@@ -84,6 +84,9 @@ int omap4430_phy_init(struct device *dev)
 		iounmap(ctrl_base);
 		return PTR_ERR(clk32k);
 	}
+	clk_prepare(phyclk);
+	clk_prepare(clk48m);
+	clk_prepare(clk32k);
 	return 0;
 }
 

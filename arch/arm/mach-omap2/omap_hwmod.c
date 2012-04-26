@@ -608,6 +608,7 @@ static int _init_main_clk(struct omap_hwmod *oh)
 			   oh->name, oh->main_clk);
 		return -EINVAL;
 	}
+	clk_prepare(oh->_clk);
 
 	if (!oh->_clk->clkdm)
 		pr_warning("omap_hwmod: %s: missing clockdomain for %s.\n",
@@ -644,6 +645,7 @@ static int _init_interface_clks(struct omap_hwmod *oh)
 				   oh->name, os->clk);
 			ret = -EINVAL;
 		}
+		clk_prepare(os->_clk);
 		os->_clk = c;
 	}
 
@@ -671,6 +673,7 @@ static int _init_opt_clks(struct omap_hwmod *oh)
 				   oh->name, oc->clk);
 			ret = -EINVAL;
 		}
+		clk_prepare(oc->_clk);
 		oc->_clk = c;
 	}
 
