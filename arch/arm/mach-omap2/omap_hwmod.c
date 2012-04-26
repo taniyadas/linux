@@ -693,7 +693,7 @@ static int _enable_clocks(struct omap_hwmod *oh)
 	pr_debug("omap_hwmod: %s: enabling clocks\n", oh->name);
 
 	if (oh->_clk)
-		clk_enable(oh->_clk);
+		clk_prepare_enable(oh->_clk);
 
 	p = oh->slave_ports.next;
 
@@ -701,7 +701,7 @@ static int _enable_clocks(struct omap_hwmod *oh)
 		os = _fetch_next_ocp_if(&p, &i);
 
 		if (os->_clk && (os->flags & OCPIF_SWSUP_IDLE))
-			clk_enable(os->_clk);
+			clk_prepare_enable(os->_clk);
 	}
 
 	/* The opt clocks are controlled by the device driver. */
@@ -724,7 +724,7 @@ static int _disable_clocks(struct omap_hwmod *oh)
 	pr_debug("omap_hwmod: %s: disabling clocks\n", oh->name);
 
 	if (oh->_clk)
-		clk_disable(oh->_clk);
+		clk_disable_unprepare(oh->_clk);
 
 	p = oh->slave_ports.next;
 
@@ -732,7 +732,7 @@ static int _disable_clocks(struct omap_hwmod *oh)
 		os = _fetch_next_ocp_if(&p, &i);
 
 		if (os->_clk && (os->flags & OCPIF_SWSUP_IDLE))
-			clk_disable(os->_clk);
+			clk_disable_unprepare(os->_clk);
 	}
 
 	/* The opt clocks are controlled by the device driver. */
@@ -751,7 +751,7 @@ static void _enable_optional_clocks(struct omap_hwmod *oh)
 		if (oc->_clk) {
 			pr_debug("omap_hwmod: enable %s:%s\n", oc->role,
 				 oc->_clk->name);
-			clk_enable(oc->_clk);
+			clk_prepare_enable(oc->_clk);
 		}
 }
 
@@ -766,7 +766,7 @@ static void _disable_optional_clocks(struct omap_hwmod *oh)
 		if (oc->_clk) {
 			pr_debug("omap_hwmod: disable %s:%s\n", oc->role,
 				 oc->_clk->name);
-			clk_disable(oc->_clk);
+			clk_disable_unprepare(oc->_clk);
 		}
 }
 
@@ -2095,7 +2095,7 @@ static void __init _setup_iclk_autoidle(struct omap_hwmod *oh)
 			/* XXX omap_iclk_deny_idle(c); */
 		} else {
 			/* XXX omap_iclk_allow_idle(c); */
-			clk_enable(os->_clk);
+			clk_prepare_enable(os->_clk);
 		}
 	}
 
