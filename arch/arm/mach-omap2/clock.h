@@ -31,6 +31,22 @@ struct clockdomain;
 
 #ifdef CONFIG_ARCH_OMAP2PLUS
 
+#define DEFINE_STRUCT_CLK(_name, _parent_array_name, _clkops_name)	\
+	static struct clk _name = {				\
+		.name = #_name,					\
+		.hw = &_name##_hw.hw,				\
+		.parent_names = _parent_array_name,		\
+		.num_parents = ARRAY_SIZE(_parent_array_name),	\
+		.ops = &_clkops_name,				\
+	};
+
+#define DEFINE_STRUCT_CLK_HW_OMAP(_name)			\
+	static struct clk_hw_omap _name##_hw = {		\
+		.hw = {						\
+			.clk = &_name,				\
+		},						\
+	};
+
 /* struct clksel_rate.flags possibilities */
 #define RATE_IN_242X		(1 << 0)
 #define RATE_IN_243X		(1 << 1)
@@ -431,6 +447,7 @@ extern const struct clksel_rate gpt_32k_rates[];
 extern const struct clksel_rate gpt_sys_rates[];
 extern const struct clksel_rate gfx_l3_rates[];
 extern const struct clksel_rate dsp_ick_rates[];
+extern struct clk dummy_ck;
 
 #ifdef CONFIG_COMMON_CLK
 extern const struct clk_hw_omap_ops clkhwops_omap3_dpll;
