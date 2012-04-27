@@ -37,6 +37,7 @@
 #include "cm2xxx_3xxx.h"
 #include "prm2xxx_3xxx.h"
 #include "pm.h"
+#include "clock.h"
 
 u32 enable_off_mode;
 
