@@ -356,9 +356,7 @@ void __init omap2420_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap2_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 #endif
 
@@ -381,9 +379,7 @@ void __init omap2430_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap2_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 #endif
 
@@ -445,9 +441,7 @@ void __init omap3_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap3_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 
 void __init omap3430_init_late(void)
@@ -455,9 +449,7 @@ void __init omap3430_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap3_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 
 void __init omap35xx_init_late(void)
@@ -465,9 +457,7 @@ void __init omap35xx_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap3_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 
 void __init omap3630_init_late(void)
@@ -475,9 +465,7 @@ void __init omap3630_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap3_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 
 void __init am35xx_init_late(void)
@@ -485,9 +473,7 @@ void __init am35xx_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap3_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 
 void __init ti81xx_init_late(void)
@@ -495,9 +481,7 @@ void __init ti81xx_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap3_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 #endif
 
@@ -521,9 +505,7 @@ void __init omap4430_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap4_pm_init();
-#ifdef CONFIG_COMMON_CLK
 	omap2_clk_enable_autoidle_all();
-#endif
 }
 #endif
 

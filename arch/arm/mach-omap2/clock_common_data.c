@@ -16,6 +16,7 @@
  * OMAP3xxx clock definition files.
  */
 
+#include <linux/clk-private.h>
 #include "clock.h"
 
 /* clksel_rate data common to 24xx/343x */
@@ -44,10 +45,6 @@ const struct clksel_rate dsp_ick_rates[] = {
 	{ .div = 0 },
 };
 
-#ifdef CONFIG_COMMON_CLK
-
-#include <linux/clk-private.h>
-
 static struct clk_ops dummy_ck_ops = {};
 
 struct clk dummy_ck = {
@@ -55,5 +52,3 @@ struct clk dummy_ck = {
 	.ops = &dummy_ck_ops,
 	.flags = CLK_IS_BASIC,
 };
-
-#endif
