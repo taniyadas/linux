@@ -17,11 +17,6 @@
 #define __ARCH_ARM_MACH_OMAP2_CLOCK_H
 
 #include <linux/kernel.h>
-
-#include <plat/clock.h>
-
-#ifdef CONFIG_COMMON_CLK
-
 #include <linux/clk-provider.h>
 #include <linux/list.h>
 
@@ -261,7 +256,6 @@ struct clk_hw_omap_ops {
 
 unsigned long omap_fixed_divisor_recalc(struct clk_hw *hw,
 		unsigned long parent_rate);
-#endif /* CONFIG_COMMON_CLK */
 
 /* CM_CLKSEL2_PLL.CORE_CLK_SRC bits (2XXX) */
 #define CORE_CLK_SRC_32K		0x0
