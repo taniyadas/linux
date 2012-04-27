@@ -29,7 +29,11 @@
 /* Private functions */
 
 /* XXX */
+#ifdef CONFIG_COMMON_CLK
+void omap2_clkt_iclk_allow_idle(struct clk_hw_omap *clk)
+#else
 void omap2_clkt_iclk_allow_idle(struct clk *clk)
+#endif
 {
 	u32 v, r;
 
@@ -41,7 +45,11 @@ void omap2_clkt_iclk_allow_idle(struct clk *clk)
 }
 
 /* XXX */
+#ifdef CONFIG_COMMON_CLK
+void omap2_clkt_iclk_deny_idle(struct clk_hw_omap *clk)
+#else
 void omap2_clkt_iclk_deny_idle(struct clk *clk)
+#endif
 {
 	u32 v, r;
 
@@ -55,6 +63,11 @@ void omap2_clkt_iclk_deny_idle(struct clk *clk)
 /* Public data */
 
 #ifdef CONFIG_COMMON_CLK
+const struct clk_hw_omap_ops clkhwops_iclk = {
+	.allow_idle	= omap2_clkt_iclk_allow_idle,
+	.deny_idle	= omap2_clkt_iclk_deny_idle,
+};
+
 const struct clk_hw_omap_ops clkhwops_iclk_wait = {
 	.allow_idle	= omap2_clkt_iclk_allow_idle,
 	.deny_idle	= omap2_clkt_iclk_deny_idle,
