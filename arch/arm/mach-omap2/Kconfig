@@ -31,6 +31,7 @@ config ARCH_OMAP2
 	select CPU_V6
 	select MULTI_IRQ_HANDLER
 	select SOC_HAS_OMAP2_SDRC
+	select COMMON_CLK
 
 config ARCH_OMAP3
 	bool "TI OMAP3"
@@ -44,6 +45,7 @@ config ARCH_OMAP3
 	select ARM_CPU_SUSPEND if PM
 	select MULTI_IRQ_HANDLER
 	select SOC_HAS_OMAP2_SDRC
+	select COMMON_CLK
 
 config ARCH_OMAP4
 	bool "TI OMAP4"
@@ -63,6 +65,7 @@ config ARCH_OMAP4
 	select USB_ARCH_HAS_EHCI if USB_SUPPORT
 	select ARM_CPU_SUSPEND if PM
 	select ARCH_NEEDS_CPU_IDLE_COUPLED if SMP
+	select COMMON_CLK
 
 config SOC_OMAP5
 	bool "TI OMAP5"
@@ -70,6 +73,7 @@ config SOC_OMAP5
 	select ARM_GIC
 	select HAVE_SMP
 	select ARM_CPU_SUSPEND if PM
+	select COMMON_CLK
 
 comment "OMAP Core Type"
 	depends on ARCH_OMAP2
@@ -104,6 +108,7 @@ config SOC_AM33XX
 	select CPU_V7
 	select ARM_CPU_SUSPEND if PM
 	select MULTI_IRQ_HANDLER
+	select COMMON_CLK
 
 config OMAP_PACKAGE_ZAF
        bool
