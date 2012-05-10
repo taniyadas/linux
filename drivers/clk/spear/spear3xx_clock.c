@@ -389,7 +389,7 @@ void __init spear3xx_clk_init(void)
 
 	clk = clk_register_divider(NULL, "ahb_clk", "pll1_clk",
 			CLK_SET_RATE_PARENT, CORE_CLK_CFG, HCLK_RATIO_SHIFT,
-			HCLK_RATIO_MASK, 0, &_lock);
+			HCLK_RATIO_MASK, 0, NULL, &_lock);
 	clk_register_clkdev(clk, "ahb_clk", NULL);
 
 	clk = clk_register_aux("uart_synth_clk", "uart_synth_gate_clk",
@@ -510,7 +510,7 @@ void __init spear3xx_clk_init(void)
 
 	clk = clk_register_divider(NULL, "apb_clk", "ahb_clk",
 			CLK_SET_RATE_PARENT, CORE_CLK_CFG, PCLK_RATIO_SHIFT,
-			PCLK_RATIO_MASK, 0, &_lock);
+			PCLK_RATIO_MASK, 0, NULL, &_lock);
 	clk_register_clkdev(clk, "apb_clk", NULL);
 
 	clk = clk_register_gate(NULL, "amem_clk", "ahb_clk", 0, AMEM_CLK_CFG,
