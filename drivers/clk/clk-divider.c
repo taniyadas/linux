@@ -32,13 +32,37 @@
 #define div_mask(d)	((1 << (d->width)) - 1)
 #define is_power_of_two(i)	!(i & ~i)
 
+static unsigned int _get_table_maxdiv(const struct clk_div_table *table)
+{
+	unsigned int maxdiv;
+	const struct clk_div_table *clkt;
+
+	for (clkt = table; clkt->div; clkt++)
+		if (clkt->div > maxdiv)
+			maxdiv = clkt->div;
+	return maxdiv;
+}
+
 static unsigned int _get_maxdiv(struct clk_divider *divider)
 {
 	if (divider->flags & CLK_DIVIDER_ONE_BASED)
 		return div_mask(divider);
 	if (divider->flags & CLK_DIVIDER_POWER_OF_TWO)
 		return 1 << div_mask(divider);
+	if (divider->table)
+		return _get_table_maxdiv(divider->table);
 	return div_mask(divider) + 1;
+}
+
+static unsigned int _get_table_div(const struct clk_div_table *table,
+							unsigned int val)
+{
+	const struct clk_div_table *clkt;
+
+	for (clkt = table; clkt->div; clkt++)
+		if (clkt->val == val)
+			return clkt->div;
+	return 0;
 }
 
 static unsigned int _get_div(struct clk_divider *divider, unsigned int val)
@@ -47,7 +71,20 @@ static unsigned int _get_div(struct clk_divider *divider, unsigned int val)
 		return val;
 	if (divider->flags & CLK_DIVIDER_POWER_OF_TWO)
 		return 1 << val;
+	if (divider->table)
+		return _get_table_div(divider->table, val);
 	return val + 1;
+}
+
+static unsigned int _get_table_val(const struct clk_div_table *table,
+							unsigned int div)
+{
+	const struct clk_div_table *clkt;
+
+	for (clkt = table; clkt->div; clkt++)
+		if (clkt->div == div)
+			return clkt->val;
+	return 0;
 }
 
 static unsigned int _get_val(struct clk_divider *divider, u8 div)
@@ -56,6 +93,8 @@ static unsigned int _get_val(struct clk_divider *divider, u8 div)
 		return div;
 	if (divider->flags & CLK_DIVIDER_POWER_OF_TWO)
 		return __ffs(div);
+	if (divider->table)
+		return  _get_table_val(divider->table, div);
 	return div - 1;
 }
 
@@ -84,6 +123,26 @@ static unsigned long clk_divider_recalc_rate(struct clk_hw *hw,
  */
 #define MULT_ROUND_UP(r, m) ((r) * (m) + (m) - 1)
 
+static bool _is_valid_table_div(const struct clk_div_table *table,
+							 unsigned int div)
+{
+	const struct clk_div_table *clkt;
+
+	for (clkt = table; clkt->div; clkt++)
+		if (clkt->div == div)
+			return true;
+	return false;
+}
+
+static bool _is_valid_div(struct clk_divider *divider, unsigned int div)
+{
+	if (divider->flags & CLK_DIVIDER_POWER_OF_TWO)
+		return is_power_of_two(div);
+	if (divider->table)
+		return _is_valid_table_div(divider->table, div);
+	return true;
+}
+
 static int clk_divider_bestdiv(struct clk_hw *hw, unsigned long rate,
 		unsigned long *best_parent_rate)
 {
@@ -111,8 +170,7 @@ static int clk_divider_bestdiv(struct clk_hw *hw, unsigned long rate,
 	maxdiv = min(ULONG_MAX / rate, maxdiv);
 
 	for (i = 1; i <= maxdiv; i++) {
-		if ((divider->flags & CLK_DIVIDER_POWER_OF_TWO)
-			&& (!is_power_of_two(i)))
+		if (!_is_valid_div(divider, i))
 			continue;
 		parent_rate = __clk_round_rate(__clk_get_parent(hw->clk),
 				MULT_ROUND_UP(rate, i));
@@ -186,12 +244,14 @@ EXPORT_SYMBOL_GPL(clk_divider_ops);
  * @shift: number of bits to shift the bitfield
  * @width: width of the bitfield
  * @clk_divider_flags: divider-specific flags for this clock
+ * @table: array of divider/value pairs ending with a div set to 0
  * @lock: shared register lock for this clock
  */
 struct clk *clk_register_divider(struct device *dev, const char *name,
 		const char *parent_name, unsigned long flags,
 		void __iomem *reg, u8 shift, u8 width,
-		u8 clk_divider_flags, spinlock_t *lock)
+		u8 clk_divider_flags, const struct clk_div_table *table,
+		spinlock_t *lock)
 {
 	struct clk_divider *div;
 	struct clk *clk;
@@ -217,6 +277,7 @@ struct clk *clk_register_divider(struct device *dev, const char *name,
 	div->flags = clk_divider_flags;
 	div->lock = lock;
 	div->hw.init = &init;
+	div->table = table;
 
 	/* register the clock */
 	clk = clk_register(dev, &div->hw);
