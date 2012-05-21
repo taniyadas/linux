@@ -116,6 +116,27 @@ static const struct clksel_rate div_1_5_rates[] = {
 	{ .div = 0 },
 };
 
+static const struct clksel_rate div_1_6_rates[] = {
+	{ .div = 1, .val = 6, .flags = RATE_IN_4430 },
+	{ .div = 0 },
+};
+
+static const struct clksel_rate div_1_7_rates[] = {
+	{ .div = 1, .val = 7, .flags = RATE_IN_4430 },
+	{ .div = 0 },
+};
+
+static const struct clksel sys_clkin_sel[] = {
+	{ .parent = &virt_12000000_ck, .rates = div_1_1_rates },
+	{ .parent = &virt_13000000_ck, .rates = div_1_2_rates },
+	{ .parent = &virt_16800000_ck, .rates = div_1_3_rates },
+	{ .parent = &virt_19200000_ck, .rates = div_1_4_rates },
+	{ .parent = &virt_26000000_ck, .rates = div_1_5_rates },
+	{ .parent = &virt_27000000_ck, .rates = div_1_6_rates },
+	{ .parent = &virt_38400000_ck, .rates = div_1_7_rates },
+	{ .parent = NULL },
+};
+
 static const char *sys_clkin_ck_parent_names[] = {
 	"virt_12000000_ck",
 	"virt_13000000_ck",
@@ -263,6 +284,7 @@ DEFINE_CLK_DIVIDER(dpll_abe_m2x2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_FIXED_FACTOR(abe_24m_fclk,
@@ -279,6 +301,7 @@ DEFINE_CLK_DIVIDER(abe_clk,
 	OMAP4430_CLKSEL_OPP_SHIFT,
 	OMAP4430_CLKSEL_OPP_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(aess_fclk,
@@ -289,6 +312,7 @@ DEFINE_CLK_DIVIDER(aess_fclk,
 	OMAP4430_CLKSEL_AESS_FCLK_SHIFT,
 	OMAP4430_CLKSEL_AESS_FCLK_WIDTH,
 	0x0,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_abe_m3x2_ck,
@@ -299,6 +323,7 @@ DEFINE_CLK_DIVIDER(dpll_abe_m3x2_ck,
 	OMAP4430_DPLL_CLKOUTHIF_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUTHIF_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 static const char *core_hsd_byp_clk_mux_ck_parent_names[] = {
@@ -395,6 +420,7 @@ DEFINE_CLK_DIVIDER(dpll_core_m6x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT3_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT3_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_core_m2_ck,
@@ -405,6 +431,7 @@ DEFINE_CLK_DIVIDER(dpll_core_m2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_FIXED_FACTOR(ddrphy_ck,
@@ -421,6 +448,7 @@ DEFINE_CLK_DIVIDER(dpll_core_m5x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT2_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT2_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(div_core_ck,
@@ -431,6 +459,7 @@ DEFINE_CLK_DIVIDER(div_core_ck,
 	OMAP4430_CLKSEL_CORE_SHIFT,
 	OMAP4430_CLKSEL_CORE_WIDTH,
 	0x0,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(div_iva_hs_clk,
@@ -441,6 +470,7 @@ DEFINE_CLK_DIVIDER(div_iva_hs_clk,
 	OMAP4430_CLKSEL_0_1_SHIFT,
 	OMAP4430_CLKSEL_0_1_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(div_mpu_hs_clk,
@@ -451,6 +481,7 @@ DEFINE_CLK_DIVIDER(div_mpu_hs_clk,
 	OMAP4430_CLKSEL_0_1_SHIFT,
 	OMAP4430_CLKSEL_0_1_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_core_m4x2_ck,
@@ -461,6 +492,7 @@ DEFINE_CLK_DIVIDER(dpll_core_m4x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT1_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT1_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_FIXED_FACTOR(dll_clk_div_ck,
@@ -477,6 +509,7 @@ DEFINE_CLK_DIVIDER(dpll_abe_m2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_core_m3x2_ck,
@@ -487,6 +520,7 @@ DEFINE_CLK_DIVIDER(dpll_core_m3x2_ck,
 	OMAP4430_DPLL_CLKOUTHIF_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUTHIF_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_core_m7x2_ck,
@@ -497,6 +531,7 @@ DEFINE_CLK_DIVIDER(dpll_core_m7x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT4_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT4_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 static const char *iva_hsd_byp_clk_mux_ck_parent_names[] = {
@@ -597,6 +632,7 @@ DEFINE_CLK_DIVIDER(dpll_iva_m4x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT1_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT1_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_iva_m5x2_ck,
@@ -607,6 +643,7 @@ DEFINE_CLK_DIVIDER(dpll_iva_m5x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT2_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT2_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 /* DPLL_MPU */
@@ -669,6 +706,7 @@ DEFINE_CLK_DIVIDER(dpll_mpu_m2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_FIXED_FACTOR(per_hs_clk_div_ck,
@@ -751,6 +789,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 static const char *dpll_per_x2_ck_parents[] = {
@@ -789,6 +828,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m2x2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_per_m3x2_ck,
@@ -799,6 +839,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m3x2_ck,
 	OMAP4430_DPLL_CLKOUTHIF_DIV_SHIFT,
 	OMAP4430_DPLL_CLKOUTHIF_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_per_m4x2_ck,
@@ -809,6 +850,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m4x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT1_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT1_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_per_m5x2_ck,
@@ -819,6 +861,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m5x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT2_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT2_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_per_m6x2_ck,
@@ -829,6 +872,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m6x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT3_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT3_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(dpll_per_m7x2_ck,
@@ -839,6 +883,7 @@ DEFINE_CLK_DIVIDER(dpll_per_m7x2_ck,
 	OMAP4430_HSDIVIDER_CLKOUT4_DIV_SHIFT,
 	OMAP4430_HSDIVIDER_CLKOUT4_DIV_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 DEFINE_CLK_FIXED_FACTOR(usb_hs_clk_div_ck,
@@ -935,6 +980,7 @@ DEFINE_CLK_DIVIDER(dpll_usb_m2_ck,
 	OMAP4430_DPLL_CLKOUT_DIV_0_6_SHIFT,
 	OMAP4430_DPLL_CLKOUT_DIV_0_6_WIDTH,
 	CLK_DIVIDER_ONE_BASED,
+	NULL,
 	NULL);
 
 static const char *ducati_clk_mux_ck_parent_names[] = {
@@ -974,14 +1020,14 @@ static const struct clk_div_table func_48m_fclk_rates[] = {
 	{ .div = 8, .val = 1 },
 	{ .div = 0 },
 };
-DEFINE_CLK_DIVIDER_TABLE(func_48m_fclk,
+DEFINE_CLK_DIVIDER(func_48m_fclk,
 	"dpll_per_m2x2_ck",
 	&dpll_per_m2x2_ck,
 	0x0,
 	OMAP4430_CM_SCALE_FCLK,
 	OMAP4430_SCALE_FCLK_SHIFT,
 	OMAP4430_SCALE_FCLK_WIDTH,
-	CLK_DIVIDER_TABLE_BASED,
+	0x0,
 	func_48m_fclk_rates,
 	NULL);
 
@@ -996,14 +1042,14 @@ static const struct clk_div_table func_64m_fclk_rates[] = {
 	{ .div = 4, .val = 1 },
 	{ .div = 0 },
 };
-DEFINE_CLK_DIVIDER_TABLE(func_64m_fclk,
+DEFINE_CLK_DIVIDER(func_64m_fclk,
 	"dpll_per_m4x2_ck",
 	&dpll_per_m4x2_ck,
 	0x0,
 	OMAP4430_CM_SCALE_FCLK,
 	OMAP4430_SCALE_FCLK_SHIFT,
 	OMAP4430_SCALE_FCLK_WIDTH,
-	CLK_DIVIDER_TABLE_BASED,
+	0x0,
 	func_64m_fclk_rates,
 	NULL);
 
@@ -1012,14 +1058,14 @@ static const struct clk_div_table func_96m_fclk_rates[] = {
 	{ .div = 4, .val = 1 },
 	{ .div = 0 },
 };
-DEFINE_CLK_DIVIDER_TABLE(func_96m_fclk,
+DEFINE_CLK_DIVIDER(func_96m_fclk,
 	"dpll_per_m2x2_ck",
 	&dpll_per_m2x2_ck,
 	0x0,
 	OMAP4430_CM_SCALE_FCLK,
 	OMAP4430_SCALE_FCLK_SHIFT,
 	OMAP4430_SCALE_FCLK_WIDTH,
-	CLK_DIVIDER_TABLE_BASED,
+	0x0,
 	func_96m_fclk_rates,
 	NULL);
 
@@ -1028,14 +1074,14 @@ static const struct clk_div_table init_60m_fclk_rates[] = {
 	{ .div = 8, .val = 1 },
 	{ .div = 0 },
 };
-DEFINE_CLK_DIVIDER_TABLE(init_60m_fclk,
+DEFINE_CLK_DIVIDER(init_60m_fclk,
 	"dpll_usb_m2_ck",
 	&dpll_usb_m2_ck,
 	0x0,
 	OMAP4430_CM_CLKSEL_USB_60MHZ,
 	OMAP4430_CLKSEL_0_0_SHIFT,
 	OMAP4430_CLKSEL_0_0_WIDTH,
-	CLK_DIVIDER_TABLE_BASED,
+	0x0,
 	init_60m_fclk_rates,
 	NULL);
 
@@ -1047,6 +1093,7 @@ DEFINE_CLK_DIVIDER(l3_div_ck,
 	OMAP4430_CLKSEL_L3_SHIFT,
 	OMAP4430_CLKSEL_L3_WIDTH,
 	0x0,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(l4_div_ck,
@@ -1057,6 +1104,7 @@ DEFINE_CLK_DIVIDER(l4_div_ck,
 	OMAP4430_CLKSEL_L4_SHIFT,
 	OMAP4430_CLKSEL_L4_WIDTH,
 	0x0,
+	NULL,
 	NULL);
 
 DEFINE_CLK_FIXED_FACTOR(lp_clk_div_ck,
@@ -1084,14 +1132,14 @@ static const struct clk_div_table ocp_abe_iclk_rates[] = {
 	{ .div = 1, .val = 1 },
 	{ .div = 0 },
 };
-DEFINE_CLK_DIVIDER_TABLE(ocp_abe_iclk,
+DEFINE_CLK_DIVIDER(ocp_abe_iclk,
 	"aess_fclk",
 	&aess_fclk,
 	0x0,
 	OMAP4430_CM1_ABE_AESS_CLKCTRL,
 	OMAP4430_CLKSEL_AESS_FCLK_SHIFT,
 	OMAP4430_CLKSEL_AESS_FCLK_WIDTH,
-	CLK_DIVIDER_TABLE_BASED,
+	0x0,
 	ocp_abe_iclk_rates,
 	NULL);
 
@@ -1109,6 +1157,7 @@ DEFINE_CLK_DIVIDER(per_abe_nc_fclk,
 	OMAP4430_SCALE_FCLK_SHIFT,
 	OMAP4430_SCALE_FCLK_WIDTH,
 	0x0,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(syc_clk_div_ck,
@@ -1119,6 +1168,7 @@ DEFINE_CLK_DIVIDER(syc_clk_div_ck,
 	OMAP4430_CLKSEL_0_0_SHIFT,
 	OMAP4430_CLKSEL_0_0_WIDTH,
 	0x0,
+	NULL,
 	NULL);
 
 /* Leaf clocks controlled by modules */
@@ -1247,6 +1297,7 @@ DEFINE_CLK_DIVIDER(fdif_fclk,
 	OMAP4430_CLKSEL_FCLK_SHIFT,
 	OMAP4430_CLKSEL_FCLK_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 DEFINE_CLK_GATE(fpka_fck, "l4_div_ck", &l4_div_ck, 0x0,
@@ -1360,6 +1411,7 @@ DEFINE_CLK_DIVIDER(hsi_fclk,
 	OMAP4430_CLKSEL_24_25_SHIFT,
 	OMAP4430_CLKSEL_24_25_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 DEFINE_CLK_GATE(i2c1_fck, "func_96m_fclk", &func_96m_fclk, 0x0,
@@ -2437,14 +2489,14 @@ static const struct clk_div_table usim_ck_rates[] = {
 	{ .div = 18, .val = 1 },
 	{ .div = 0 },
 };
-DEFINE_CLK_DIVIDER_TABLE(usim_ck,
+DEFINE_CLK_DIVIDER(usim_ck,
 	"dpll_per_m4x2_ck",
 	&dpll_per_m4x2_ck,
 	0x0,
 	OMAP4430_CM_WKUP_USIM_CLKCTRL,
 	OMAP4430_CLKSEL_DIV_SHIFT,
 	OMAP4430_CLKSEL_DIV_WIDTH,
-	CLK_DIVIDER_TABLE_BASED,
+	0x0,
 	usim_ck_rates,
 	NULL);
 
@@ -2503,6 +2555,7 @@ DEFINE_CLK_DIVIDER(stm_clk_div_ck,
 	OMAP4430_CLKSEL_PMD_STM_CLK_SHIFT,
 	OMAP4430_CLKSEL_PMD_STM_CLK_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 DEFINE_CLK_DIVIDER(trace_clk_div_ck,
@@ -2513,6 +2566,7 @@ DEFINE_CLK_DIVIDER(trace_clk_div_ck,
 	OMAP4430_CLKSEL_PMD_TRACE_CLK_SHIFT,
 	OMAP4430_CLKSEL_PMD_TRACE_CLK_WIDTH,
 	CLK_DIVIDER_POWER_OF_TWO,
+	NULL,
 	NULL);
 
 /* SCRM aux clk nodes */
