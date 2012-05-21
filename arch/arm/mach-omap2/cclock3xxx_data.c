@@ -626,6 +626,10 @@ static const char *cm_96m_fck_parent_names[] = {
 	"omap_96m_alwon_fck",
 };
 
+static const char *cm_96m_fck_3630_parent_names[] = {
+	"omap_96m_alwon_fck_3630",
+};
+
 static struct clk_hw_omap cm_96m_fck_hw = {
 	.hw = {
 		.clk = &cm_96m_fck,
@@ -3830,6 +3834,7 @@ static struct omap_clk omap3xxx_clks[] = {
 	CLK(NULL,	"dpll4_x2_ck",	&dpll4_x2_ck,	CK_3XXX),
 	CLK(NULL,	"omap_192m_alwon_fck", &omap_192m_alwon_fck, CK_36XX),
 	CLK(NULL,	"omap_96m_alwon_fck", &omap_96m_alwon_fck, CK_3XXX),
+	CLK(NULL,	"omap_96m_alwon_fck_3630", &omap_96m_alwon_fck_3630, CK_3XXX),
 	CLK(NULL,	"omap_96m_fck",	&omap_96m_fck,	CK_3XXX),
 	CLK(NULL,	"cm_96m_fck",	&cm_96m_fck,	CK_3XXX),
 	CLK(NULL,	"omap_54m_fck",	&omap_54m_fck,	CK_3XXX),
@@ -4147,7 +4152,7 @@ int __init omap3xxx_clk_init(void)
 	}
 
 	if (omap3_has_192mhz_clk())
-		omap_96m_alwon_fck = omap_96m_alwon_fck_3630;
+		cm_96m_fck_parent_names[0] = cm_96m_fck_3630_parent_names[0];
 	/*
 	 * XXX This type of dynamic rewriting of the clock tree is
 	 * deprecated and should be revised soon.

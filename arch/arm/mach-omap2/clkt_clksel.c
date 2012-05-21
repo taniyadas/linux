@@ -307,7 +307,7 @@ u8 omap2_init_clksel_parent(struct clk_hw *hw)
 	struct clk_hw_omap *clk = to_clk_hw_omap(hw);
 	const struct clksel *clks;
 	const struct clksel_rate *clkr;
-	u32 r, found = 0;
+	u32 r, found = 0, i;
 	struct clk *parent;
 	const char *clk_name;
 
@@ -320,7 +320,7 @@ u8 omap2_init_clksel_parent(struct clk_hw *hw)
 	r = __raw_readl(clk->clksel_reg) & clk->clksel_mask;
 	r >>= __ffs(clk->clksel_mask);
 
-	for (clks = clk->clksel; clks->parent && !found; clks++) {
+	for (clks = clk->clksel, i = 0; clks->parent && !found; clks++, i++) {
 		for (clkr = clks->rates; clkr->div && !found; clkr++) {
 			if (!(clkr->flags & cpu_mask))
 				continue;
@@ -336,7 +336,7 @@ u8 omap2_init_clksel_parent(struct clk_hw *hw)
 						 "NULL"));
 				};
 				/*return clks->parent;*/
-				return r;
+				return i;
 			}
 		}
 	}
