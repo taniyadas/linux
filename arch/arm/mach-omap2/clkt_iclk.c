@@ -47,3 +47,7 @@ void omap2_clkt_iclk_deny_idle(struct clk_hw_omap *clk)
 	__raw_writel(v, (__force void __iomem *)r);
 }
 
+const struct clk_hw_omap_ops clkhwops_iclk = {
+	.allow_idle	= omap2_clkt_iclk_allow_idle,
+	.deny_idle	= omap2_clkt_iclk_deny_idle,
+};

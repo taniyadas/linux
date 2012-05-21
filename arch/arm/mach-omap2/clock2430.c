@@ -50,3 +50,8 @@ static void omap2430_clk_i2chs_find_idlest(struct clk_hw_omap *clk,
 	*idlest_bit = clk->enable_bit;
 	*idlest_val = OMAP24XX_CM_IDLEST_VAL;
 }
+
+const struct clk_hw_omap_ops clkhwops_omap2430_i2chs_wait = {
+	.find_idlest	= omap2430_clk_i2chs_find_idlest,
+	.find_companion	= omap2_clk_dflt_find_companion,
+};

@@ -235,6 +235,9 @@ struct dpll_data {
  * XXX The notion of the clock's current rate probably needs to be
  * separated from the clock's target rate.
  */
+
+struct clk_hw_omap_ops;
+
 struct clk_hw_omap {
         struct clk_hw           hw;
         struct list_head        node;
@@ -257,6 +260,10 @@ struct clk_hw_omap {
 #if defined(CONFIG_PM_DEBUG) && defined(CONFIG_DEBUG_FS)
         struct dentry           *dent;  /* For visible tree hierarchy */
 #endif
+	struct clk_hw_omap_ops	*ops;
+};
+
+struct clk_hw_omap_ops {
         void                    (*find_idlest)(struct clk_hw_omap *oclk,
                                         void __iomem **idlest_reg,
                                         u8 *idlest_bit, u8 *idlest_val);
@@ -264,7 +271,7 @@ struct clk_hw_omap {
                                         void __iomem **other_reg, u8 *other_bit);
         void                    (*allow_idle)(struct clk_hw_omap *oclk);
         void                    (*deny_idle)(struct clk_hw_omap *oclk);
-};
+}
 
 unsigned long omap_fixed_divisor_recalc(struct clk_hw *hw,
 		unsigned long parent_rate);

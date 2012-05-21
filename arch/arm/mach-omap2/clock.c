@@ -90,13 +90,13 @@ static void _omap2_module_wait_ready(struct clk_hw_omap *clk)
 	u8 other_bit, idlest_bit, idlest_val;
 
 	/* Not all modules have multiple clocks that their IDLEST depends on */
-	if (clk->find_companion) {
-		clk->find_companion(clk, &companion_reg, &other_bit);
+	if (clk->ops && clk->ops->find_companion) {
+		clk->ops->find_companion(clk, &companion_reg, &other_bit);
 		if (!(__raw_readl(companion_reg) & (1 << other_bit)))
 			return;
 	}
 
-	clk->find_idlest(clk, &idlest_reg, &idlest_bit, &idlest_val);
+	clk->ops->find_idlest(clk, &idlest_reg, &idlest_bit, &idlest_val);
 	omap2_cm_wait_idlest(idlest_reg, (1 << idlest_bit), idlest_val,
 			     __clk_get_name(clk->hw.clk));
 }
@@ -253,7 +253,7 @@ int omap2_dflt_clk_enable(struct clk_hw *hw)
 	__raw_writel(v, clk->enable_reg);
 	v = __raw_readl(clk->enable_reg); /* OCP barrier */
 
-	if (clk->find_idlest)
+	if (clk->ops && clk->ops->find_idlest)
 		_omap2_module_wait_ready(clk);
 
 	return 0;
@@ -291,6 +291,23 @@ void omap2_dflt_clk_disable(struct clk_hw *hw)
 	if (clkdm_control && clk->clkdm)
 		clkdm_clk_disable(clk->clkdm, hw->clk);
 }
+
+const struct clk_hw_omap_ops clkhwops_omap3_dpll = {
+	.allow_idle	= omap3_dpll_allow_idle,
+	.deny_idle	= omap3_dpll_deny_idle,
+};
+
+const struct clk_hw_omap_ops clkhwops_iclk_wait = {
+	.allow_idle	= omap2_clkt_iclk_allow_idle,
+	.deny_idle	= omap2_clkt_iclk_deny_idle,
+	.find_idlest	= omap2_clk_dflt_find_idlest,
+	.find_companion	= omap2_clk_dflt_find_companion,
+};
+
+const struct clk_hw_omap_ops clkhwops_wait = {
+	.find_idlest	= omap2_clk_dflt_find_idlest,
+	.find_companion	= omap2_clk_dflt_find_companion,
+};
 
 /* TODO: Need to handle these for the COMMON clk case */
 int __init omap2_clk_switch_mpurate_at_boot(const char *mpurate_ck_name)

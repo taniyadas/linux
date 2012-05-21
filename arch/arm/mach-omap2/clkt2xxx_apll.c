@@ -129,3 +129,12 @@ u32 omap2xxx_get_apll_clkin(void)
 	return srate;
 }
 
+const struct clk_hw_omap_ops clkhwops_apll54 = {
+	.allow_idle	= _apll54_allow_idle,
+	.deny_idle	= _apll54_deny_idle,
+};
+
+const struct clk_hw_omap_ops clkhwops_apll96 = {
+	.allow_idle	= _apll96_allow_idle,
+	.deny_idle	= _apll96_deny_idle,
+};

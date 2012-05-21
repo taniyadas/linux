@@ -50,3 +50,8 @@ void _deny_idle(struct clk_hw_omap *clk)
 
 	omap2xxx_cm_set_dpll_disable_autoidle();
 }
+
+const struct clk_hw_omap_ops clkhwops_omap2xxx_dpll = {
+	.allow_idle	= _allow_idle,
+	.deny_idle	= _deny_idle,
+};

@@ -104,3 +104,15 @@ static void am35xx_clk_ipss_find_idlest(struct clk_hw_omap *clk,
 	*idlest_bit = AM35XX_ST_IPSS_SHIFT;
 	*idlest_val = OMAP34XX_CM_IDLEST_VAL;
 }
+
+const struct clk_hw_omap_ops clkhwops_am35xx_ipss_module_wait = {
+	.find_idlest	= am35xx_clk_find_idlest,
+	.find_companion	= am35xx_clk_find_companion,
+};
+
+const struct clk_hw_omap_ops clkhwops_am35xx_ipss_wait = {
+	.allow_idle	= omap2_clkt_iclk_allow_idle,
+	.deny_idle	= omap2_clkt_iclk_deny_idle,
+	.find_idlest	= am35xx_clk_ipss_find_idlest,
+	.find_companion	= omap2_clk_dflt_find_companion,
+};
