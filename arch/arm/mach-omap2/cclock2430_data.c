@@ -58,7 +58,26 @@ DEFINE_CLK_FIXED_RATE(func_32k_ck, CLK_IS_ROOT, 32768, 0x0);
 
 DEFINE_CLK_FIXED_RATE(mcbsp_clks, CLK_IS_ROOT, 0x0, 0x0);
 
-DEFINE_CLK_FIXED_RATE(osc_ck, CLK_IS_ROOT, 0x0, 0x0);
+static struct clk osc_ck;
+
+static const struct clk_ops osc_ck_ops = {
+	.enable		= &omap2_enable_osc_ck,
+	.disable	= omap2_disable_osc_ck,
+	.recalc_rate	= &omap2_osc_clk_recalc,
+};
+
+static struct clk_hw_omap osc_ck_hw = {
+	.hw = {
+		.clk = &osc_ck,
+	},
+};
+
+static struct clk osc_ck = {
+	.name	= "osc_ck",
+	.ops	= &osc_ck_ops,
+	.hw	= &osc_ck_hw.hw,
+	.flags	= CLK_IS_ROOT,
+};
 
 DEFINE_CLK_FIXED_RATE(secure_32k_ck, CLK_IS_ROOT, 32768, 0x0);
 
@@ -222,6 +241,7 @@ static struct clk_hw_omap apll96_ck_hw = {
 
 DEFINE_STRUCT_CLK(apll96_ck, dpll_ck_parent_names, apll96_ck_ops);
 
+#if 1
 static const struct clksel_rate func_96m_apll96_rates[] = {
 	{ .div = 1, .val = 0, .flags = RATE_IN_24XX },
 	{ .div = 0 }
@@ -261,6 +281,7 @@ static struct clk_hw_omap func_96m_ck_hw = {
 };
 
 DEFINE_STRUCT_CLK(func_96m_ck, func_96m_ck_parent_names, func_96m_ck_ops);
+#endif
 
 static struct clk cam_fck;
 
@@ -484,6 +505,7 @@ static struct clk_hw_omap dss2_fck_hw = {
 
 DEFINE_STRUCT_CLK(dss2_fck, dss2_fck_parent_names, dss1_fck_ops);
 
+#if 1
 static const struct clksel_rate func_54m_apll54_rates[] = {
 	{ .div = 1, .val = 0, .flags = RATE_IN_24XX },
 	{ .div = 0 }
@@ -517,6 +539,7 @@ static struct clk_hw_omap func_54m_ck_hw = {
 };
 
 DEFINE_STRUCT_CLK(func_54m_ck, func_54m_ck_parent_names, func_96m_ck_ops);
+#endif
 
 static struct clk dss_54m_fck;
 
@@ -563,6 +586,7 @@ static struct clk_hw_omap emul_ck_hw = {
 
 DEFINE_STRUCT_CLK(emul_ck, dss_54m_fck_parent_names, aes_ick_ops);
 
+#if 1
 static struct clk func_12m_ck;
 
 static const char *func_12m_ck_parent_names[] = {
@@ -581,6 +605,7 @@ static struct clk_hw_omap func_12m_ck_hw = {
 };
 
 DEFINE_STRUCT_CLK(func_12m_ck, func_12m_ck_parent_names, func_12m_ck_ops);
+#endif
 
 static struct clk fac_fck;
 
