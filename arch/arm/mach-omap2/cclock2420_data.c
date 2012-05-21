@@ -82,72 +82,25 @@ static struct clk_hw_omap core_ck_hw = {
 
 DEFINE_STRUCT_CLK(core_ck, core_ck_parent_names, core_ck_ops);
 
-static const struct clksel_rate core_l3_core_rates[] = {
-	{ .div = 1, .val = 1, .flags = RATE_IN_24XX },
-	{ .div = 2, .val = 2, .flags = RATE_IN_242X },
-	{ .div = 4, .val = 4, .flags = RATE_IN_24XX },
-	{ .div = 6, .val = 6, .flags = RATE_IN_24XX },
-	{ .div = 8, .val = 8, .flags = RATE_IN_242X },
-	{ .div = 12, .val = 12, .flags = RATE_IN_242X },
-	{ .div = 16, .val = 16, .flags = RATE_IN_242X },
-	{ .div = 0 }
-};
-
-static const struct clksel core_l3_clksel[] = {
-	{ .parent = &core_ck, .rates = core_l3_core_rates },
-	{ .parent = NULL },
-};
-
-static const char *core_l3_ck_parent_names[] = {
+DEFINE_CLK_DIVIDER(core_l3_ck,
 	"core_ck",
-};
+	&core_ck,
+	0x0,
+	OMAP_CM_REGADDR(CORE_MOD, CM_CLKSEL1),
+	OMAP24XX_CLKSEL_L3_SHIFT,
+	OMAP24XX_CLKSEL_L3_WIDTH,
+	CLK_DIVIDER_ONE_BASED,
+	NULL);
 
-static struct clk core_l3_ck;
-
-static const struct clk_ops core_l3_ck_ops = {
-	.recalc_rate	= &omap2_clksel_recalc,
-	.set_rate	= &omap2_clksel_set_rate,
-	.round_rate	= &omap2_clksel_round_rate,
-};
-
-static struct clk_hw_omap core_l3_ck_hw = {
-	.hw = {
-		.clk = &core_l3_ck,
-	},
-	.clksel		= core_l3_clksel,
-	.clksel_reg	= OMAP_CM_REGADDR(CORE_MOD, CM_CLKSEL1),
-	.clksel_mask	= OMAP24XX_CLKSEL_L3_MASK,
-};
-
-DEFINE_STRUCT_CLK(core_l3_ck, core_l3_ck_parent_names, core_l3_ck_ops);
-
-static const struct clksel_rate l4_core_l3_rates[] = {
-	{ .div = 1, .val = 1, .flags = RATE_IN_24XX },
-	{ .div = 2, .val = 2, .flags = RATE_IN_24XX },
-	{ .div = 0 }
-};
-
-static const struct clksel l4_clksel[] = {
-	{ .parent = &core_l3_ck, .rates = l4_core_l3_rates },
-	{ .parent = NULL },
-};
-
-static const char *l4_ck_parent_names[] = {
+DEFINE_CLK_DIVIDER(l4_ck,
 	"core_l3_ck",
-};
-
-static struct clk l4_ck;
-
-static struct clk_hw_omap l4_ck_hw = {
-	.hw = {
-		.clk = &l4_ck,
-	},
-	.clksel		= l4_clksel,
-	.clksel_reg	= OMAP_CM_REGADDR(CORE_MOD, CM_CLKSEL1),
-	.clksel_mask	= OMAP24XX_CLKSEL_L4_MASK,
-};
-
-DEFINE_STRUCT_CLK(l4_ck, l4_ck_parent_names, core_l3_ck_ops);
+	&core_l3_ck,
+	0x0,
+	OMAP_CM_REGADDR(CORE_MOD, CM_CLKSEL1),
+	OMAP24XX_CLKSEL_L4_SHIFT,
+	OMAP24XX_CLKSEL_L4_WIDTH,
+	CLK_DIVIDER_ONE_BASED,
+	NULL);
 
 static struct clk aes_ick;
 
@@ -1617,36 +1570,15 @@ static struct clk_hw_omap mmc_ick_hw = {
 
 DEFINE_STRUCT_CLK(mmc_ick, mmc_ick_parent_names, aes_ick_ops);
 
-static const struct clksel_rate mpu_core_rates[] = {
-	{ .div = 1, .val = 1, .flags = RATE_IN_24XX },
-	{ .div = 2, .val = 2, .flags = RATE_IN_24XX },
-	{ .div = 4, .val = 4, .flags = RATE_IN_242X },
-	{ .div = 6, .val = 6, .flags = RATE_IN_242X },
-	{ .div = 8, .val = 8, .flags = RATE_IN_242X },
-	{ .div = 0 }
-};
-
-static const struct clksel mpu_clksel[] = {
-	{ .parent = &core_ck, .rates = mpu_core_rates },
-	{ .parent = NULL },
-};
-
-static const char *mpu_ck_parent_names[] = {
+DEFINE_CLK_DIVIDER(mpu_ck,
 	"core_ck",
-};
-
-static struct clk mpu_ck;
-
-static struct clk_hw_omap mpu_ck_hw = {
-	.hw = {
-		.clk = &mpu_ck,
-	},
-	.clksel		= mpu_clksel,
-	.clksel_reg	= OMAP_CM_REGADDR(MPU_MOD, CM_CLKSEL),
-	.clksel_mask	= OMAP24XX_CLKSEL_MPU_MASK,
-};
-
-DEFINE_STRUCT_CLK(mpu_ck, mpu_ck_parent_names, core_l3_ck_ops);
+	&core_ck,
+	0x0,
+	OMAP_CM_REGADDR(MPU_MOD, CM_CLKSEL),
+	OMAP24XX_CLKSEL_MPU_SHIFT,
+	OMAP24XX_CLKSEL_MPU_WIDTH,
+	CLK_DIVIDER_ONE_BASED,
+	NULL);
 
 static struct clk mpu_wdt_fck;
 
@@ -1975,36 +1907,15 @@ static struct clk_hw_omap sys_clkout_src_hw = {
 
 DEFINE_STRUCT_CLK(sys_clkout_src, sys_clkout_src_parent_names, gpt1_fck_ops);
 
-static const struct clksel_rate common_clkout_rates[] = {
-	{ .div = 1, .val = 0, .flags = RATE_IN_24XX },
-	{ .div = 2, .val = 1, .flags = RATE_IN_24XX },
-	{ .div = 4, .val = 2, .flags = RATE_IN_24XX },
-	{ .div = 8, .val = 3, .flags = RATE_IN_24XX },
-	{ .div = 16, .val = 4, .flags = RATE_IN_24XX },
-	{ .div = 0 }
-};
-
-static const struct clksel sys_clkout_clksel[] = {
-	{ .parent = &sys_clkout_src, .rates = common_clkout_rates },
-	{ .parent = NULL },
-};
-
-static const char *sys_clkout_parent_names[] = {
+DEFINE_CLK_DIVIDER(sys_clkout,
 	"sys_clkout_src",
-};
-
-static struct clk sys_clkout;
-
-static struct clk_hw_omap sys_clkout_hw = {
-	.hw = {
-		.clk = &sys_clkout,
-	},
-	.clksel		= sys_clkout_clksel,
-	.clksel_reg	= OMAP2420_PRCM_CLKOUT_CTRL,
-	.clksel_mask	= OMAP24XX_CLKOUT_DIV_MASK,
-};
-
-DEFINE_STRUCT_CLK(sys_clkout, sys_clkout_parent_names, core_l3_ck_ops);
+	&sys_clkout_src,
+	0x0,
+	OMAP2420_PRCM_CLKOUT_CTRL,
+	OMAP24XX_CLKOUT_DIV_SHIFT,
+	OMAP24XX_CLKOUT_DIV_WIDTH,
+	CLK_DIVIDER_POWER_OF_TWO,
+	NULL);
 
 static struct clk sys_clkout2_src;
 
@@ -2022,27 +1933,15 @@ static struct clk_hw_omap sys_clkout2_src_hw = {
 
 DEFINE_STRUCT_CLK(sys_clkout2_src, sys_clkout_src_parent_names, gpt1_fck_ops);
 
-static const struct clksel sys_clkout2_clksel[] = {
-	{ .parent = &sys_clkout2_src, .rates = common_clkout_rates },
-	{ .parent = NULL },
-};
-
-static const char *sys_clkout2_parent_names[] = {
+DEFINE_CLK_DIVIDER(sys_clkout2,
 	"sys_clkout2_src",
-};
-
-static struct clk sys_clkout2;
-
-static struct clk_hw_omap sys_clkout2_hw = {
-	.hw = {
-		.clk = &sys_clkout2,
-	},
-	.clksel		= sys_clkout2_clksel,
-	.clksel_reg	= OMAP2420_PRCM_CLKOUT_CTRL,
-	.clksel_mask	= OMAP2420_CLKOUT2_DIV_MASK,
-};
-
-DEFINE_STRUCT_CLK(sys_clkout2, sys_clkout2_parent_names, core_l3_ck_ops);
+	&sys_clkout2_src,
+	0x0,
+	OMAP2420_PRCM_CLKOUT_CTRL,
+	OMAP2420_CLKOUT2_DIV_SHIFT,
+	OMAP2420_CLKOUT2_DIV_WIDTH,
+	CLK_DIVIDER_POWER_OF_TWO,
+	NULL);
 
 static struct clk uart1_fck;
 
