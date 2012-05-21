@@ -30,6 +30,15 @@ extern struct mutex omap_clocks_mutex;
 
 #ifdef CONFIG_ARCH_OMAP2PLUS
 
+#define DEFINE_STRUCT_CLK(_name, _parent_array_name, _clkops_name)	\
+	static struct clk _name = {				\
+		.name = #_name,					\
+		.hw = &_name##_hw.hw,				\
+		.parent_names = _parent_array_name,		\
+		.num_parents = ARRAY_SIZE(_parent_array_name),	\
+		.ops = &_clkops_name,				\
+	};
+
 /* struct clksel_rate.flags possibilities */
 #define RATE_IN_242X            (1 << 0)
 #define RATE_IN_243X            (1 << 1)
@@ -260,7 +269,7 @@ struct clk_hw_omap {
 #if defined(CONFIG_PM_DEBUG) && defined(CONFIG_DEBUG_FS)
         struct dentry           *dent;  /* For visible tree hierarchy */
 #endif
-	struct clk_hw_omap_ops	*ops;
+	const struct clk_hw_omap_ops	*ops;
 };
 
 struct clk_hw_omap_ops {
@@ -271,7 +280,7 @@ struct clk_hw_omap_ops {
                                         void __iomem **other_reg, u8 *other_bit);
         void                    (*allow_idle)(struct clk_hw_omap *oclk);
         void                    (*deny_idle)(struct clk_hw_omap *oclk);
-}
+};
 
 unsigned long omap_fixed_divisor_recalc(struct clk_hw *hw,
 		unsigned long parent_rate);
@@ -410,3 +419,18 @@ extern const struct clksel_rate gfx_l3_rates[];
 extern const struct clksel_rate dsp_ick_rates[];
 extern struct clk dummy_ck;
 
+extern const struct clk_hw_omap_ops clkhwops_omap2xxx_dpll;
+extern const struct clk_hw_omap_ops clkhwops_iclk_wait;
+extern const struct clk_hw_omap_ops clkhwops_apll54;
+extern const struct clk_hw_omap_ops clkhwops_apll96;
+extern const struct clk_hw_omap_ops clkhwops_iclk;
+extern const struct clk_hw_omap_ops clkhwops_wait;
+extern const struct clk_hw_omap_ops clkhwops_omap2430_i2chs_wait;
+extern const struct clk_hw_omap_ops clkhwops_omap3_dpll;
+extern const struct clk_hw_omap_ops clkhwops_omap3430es2_dss_usbhost_wait;
+extern const struct clk_hw_omap_ops clkhwops_omap3430es2_iclk_dss_usbhost_wait;
+extern const struct clk_hw_omap_ops clkhwops_am35xx_ipss_wait;
+extern const struct clk_hw_omap_ops clkhwops_am35xx_ipss_module_wait;
+extern const struct clk_hw_omap_ops clkhwops_omap3430es2_iclk_hsotgusb_wait;
+extern const struct clk_hw_omap_ops clkhwops_omap3430es2_iclk_ssi_wait;
+extern const struct clk_hw_omap_ops clkhwops_omap3430es2_ssi_wait;

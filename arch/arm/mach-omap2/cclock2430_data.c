@@ -1,3 +1,57 @@
+
+/*
+ * OMAP2430 clock data
+ *
+ * Copyright (C) 2005-2009 Texas Instruments, Inc.
+ * Copyright (C) 2004-2011 Nokia Corporation
+ *
+ * Contacts:
+ * Richard Woodruff <r-woodruff2@ti.com>
+ * Paul Walmsley
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include <linux/kernel.h>
+#include <linux/clk.h>
+#include <linux/clk-private.h>
+#include <linux/list.h>
+
+#include <plat/hardware.h>
+#include <plat/clkdev_omap.h>
+
+#include "iomap.h"
+#include "clock.h"
+#include "clock2xxx.h"
+#include "opp2xxx.h"
+#include "cm2xxx_3xxx.h"
+#include "prm2xxx_3xxx.h"
+#include "prm-regbits-24xx.h"
+#include "cm-regbits-24xx.h"
+#include "sdrc.h"
+#include "control.h"
+
+#define OMAP_CM_REGADDR			OMAP2430_CM_REGADDR
+
+/*
+ * 2430 clock tree.
+ *
+ * NOTE:In many cases here we are assigning a 'default' parent. In
+ *	many cases the parent is selectable. The set parent calls will
+ *	also switch sources.
+ *
+ *	Several sources are given initial rates which may be wrong, this will
+ *	be fixed up in the init func.
+ *
+ *	Things are broadly separated below by clock domains. It is
+ *	noteworthy that most peripherals have dependencies on multiple clock
+ *	domains. Many get their interface clocks from the L4 domain, but get
+ *	functional clocks from fixed sources or other core domain derived
+ *	clocks.
+ */
+
 DEFINE_CLK_FIXED_RATE(alt_ck, CLK_IS_ROOT, 54000000, 0x0);
 
 DEFINE_CLK_FIXED_RATE(func_32k_ck, CLK_IS_ROOT, 32768, 0x0);
@@ -2165,3 +2219,214 @@ static struct clk_hw_omap wdt4_ick_hw = {
 
 DEFINE_STRUCT_CLK(wdt4_ick, aes_ick_parent_names, aes_ick_ops);
 
+/*
+ * clkdev integration
+ */
+
+static struct omap_clk omap2430_clks[] = {
+	/* external root sources */
+	CLK(NULL,	"func_32k_ck",	&func_32k_ck,	CK_243X),
+	CLK(NULL,	"secure_32k_ck", &secure_32k_ck, CK_243X),
+	CLK(NULL,	"osc_ck",	&osc_ck,	CK_243X),
+	CLK(NULL,	"sys_ck",	&sys_ck,	CK_243X),
+	CLK(NULL,	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap-mcbsp.1",	"pad_fck",	&mcbsp_clks,	CK_243X),
+	CLK("omap-mcbsp.2",	"pad_fck",	&mcbsp_clks,	CK_243X),
+	CLK("omap-mcbsp.3",	"pad_fck",	&mcbsp_clks,	CK_243X),
+	CLK("omap-mcbsp.4",	"pad_fck",	&mcbsp_clks,	CK_243X),
+	CLK("omap-mcbsp.5",	"pad_fck",	&mcbsp_clks,	CK_243X),
+	CLK(NULL,	"mcbsp_clks",	&mcbsp_clks,	CK_243X),
+	/* internal analog sources */
+	CLK(NULL,	"dpll_ck",	&dpll_ck,	CK_243X),
+	CLK(NULL,	"apll96_ck",	&apll96_ck,	CK_243X),
+	CLK(NULL,	"apll54_ck",	&apll54_ck,	CK_243X),
+	/* internal prcm root sources */
+	CLK(NULL,	"func_54m_ck",	&func_54m_ck,	CK_243X),
+	CLK(NULL,	"core_ck",	&core_ck,	CK_243X),
+	CLK("omap-mcbsp.1",	"prcm_fck",	&func_96m_ck,	CK_243X),
+	CLK("omap-mcbsp.2",	"prcm_fck",	&func_96m_ck,	CK_243X),
+	CLK("omap-mcbsp.3",	"prcm_fck",	&func_96m_ck,	CK_243X),
+	CLK("omap-mcbsp.4",	"prcm_fck",	&func_96m_ck,	CK_243X),
+	CLK("omap-mcbsp.5",	"prcm_fck",	&func_96m_ck,	CK_243X),
+	CLK(NULL,	"func_96m_ck",	&func_96m_ck,	CK_243X),
+	CLK(NULL,	"func_48m_ck",	&func_48m_ck,	CK_243X),
+	CLK(NULL,	"func_12m_ck",	&func_12m_ck,	CK_243X),
+	CLK(NULL,	"ck_wdt1_osc",	&wdt1_osc_ck,	CK_243X),
+	CLK(NULL,	"sys_clkout_src", &sys_clkout_src, CK_243X),
+	CLK(NULL,	"sys_clkout",	&sys_clkout,	CK_243X),
+	CLK(NULL,	"emul_ck",	&emul_ck,	CK_243X),
+	/* mpu domain clocks */
+	CLK(NULL,	"mpu_ck",	&mpu_ck,	CK_243X),
+	/* dsp domain clocks */
+	CLK(NULL,	"dsp_fck",	&dsp_fck,	CK_243X),
+	CLK(NULL,	"iva2_1_ick",	&iva2_1_ick,	CK_243X),
+	/* GFX domain clocks */
+	CLK(NULL,	"gfx_3d_fck",	&gfx_3d_fck,	CK_243X),
+	CLK(NULL,	"gfx_2d_fck",	&gfx_2d_fck,	CK_243X),
+	CLK(NULL,	"gfx_ick",	&gfx_ick,	CK_243X),
+	/* Modem domain clocks */
+	CLK(NULL,	"mdm_ick",	&mdm_ick,	CK_243X),
+	CLK(NULL,	"mdm_osc_ck",	&mdm_osc_ck,	CK_243X),
+	/* DSS domain clocks */
+	CLK("omapdss_dss",	"ick",		&dss_ick,	CK_243X),
+	CLK(NULL,	"dss1_fck",		&dss1_fck,	CK_243X),
+	CLK(NULL,	"dss2_fck",	&dss2_fck,	CK_243X),
+	CLK(NULL,	"dss_54m_fck",	&dss_54m_fck,	CK_243X),
+	/* L3 domain clocks */
+	CLK(NULL,	"core_l3_ck",	&core_l3_ck,	CK_243X),
+	CLK(NULL,	"ssi_fck",	&ssi_ssr_sst_fck, CK_243X),
+	CLK(NULL,	"usb_l4_ick",	&usb_l4_ick,	CK_243X),
+	/* L4 domain clocks */
+	CLK(NULL,	"l4_ck",	&l4_ck,		CK_243X),
+	CLK(NULL,	"ssi_l4_ick",	&ssi_l4_ick,	CK_243X),
+	CLK(NULL,	"wu_l4_ick",	&wu_l4_ick,	CK_243X),
+	/* virtual meta-group clock */
+	CLK(NULL,	"virt_prcm_set", &virt_prcm_set, CK_243X),
+	/* general l4 interface ck, multi-parent functional clk */
+	CLK(NULL,	"gpt1_ick",	&gpt1_ick,	CK_243X),
+	CLK(NULL,	"gpt1_fck",	&gpt1_fck,	CK_243X),
+	CLK(NULL,	"gpt2_ick",	&gpt2_ick,	CK_243X),
+	CLK(NULL,	"gpt2_fck",	&gpt2_fck,	CK_243X),
+	CLK(NULL,	"gpt3_ick",	&gpt3_ick,	CK_243X),
+	CLK(NULL,	"gpt3_fck",	&gpt3_fck,	CK_243X),
+	CLK(NULL,	"gpt4_ick",	&gpt4_ick,	CK_243X),
+	CLK(NULL,	"gpt4_fck",	&gpt4_fck,	CK_243X),
+	CLK(NULL,	"gpt5_ick",	&gpt5_ick,	CK_243X),
+	CLK(NULL,	"gpt5_fck",	&gpt5_fck,	CK_243X),
+	CLK(NULL,	"gpt6_ick",	&gpt6_ick,	CK_243X),
+	CLK(NULL,	"gpt6_fck",	&gpt6_fck,	CK_243X),
+	CLK(NULL,	"gpt7_ick",	&gpt7_ick,	CK_243X),
+	CLK(NULL,	"gpt7_fck",	&gpt7_fck,	CK_243X),
+	CLK(NULL,	"gpt8_ick",	&gpt8_ick,	CK_243X),
+	CLK(NULL,	"gpt8_fck",	&gpt8_fck,	CK_243X),
+	CLK(NULL,	"gpt9_ick",	&gpt9_ick,	CK_243X),
+	CLK(NULL,	"gpt9_fck",	&gpt9_fck,	CK_243X),
+	CLK(NULL,	"gpt10_ick",	&gpt10_ick,	CK_243X),
+	CLK(NULL,	"gpt10_fck",	&gpt10_fck,	CK_243X),
+	CLK(NULL,	"gpt11_ick",	&gpt11_ick,	CK_243X),
+	CLK(NULL,	"gpt11_fck",	&gpt11_fck,	CK_243X),
+	CLK(NULL,	"gpt12_ick",	&gpt12_ick,	CK_243X),
+	CLK(NULL,	"gpt12_fck",	&gpt12_fck,	CK_243X),
+	CLK("omap-mcbsp.1", "ick",	&mcbsp1_ick,	CK_243X),
+	CLK(NULL,	"mcbsp1_fck",	&mcbsp1_fck,	CK_243X),
+	CLK("omap-mcbsp.2", "ick",	&mcbsp2_ick,	CK_243X),
+	CLK(NULL,	"mcbsp2_fck",	&mcbsp2_fck,	CK_243X),
+	CLK("omap-mcbsp.3", "ick",	&mcbsp3_ick,	CK_243X),
+	CLK(NULL,	"mcbsp3_fck",	&mcbsp3_fck,	CK_243X),
+	CLK("omap-mcbsp.4", "ick",	&mcbsp4_ick,	CK_243X),
+	CLK(NULL,	"mcbsp4_fck",	&mcbsp4_fck,	CK_243X),
+	CLK("omap-mcbsp.5", "ick",	&mcbsp5_ick,	CK_243X),
+	CLK(NULL,	"mcbsp5_fck",	&mcbsp5_fck,	CK_243X),
+	CLK("omap2_mcspi.1", "ick",	&mcspi1_ick,	CK_243X),
+	CLK(NULL,	"mcspi1_fck",	&mcspi1_fck,	CK_243X),
+	CLK("omap2_mcspi.2", "ick",	&mcspi2_ick,	CK_243X),
+	CLK(NULL,	"mcspi2_fck",	&mcspi2_fck,	CK_243X),
+	CLK("omap2_mcspi.3", "ick",	&mcspi3_ick,	CK_243X),
+	CLK(NULL,	"mcspi3_fck",	&mcspi3_fck,	CK_243X),
+	CLK(NULL,	"uart1_ick",	&uart1_ick,	CK_243X),
+	CLK(NULL,	"uart1_fck",	&uart1_fck,	CK_243X),
+	CLK(NULL,	"uart2_ick",	&uart2_ick,	CK_243X),
+	CLK(NULL,	"uart2_fck",	&uart2_fck,	CK_243X),
+	CLK(NULL,	"uart3_ick",	&uart3_ick,	CK_243X),
+	CLK(NULL,	"uart3_fck",	&uart3_fck,	CK_243X),
+	CLK(NULL,	"gpios_ick",	&gpios_ick,	CK_243X),
+	CLK(NULL,	"gpios_fck",	&gpios_fck,	CK_243X),
+	CLK("omap_wdt",	"ick",		&mpu_wdt_ick,	CK_243X),
+	CLK(NULL,	"mpu_wdt_fck",	&mpu_wdt_fck,	CK_243X),
+	CLK(NULL,	"sync_32k_ick",	&sync_32k_ick,	CK_243X),
+	CLK(NULL,	"wdt1_ick",	&wdt1_ick,	CK_243X),
+	CLK(NULL,	"omapctrl_ick",	&omapctrl_ick,	CK_243X),
+	CLK(NULL,	"icr_ick",	&icr_ick,	CK_243X),
+	CLK("omap24xxcam", "fck",	&cam_fck,	CK_243X),
+	CLK("omap24xxcam", "ick",	&cam_ick,	CK_243X),
+	CLK(NULL,	"mailboxes_ick", &mailboxes_ick,	CK_243X),
+	CLK(NULL,	"wdt4_ick",	&wdt4_ick,	CK_243X),
+	CLK(NULL,	"wdt4_fck",	&wdt4_fck,	CK_243X),
+	CLK(NULL,	"mspro_ick",	&mspro_ick,	CK_243X),
+	CLK(NULL,	"mspro_fck",	&mspro_fck,	CK_243X),
+	CLK(NULL,	"fac_ick",	&fac_ick,	CK_243X),
+	CLK(NULL,	"fac_fck",	&fac_fck,	CK_243X),
+	CLK("omap_hdq.0", "ick",	&hdq_ick,	CK_243X),
+	CLK("omap_hdq.1", "fck",	&hdq_fck,	CK_243X),
+	CLK("omap_i2c.1", "ick",	&i2c1_ick,	CK_243X),
+	CLK(NULL,	"i2chs1_fck",	&i2chs1_fck,	CK_243X),
+	CLK("omap_i2c.2", "ick",	&i2c2_ick,	CK_243X),
+	CLK(NULL,	"i2chs2_fck",	&i2chs2_fck,	CK_243X),
+	CLK(NULL,	"gpmc_fck",	&gpmc_fck,	CK_243X),
+	CLK(NULL,	"sdma_fck",	&sdma_fck,	CK_243X),
+	CLK(NULL,	"sdma_ick",	&sdma_ick,	CK_243X),
+	CLK(NULL,	"sdrc_ick",	&sdrc_ick,	CK_243X),
+	CLK(NULL,	"des_ick",	&des_ick,	CK_243X),
+	CLK("omap-sham",	"ick",	&sha_ick,	CK_243X),
+	CLK("omap_rng",	"ick",		&rng_ick,	CK_243X),
+	CLK("omap-aes",	"ick",	&aes_ick,	CK_243X),
+	CLK(NULL,	"pka_ick",	&pka_ick,	CK_243X),
+	CLK(NULL,	"usb_fck",	&usb_fck,	CK_243X),
+	CLK("musb-omap2430",	"ick",	&usbhs_ick,	CK_243X),
+	CLK("omap_hsmmc.0", "ick",	&mmchs1_ick,	CK_243X),
+	CLK(NULL,	"mmchs1_fck",	&mmchs1_fck,	CK_243X),
+	CLK("omap_hsmmc.1", "ick",	&mmchs2_ick,	CK_243X),
+	CLK(NULL,	"mmchs2_fck",	&mmchs2_fck,	CK_243X),
+	CLK(NULL,	"gpio5_ick",	&gpio5_ick,	CK_243X),
+	CLK(NULL,	"gpio5_fck",	&gpio5_fck,	CK_243X),
+	CLK(NULL,	"mdm_intc_ick",	&mdm_intc_ick,	CK_243X),
+	CLK("omap_hsmmc.0", "mmchsdb_fck",	&mmchsdb1_fck,	CK_243X),
+	CLK("omap_hsmmc.1", "mmchsdb_fck",	&mmchsdb2_fck,	CK_243X),
+	CLK("omap_timer.1",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.2",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.3",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.4",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.5",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.6",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.7",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.8",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.9",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.10",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.11",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.12",	"32k_ck",  &func_32k_ck,   CK_243X),
+	CLK("omap_timer.1",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.2",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.3",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.4",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.5",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.6",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.7",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.8",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.9",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.10",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.11",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.12",	"sys_ck",	&sys_ck,	CK_243X),
+	CLK("omap_timer.1",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.2",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.3",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.4",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.5",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.6",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.7",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.8",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.9",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.10",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.11",	"alt_ck",	&alt_ck,	CK_243X),
+	CLK("omap_timer.12",	"alt_ck",	&alt_ck,	CK_243X),
+};
+
+/*
+ * init code
+ */
+
+int __init omap2430_clk_init(void)
+{
+	struct omap_clk *c;
+	prcm_clksrc_ctrl = OMAP2430_PRCM_CLKSRC_CTRL;
+	cm_idlest_pll = OMAP_CM_REGADDR(PLL_MOD, CM_IDLEST);
+	cpu_mask = RATE_IN_243X;
+	rate_table = omap2430_rate_table;
+
+	for (c = omap2430_clks; c < omap2430_clks + ARRAY_SIZE(omap2430_clks);
+	     c++) {
+		clkdev_add(&c->lk);
+		__clk_init(NULL, c->lk.clk);
+	}
+
+	return 0;
+}
