@@ -236,8 +236,6 @@ static struct clk_hw_omap dpll_abe_ck_hw = {
 		.clk = &dpll_abe_ck,
 	},
 	.dpll_data	= &dpll_abe_dd,
-	.allow_idle	= &omap3_dpll_allow_idle,
-	.deny_idle	= &omap3_dpll_deny_idle,
 };
 
 static struct clk dpll_abe_ck = {
@@ -264,8 +262,6 @@ static struct clk_hw_omap dpll_abe_x2_ck_hw = {
 	},
 	.flags		= CLOCK_CLKOUTX2,
 	.clksel_reg	= OMAP4430_CM_DIV_M2_DPLL_ABE,
-	.allow_idle	= &omap4_dpllmx_allow_gatectrl,
-	.deny_idle	= &omap4_dpllmx_deny_gatectrl,
 };
 
 static struct clk dpll_abe_x2_ck = {
@@ -376,8 +372,6 @@ static struct clk_hw_omap dpll_core_ck_hw = {
 		.clk = &dpll_core_ck,
 	},
 	.dpll_data	= &dpll_core_dd,
-	.allow_idle	= &omap3_dpll_allow_idle,
-	.deny_idle	= &omap3_dpll_deny_idle,
 };
 
 static struct clk dpll_core_ck = {
@@ -588,8 +582,6 @@ static struct clk_hw_omap dpll_iva_ck_hw = {
 		.clk = &dpll_iva_ck,
 	},
 	.dpll_data	= &dpll_iva_dd,
-	.allow_idle	= &omap3_dpll_allow_idle,
-	.deny_idle	= &omap3_dpll_deny_idle,
 };
 
 static struct clk dpll_iva_ck = {
@@ -686,8 +678,6 @@ static struct clk_hw_omap dpll_mpu_ck_hw = {
 		.clk = &dpll_mpu_ck,
 	},
 	.dpll_data	= &dpll_mpu_dd,
-	.allow_idle	= &omap3_dpll_allow_idle,
-	.deny_idle	= &omap3_dpll_deny_idle,
 };
 
 static struct clk dpll_mpu_ck = {
@@ -769,8 +759,6 @@ static struct clk_hw_omap dpll_per_ck_hw = {
 		.clk = &dpll_per_ck,
 	},
 	.dpll_data	= &dpll_per_dd,
-	.allow_idle	= &omap3_dpll_allow_idle,
-	.deny_idle	= &omap3_dpll_deny_idle,
 };
 
 static struct clk dpll_per_ck = {
@@ -808,8 +796,6 @@ static struct clk_hw_omap dpll_per_x2_ck_hw = {
 	},
 	.flags		= CLOCK_CLKOUTX2,
 	.clksel_reg	= OMAP4430_CM_DIV_M2_DPLL_PER,
-	.allow_idle	= &omap4_dpllmx_allow_gatectrl,
-	.deny_idle	= &omap4_dpllmx_deny_gatectrl,
 };
 
 static struct clk dpll_per_x2_ck = {
@@ -934,8 +920,6 @@ static struct clk_hw_omap dpll_usb_ck_hw = {
 		.clk = &dpll_usb_ck,
 	},
 	.dpll_data	= &dpll_usb_dd,
-	.allow_idle	= &omap3_dpll_allow_idle,
-	.deny_idle	= &omap3_dpll_deny_idle,
 };
 
 static struct clk dpll_usb_ck = {
@@ -960,8 +944,6 @@ static struct clk_hw_omap dpll_usb_clkdcoldo_ck_hw = {
 		.clk = &dpll_usb_clkdcoldo_ck,
 	},
 	.clksel_reg	= OMAP4430_CM_CLKDCOLDO_DPLL_USB,
-	.allow_idle	= &omap4_dpllmx_allow_gatectrl,
-	.deny_idle	= &omap4_dpllmx_deny_gatectrl,
 };
 
 static struct clk dpll_usb_clkdcoldo_ck = {
