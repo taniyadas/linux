@@ -1466,13 +1466,14 @@ static int __devinit mmc_omap_probe(struct platform_device *pdev)
 		ret = PTR_ERR(host->iclk);
 		goto err_free_mmc_host;
 	}
-	clk_enable(host->iclk);
+	clk_prepare_enable(host->iclk);
 
 	host->fclk = clk_get(&pdev->dev, "fck");
 	if (IS_ERR(host->fclk)) {
 		ret = PTR_ERR(host->fclk);
 		goto err_free_iclk;
 	}
+	clk_prepare(host->fclk);
 
 	ret = request_irq(host->irq, mmc_omap_irq, 0, DRIVER_NAME, host);
 	if (ret)
@@ -1509,9 +1510,10 @@ err_plat_cleanup:
 err_free_irq:
 	free_irq(host->irq, host);
 err_free_fclk:
+	clk_unprepare(host->fclk);
 	clk_put(host->fclk);
 err_free_iclk:
-	clk_disable(host->iclk);
+	clk_disable_unprepare(host->iclk);
 	clk_put(host->iclk);
 err_free_mmc_host:
 	iounmap(host->virt_base);
@@ -1539,8 +1541,9 @@ static int __devexit mmc_omap_remove(struct platform_device *pdev)
 
 	mmc_omap_fclk_enable(host, 0);
 	free_irq(host->irq, host);
+	clk_unprepare(host->fclk);
 	clk_put(host->fclk);
-	clk_disable(host->iclk);
+	clk_disable_unprepare(host->iclk);
 	clk_put(host->iclk);
 
 	iounmap(host->virt_base);
