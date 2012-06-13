@@ -105,7 +105,7 @@ struct clk {
 
 #define DEFINE_CLK_DIVIDER(_name, _parent_name, _parent_ptr,	\
 				_flags, _reg, _shift, _width,	\
-				_divider_flags, _table, _lock)	\
+				_divider_flags, _lock)		\
 	static struct clk _name;				\
 	static const char *_name##_parent_names[] = {		\
 		_parent_name,					\
@@ -121,7 +121,6 @@ struct clk {
 		.shift = _shift,				\
 		.width = _width,				\
 		.flags = _divider_flags,			\
-		.table = _table,				\
 		.lock = _lock,					\
 	};							\
 	DEFINE_CLK(_name, clk_divider_ops, _flags,		\
