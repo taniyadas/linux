@@ -21,7 +21,6 @@
 #include <linux/types.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
-#include <linux/platform_device.h>
 #include <linux/clk.h>
 #include <linux/dma-mapping.h>
 #include <linux/spinlock.h>
@@ -287,6 +286,7 @@ static int usbhs_runtime_resume(struct device *dev)
 		return  -ENODEV;
 	}
 
+	omap_tll_enable();
 	spin_lock_irqsave(&omap->lock, flags);
 
 	if (omap->ehci_logic_fck && !IS_ERR(omap->ehci_logic_fck))
@@ -332,6 +332,7 @@ static int usbhs_runtime_suspend(struct device *dev)
 		clk_disable(omap->ehci_logic_fck);
 
 	spin_unlock_irqrestore(&omap->lock, flags);
+	omap_tll_disable();
 
 	return 0;
 }
