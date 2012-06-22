@@ -923,6 +923,7 @@ static int __devinit omap_iommu_probe(struct platform_device *pdev)
 	obj->clk = clk_get(&pdev->dev, pdata->clk_name);
 	if (IS_ERR(obj->clk))
 		goto err_clk;
+	clk_prepare(obj->clk);
 
 	obj->nr_tlb_entries = pdata->nr_tlb_entries;
 	obj->name = pdata->name;
@@ -974,6 +975,7 @@ err_irq:
 err_ioremap:
 	release_mem_region(res->start, resource_size(res));
 err_mem:
+	clk_unprepare(obj->clk);
 	clk_put(obj->clk);
 err_clk:
 	kfree(obj);
