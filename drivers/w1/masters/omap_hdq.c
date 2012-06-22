@@ -609,13 +609,13 @@ static int __devinit omap_hdq_probe(struct platform_device *pdev)
 	hdq_data->hdq_usecount = 0;
 	mutex_init(&hdq_data->hdq_mutex);
 
-	if (clk_enable(hdq_data->hdq_ick)) {
+	if (clk_prepare_enable(hdq_data->hdq_ick)) {
 		dev_dbg(&pdev->dev, "Can not enable ick\n");
 		ret = -ENODEV;
 		goto err_intfclk;
 	}
 
-	if (clk_enable(hdq_data->hdq_fck)) {
+	if (clk_prepare_enable(hdq_data->hdq_fck)) {
 		dev_dbg(&pdev->dev, "Can not enable fck\n");
 		ret = -ENODEV;
 		goto err_fnclk;
@@ -657,10 +657,10 @@ static int __devinit omap_hdq_probe(struct platform_device *pdev)
 
 err_w1:
 err_irq:
-	clk_disable(hdq_data->hdq_fck);
+	clk_disable_unprepare(hdq_data->hdq_fck);
 
 err_fnclk:
-	clk_disable(hdq_data->hdq_ick);
+	clk_disable_unprepare(hdq_data->hdq_ick);
 
 err_intfclk:
 	clk_put(hdq_data->hdq_fck);
