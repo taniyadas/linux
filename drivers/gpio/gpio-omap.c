@@ -893,6 +893,8 @@ static int gpio_debounce(struct gpio_chip *chip, unsigned offset,
 		bank->dbck = clk_get(bank->dev, "dbclk");
 		if (IS_ERR(bank->dbck))
 			dev_err(bank->dev, "Could not get gpio dbck\n");
+		else
+			clk_prepare(bank->dbck);
 	}
 
 	spin_lock_irqsave(&bank->lock, flags);
