@@ -1205,6 +1205,7 @@ static int __devinit omap_sham_probe(struct platform_device *pdev)
 		err = PTR_ERR(dd->iclk);
 		goto clk_err;
 	}
+	clk_prepare(dd->iclk);
 
 	dd->io_base = ioremap(dd->phys_base, SZ_4K);
 	if (!dd->io_base) {
@@ -1236,6 +1237,7 @@ err_algs:
 		crypto_unregister_ahash(&algs[j]);
 	iounmap(dd->io_base);
 io_err:
+	clk_unprepare(dd->iclk);
 	clk_put(dd->iclk);
 clk_err:
 	omap_sham_dma_cleanup(dd);

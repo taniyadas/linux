@@ -848,6 +848,7 @@ static int omap_aes_probe(struct platform_device *pdev)
 		err = PTR_ERR(dd->iclk);
 		goto err_res;
 	}
+	clk_prepare(dd->iclk);
 
 	dd->io_base = ioremap(dd->phys_base, SZ_4K);
 	if (!dd->io_base) {
@@ -894,6 +895,7 @@ err_dma:
 	tasklet_kill(&dd->queue_task);
 	iounmap(dd->io_base);
 err_io:
+	clk_unprepare(dd->iclk);
 	clk_put(dd->iclk);
 err_res:
 	kfree(dd);
