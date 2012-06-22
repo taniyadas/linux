@@ -544,14 +544,17 @@ static int hdmi_get_clocks(struct platform_device *pdev)
 	}
 
 	hdmi.sys_clk = clk;
+	clk_prepare(hdmi.sys_clk);
 
 	return 0;
 }
 
 static void hdmi_put_clocks(void)
 {
-	if (hdmi.sys_clk)
+	if (hdmi.sys_clk) {
+		clk_unprepare(hdmi.sys_clk);
 		clk_put(hdmi.sys_clk);
+	}
 }
 
 #if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)

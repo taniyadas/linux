@@ -4776,6 +4776,7 @@ static int dsi_get_clocks(struct platform_device *dsidev)
 	}
 
 	dsi->sys_clk = clk;
+	clk_prepare(dsi->sys_clk);
 
 	return 0;
 }
@@ -4786,8 +4787,10 @@ static void dsi_put_clocks(struct platform_device *dsidev)
 
 	if (dsi->dss_clk)
 		clk_put(dsi->dss_clk);
-	if (dsi->sys_clk)
+	if (dsi->sys_clk) {
+		clk_unprepare(dsi->sys_clk);
 		clk_put(dsi->sys_clk);
+	}
 }
 
 static void __init dsi_probe_pdata(struct platform_device *dsidev)

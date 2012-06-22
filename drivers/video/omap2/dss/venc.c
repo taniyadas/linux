@@ -818,14 +818,17 @@ static int venc_get_clocks(struct platform_device *pdev)
 	}
 
 	venc.tv_dac_clk = clk;
+	clk_prepare(venc.tv_dac_clk);
 
 	return 0;
 }
 
 static void venc_put_clocks(void)
 {
-	if (venc.tv_dac_clk)
+	if (venc.tv_dac_clk) {
+		clk_unprepare(venc.tv_dac_clk);
 		clk_put(venc.tv_dac_clk);
+	}
 }
 
 static void __init venc_probe_pdata(struct platform_device *pdev)
