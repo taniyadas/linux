@@ -58,6 +58,9 @@ $(obj)/zImage:	$(obj)/compressed/vmlinux FORCE
 $(obj)/zImage-dtb.%:	$(obj)/%.dtb $(obj)/zImage
 	cat $(obj)/zImage $< > $@
 
+$(obj)/zImage-dtb.%:	$(obj)/%.dtb $(obj)/zImage
+	cat $(obj)/zImage $< > $@
+
 endif
 
 targets += $(dtb-y)
@@ -75,8 +78,10 @@ ifneq ($(LOADADDR),)
 else
   ifeq ($(CONFIG_ZBOOT_ROM),y)
     UIMAGE_LOADADDR=$(CONFIG_ZBOOT_ROM_TEXT)
+    $(obj)/uImage-dtb.%: LOADADDR=$(CONFIG_ZBOOT_ROM_TEXT)
   else
     UIMAGE_LOADADDR=$(ZRELADDR)
+    $(obj)/uImage-dtb.%: LOADADDR=$(ZRELADDR)
   endif
 endif
 
@@ -94,6 +99,11 @@ $(obj)/uImage:	$(obj)/zImage FORCE
 	@echo '  Image $@ is ready'
 
 $(obj)/uImage.%:	$(obj)/zImage-dtb.% FORCE
+	$(call if_changed,uimage)
+	cp $(obj)/zImage-dtb.% FORCE ~
+	@echo '  Image $@ is ready'
+
+$(obj)/uImage-dtb.%:	$(obj)/zImage-dtb.% FORCE
 	$(call if_changed,uimage)
 	@echo '  Image $@ is ready'
 
