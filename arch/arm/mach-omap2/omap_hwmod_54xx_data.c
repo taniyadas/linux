@@ -440,7 +440,7 @@ static struct omap_hwmod omap54xx_counter_32k_hwmod = {
 	.class		= &omap54xx_counter_hwmod_class,
 	.clkdm_name	= "wkupaon_clkdm",
 	.flags		= HWMOD_SWSUP_SIDLE,
-	.main_clk	= "wkupaon_clk_mux",
+	.main_clk	= "wkupaon_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_WKUPAON_COUNTER_32K_CLKCTRL_OFFSET,
@@ -528,7 +528,7 @@ static struct omap_hwmod omap54xx_debugss_hwmod = {
 	.clkdm_name	= "emu_clkdm",
 	.mpu_irqs	= omap54xx_debugss_irqs,
 	.sdma_reqs	= omap54xx_debugss_sdma_reqs,
-	.main_clk	= "sys_clkin",
+	.main_clk	= "sys_clkin_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_EMU_DEBUGSS_CLKCTRL_OFFSET,
@@ -1140,7 +1140,7 @@ static struct omap_hwmod omap54xx_gpio1_hwmod = {
 	.class		= &omap54xx_gpio_hwmod_class,
 	.clkdm_name	= "wkupaon_clkdm",
 	.mpu_irqs	= omap54xx_gpio1_irqs,
-	.main_clk	= "wkupaon_clk_mux",
+	.main_clk	= "wkupaon_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_WKUPAON_GPIO1_CLKCTRL_OFFSET,
@@ -1434,7 +1434,7 @@ static struct omap_hwmod omap54xx_gpu_hwmod = {
 	.class		= &omap54xx_gpu_hwmod_class,
 	.clkdm_name	= "gpu_clkdm",
 	.mpu_irqs	= omap54xx_gpu_irqs,
-	.main_clk	= "gpu_core_clk_mux",
+	.main_clk	= "gpu_core_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_GPU_GPU_CLKCTRL_OFFSET,
@@ -2024,8 +2024,8 @@ static struct omap_hwmod_dma_info omap54xx_mcbsp1_sdma_reqs[] = {
 };
 
 static struct omap_hwmod_opt_clk mcbsp1_opt_clks[] = {
-	{ .role = "pad_fck", .clk = "pad_clks" },
-	{ .role = "prcm_clk", .clk = "mcbsp1_sync_mux_ck" },
+	{ .role = "pad_fck", .clk = "pad_clks_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp1_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap54xx_mcbsp1_hwmod = {
@@ -2059,8 +2059,8 @@ static struct omap_hwmod_dma_info omap54xx_mcbsp2_sdma_reqs[] = {
 };
 
 static struct omap_hwmod_opt_clk mcbsp2_opt_clks[] = {
-	{ .role = "pad_fck", .clk = "pad_clks" },
-	{ .role = "prcm_clk", .clk = "mcbsp2_sync_mux_ck" },
+	{ .role = "pad_fck", .clk = "pad_clks_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp2_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap54xx_mcbsp2_hwmod = {
@@ -2094,8 +2094,8 @@ static struct omap_hwmod_dma_info omap54xx_mcbsp3_sdma_reqs[] = {
 };
 
 static struct omap_hwmod_opt_clk mcbsp3_opt_clks[] = {
-	{ .role = "pad_fck", .clk = "pad_clks" },
-	{ .role = "prcm_clk", .clk = "mcbsp3_sync_mux_ck" },
+	{ .role = "pad_fck", .clk = "pad_clks_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp3_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap54xx_mcbsp3_hwmod = {
@@ -2155,7 +2155,7 @@ static struct omap_hwmod omap54xx_mcpdm_hwmod = {
 	.clkdm_name	= "abe_clkdm",
 	.mpu_irqs	= omap54xx_mcpdm_irqs,
 	.sdma_reqs	= omap54xx_mcpdm_sdma_reqs,
-	.main_clk	= "pad_clks",
+	.main_clk	= "pad_clks_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_ABE_MCPDM_CLKCTRL_OFFSET,
@@ -2806,7 +2806,7 @@ static struct omap_hwmod omap54xx_smartreflex_core_hwmod = {
 	.class		= &omap54xx_smartreflex_hwmod_class,
 	.clkdm_name	= "coreaon_clkdm",
 	.mpu_irqs	= omap54xx_smartreflex_core_irqs,
-	.main_clk	= "wkupaon_clk_mux",
+	.main_clk	= "wkupaon_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_COREAON_SMARTREFLEX_CORE_CLKCTRL_OFFSET,
@@ -2833,7 +2833,7 @@ static struct omap_hwmod omap54xx_smartreflex_mm_hwmod = {
 	.class		= &omap54xx_smartreflex_hwmod_class,
 	.clkdm_name	= "coreaon_clkdm",
 	.mpu_irqs	= omap54xx_smartreflex_mm_irqs,
-	.main_clk	= "wkupaon_clk_mux",
+	.main_clk	= "wkupaon_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_COREAON_SMARTREFLEX_MM_CLKCTRL_OFFSET,
@@ -2860,7 +2860,7 @@ static struct omap_hwmod omap54xx_smartreflex_mpu_hwmod = {
 	.class		= &omap54xx_smartreflex_hwmod_class,
 	.clkdm_name	= "coreaon_clkdm",
 	.mpu_irqs	= omap54xx_smartreflex_mpu_irqs,
-	.main_clk	= "wkupaon_clk_mux",
+	.main_clk	= "wkupaon_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_COREAON_SMARTREFLEX_MPU_CLKCTRL_OFFSET,
@@ -2955,7 +2955,7 @@ static struct omap_hwmod omap54xx_timer1_hwmod = {
 	.class		= &omap54xx_timer_1ms_hwmod_class,
 	.clkdm_name	= "wkupaon_clkdm",
 	.mpu_irqs	= omap54xx_timer1_irqs,
-	.main_clk	= "timer1_clk_mux",
+	.main_clk	= "timer1_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_WKUPAON_TIMER1_CLKCTRL_OFFSET,
@@ -2976,7 +2976,7 @@ static struct omap_hwmod omap54xx_timer2_hwmod = {
 	.class		= &omap54xx_timer_1ms_hwmod_class,
 	.clkdm_name	= "l4per_clkdm",
 	.mpu_irqs	= omap54xx_timer2_irqs,
-	.main_clk	= "timer2_clk_mux",
+	.main_clk	= "timer2_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_L4PER_TIMER2_CLKCTRL_OFFSET,
@@ -2997,7 +2997,7 @@ static struct omap_hwmod omap54xx_timer3_hwmod = {
 	.class		= &omap54xx_timer_hwmod_class,
 	.clkdm_name	= "l4per_clkdm",
 	.mpu_irqs	= omap54xx_timer3_irqs,
-	.main_clk	= "timer3_clk_mux",
+	.main_clk	= "timer3_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_L4PER_TIMER3_CLKCTRL_OFFSET,
@@ -3018,7 +3018,7 @@ static struct omap_hwmod omap54xx_timer4_hwmod = {
 	.class		= &omap54xx_timer_hwmod_class,
 	.clkdm_name	= "l4per_clkdm",
 	.mpu_irqs	= omap54xx_timer4_irqs,
-	.main_clk	= "timer4_clk_mux",
+	.main_clk	= "timer4_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_L4PER_TIMER4_CLKCTRL_OFFSET,
@@ -3123,7 +3123,7 @@ static struct omap_hwmod omap54xx_timer9_hwmod = {
 	.class		= &omap54xx_timer_hwmod_class,
 	.clkdm_name	= "l4per_clkdm",
 	.mpu_irqs	= omap54xx_timer9_irqs,
-	.main_clk	= "timer9_clk_mux",
+	.main_clk	= "timer9_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_L4PER_TIMER9_CLKCTRL_OFFSET,
@@ -3144,7 +3144,7 @@ static struct omap_hwmod omap54xx_timer10_hwmod = {
 	.class		= &omap54xx_timer_1ms_hwmod_class,
 	.clkdm_name	= "l4per_clkdm",
 	.mpu_irqs	= omap54xx_timer10_irqs,
-	.main_clk	= "timer10_clk_mux",
+	.main_clk	= "timer10_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_L4PER_TIMER10_CLKCTRL_OFFSET,
@@ -3165,7 +3165,7 @@ static struct omap_hwmod omap54xx_timer11_hwmod = {
 	.class		= &omap54xx_timer_hwmod_class,
 	.clkdm_name	= "l4per_clkdm",
 	.mpu_irqs	= omap54xx_timer11_irqs,
-	.main_clk	= "timer11_clk_mux",
+	.main_clk	= "timer11_clk_mux_ck",
 	.prcm = {
 		.omap4 = {
 			.clkctrl_offs = OMAP54XX_CM_L4PER_TIMER11_CLKCTRL_OFFSET,
@@ -3451,7 +3451,7 @@ static struct omap_hwmod_irq_info omap54xx_usb_otg_ss_irqs[] = {
 };
 
 static struct omap_hwmod_opt_clk usb_otg_ss_opt_clks[] = {
-	{ .role = "refclk960m", .clk = "usb_otg_ss_refclk960m" },
+	{ .role = "refclk960m", .clk = "usb_otg_ss_refclk960m_ck" },
 };
 
 static struct omap_hwmod omap54xx_usb_otg_ss_hwmod = {
@@ -4057,7 +4057,7 @@ static struct omap_hwmod_addr_space omap54xx_counter_32k_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__counter_32k = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_counter_32k_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_counter_32k_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
@@ -4075,7 +4075,7 @@ static struct omap_hwmod_addr_space omap54xx_ctrl_module_wkup_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__ctrl_module_wkup = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_ctrl_module_wkup_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_ctrl_module_wkup_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
@@ -4438,7 +4438,7 @@ static struct omap_hwmod_addr_space omap54xx_gpio1_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__gpio1 = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_gpio1_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_gpio1_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
@@ -4818,7 +4818,7 @@ static struct omap_hwmod_addr_space omap54xx_kbd_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__kbd = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_kbd_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_kbd_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
@@ -5243,7 +5243,7 @@ static struct omap_hwmod_addr_space omap54xx_scrm_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__scrm = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_scrm_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_scrm_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
@@ -5377,7 +5377,7 @@ static struct omap_hwmod_addr_space omap54xx_timer1_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__timer1 = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_timer1_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_timer1_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
@@ -5760,7 +5760,7 @@ static struct omap_hwmod_addr_space omap54xx_wd_timer2_addrs[] = {
 static struct omap_hwmod_ocp_if omap54xx_l4_wkup__wd_timer2 = {
 	.master		= &omap54xx_l4_wkup_hwmod,
 	.slave		= &omap54xx_wd_timer2_hwmod,
-	.clk		= "wkupaon_clk_mux",
+	.clk		= "wkupaon_clk_mux_ck",
 	.addr		= omap54xx_wd_timer2_addrs,
 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 };
