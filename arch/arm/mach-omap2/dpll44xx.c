@@ -19,7 +19,7 @@
 #include <plat/clock.h>
 
 #include "clock.h"
-#include "clock44xx.h"
+#include <mach/clock44xx.h>
 #include <mach/cm-regbits-44xx.h>
 
 /* Supported only on OMAP4 */

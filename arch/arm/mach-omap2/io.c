@@ -41,7 +41,7 @@
 #include "clock.h"
 #include "clock2xxx.h"
 #include "clock3xxx.h"
-#include "clock44xx.h"
+#include <mach/clock44xx.h>
 
 /*
  * The machine specific code may provide the extra mapping besides the
