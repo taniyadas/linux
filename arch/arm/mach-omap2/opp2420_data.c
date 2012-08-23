@@ -30,7 +30,7 @@
 
 #include <plat/hardware.h>
 
-#include "opp2xxx.h"
+#include <mach/opp2xxx.h>
 #include "sdrc.h"
 #include <mach/clock.h>
 

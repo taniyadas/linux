@@ -31,7 +31,7 @@
 
 #include <mach/clock.h>
 #include <mach/clock2xxx.h>
-#include "opp2xxx.h"
+#include <mach/opp2xxx.h>
 #include <mach/cm2xxx_3xxx.h>
 #include <mach/cm-regbits-24xx.h>
 
