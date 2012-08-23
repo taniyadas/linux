@@ -23,7 +23,7 @@
 #include <linux/io.h>
 
 #include "clockdomain.h"
-#include "cm1_44xx.h"
+#include <mach/cm1_44xx.h>
 #include "cm2_44xx.h"
 
 #include <mach/cm-regbits-44xx.h>

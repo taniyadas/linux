@@ -33,7 +33,7 @@
 #include <plat/common.h>
 
 #include "omap_hwmod_common_data.h"
-#include "cm1_44xx.h"
+#include <mach/cm1_44xx.h>
 #include "cm2_44xx.h"
 #include <mach/prm44xx.h>
 #include <mach/prm-regbits-44xx.h>

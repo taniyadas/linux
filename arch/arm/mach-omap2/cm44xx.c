@@ -21,7 +21,7 @@
 #include <mach/iomap.h>
 #include "common.h"
 #include "cm.h"
-#include "cm1_44xx.h"
+#include <mach/cm1_44xx.h>
 #include "cm2_44xx.h"
 #include <mach/cm-regbits-44xx.h>
 

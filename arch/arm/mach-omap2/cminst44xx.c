@@ -23,7 +23,7 @@
 #include <mach/iomap.h>
 #include "common.h"
 #include "cm.h"
-#include "cm1_44xx.h"
+#include <mach/cm1_44xx.h>
 #include "cm2_44xx.h"
 #include "cm44xx.h"
 #include "cminst44xx.h"
