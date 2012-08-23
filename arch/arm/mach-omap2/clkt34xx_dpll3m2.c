@@ -27,7 +27,7 @@
 
 #include <mach/clock.h>
 #include <mach/clock3xxx.h>
-#include "clock34xx.h"
+#include <mach/clock34xx.h>
 #include "sdrc.h"
 
 #define CYCLES_PER_MHZ			1000000

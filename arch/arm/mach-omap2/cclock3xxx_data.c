@@ -29,7 +29,7 @@
 #include <mach/iomap.h>
 #include <mach/clock.h>
 #include <mach/clock3xxx.h>
-#include "clock34xx.h"
+#include <mach/clock34xx.h>
 #include "clock36xx.h"
 #include "clock3517.h"
 #include "cm2xxx_3xxx.h"
