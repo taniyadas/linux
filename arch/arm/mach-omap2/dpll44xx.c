@@ -18,7 +18,7 @@
 #include <plat/cpu.h>
 #include <plat/clock.h>
 
-#include "clock.h"
+#include <mach/clock.h>
 #include <mach/clock44xx.h>
 #include <mach/cm-regbits-44xx.h>
 

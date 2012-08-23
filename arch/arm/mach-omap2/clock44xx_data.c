@@ -32,7 +32,7 @@
 #include <plat/clkdev_omap.h>
 
 #include <mach/iomap.h>
-#include "clock.h"
+#include <mach/clock.h>
 #include <mach/clock44xx.h>
 #include <mach/cm1_44xx.h>
 #include <mach/cm2_44xx.h>

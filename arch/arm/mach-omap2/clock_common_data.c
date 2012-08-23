@@ -17,7 +17,7 @@
  */
 
 #include <linux/clk-private.h>
-#include "clock.h"
+#include <mach/clock.h>
 
 /* clksel_rate data common to 24xx/343x */
 const struct clksel_rate gpt_32k_rates[] = {

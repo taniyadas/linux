@@ -38,7 +38,7 @@
 #include "powerdomain.h"
 #include "clockdomain.h"
 #include "common.h"
-#include "clock.h"
+#include <mach/clock.h>
 #include "clock2xxx.h"
 #include "clock3xxx.h"
 #include <mach/clock44xx.h>

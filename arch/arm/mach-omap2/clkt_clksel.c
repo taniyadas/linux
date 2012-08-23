@@ -47,7 +47,7 @@
 
 #include <plat/clock.h>
 
-#include "clock.h"
+#include <mach/clock.h>
 
 /* Private functions */
 

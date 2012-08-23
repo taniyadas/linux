@@ -24,7 +24,7 @@
 #include <plat/clkdev_omap.h>
 
 #include <mach/iomap.h>
-#include "clock.h"
+#include <mach/clock.h>
 #include "clock2xxx.h"
 #include "opp2xxx.h"
 #include "cm2xxx_3xxx.h"

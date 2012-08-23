@@ -32,7 +32,7 @@
 
 #include "opp2xxx.h"
 #include "sdrc.h"
-#include "clock.h"
+#include <mach/clock.h>
 
 /*
  * Key dividers which make up a PRCM set. Ratios for a PRCM are mandated.

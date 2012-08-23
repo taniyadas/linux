@@ -38,7 +38,7 @@
 #include <plat/sram.h>
 #include <plat/sdrc.h>
 
-#include "clock.h"
+#include <mach/clock.h>
 #include "clock2xxx.h"
 #include "opp2xxx.h"
 #include "cm2xxx_3xxx.h"

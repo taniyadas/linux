@@ -29,7 +29,7 @@
 #include <plat/prcm.h>
 #include <plat/irqs.h>
 
-#include "clock.h"
+#include <mach/clock.h>
 #include "clock2xxx.h"
 #include "cm2xxx_3xxx.h"
 #include "prm2xxx_3xxx.h"

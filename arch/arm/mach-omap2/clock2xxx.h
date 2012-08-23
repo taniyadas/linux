@@ -9,7 +9,7 @@
 #define __ARCH_ARM_MACH_OMAP2_CLOCK2XXX_H
 
 #include <linux/clk-provider.h>
-#include "clock.h"
+#include <mach/clock.h>
 
 unsigned long omap2_table_mpu_recalc(struct clk_hw *clk, unsigned long parent_rate);
 int omap2_select_table_rate(struct clk_hw *hw, unsigned long rate, unsigned long parent_rate);

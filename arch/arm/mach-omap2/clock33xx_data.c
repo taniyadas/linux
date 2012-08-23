@@ -22,7 +22,7 @@
 
 #include <mach/iomap.h>
 #include "control.h"
-#include "clock.h"
+#include <mach/clock.h>
 #include "cm.h"
 #include "cm33xx.h"
 #include "cm-regbits-33xx.h"
