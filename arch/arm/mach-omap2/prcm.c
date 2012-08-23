@@ -36,7 +36,7 @@
 #include <mach/prm44xx.h>
 #include "prminst44xx.h"
 #include "cminst44xx.h"
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 #include <mach/prm-regbits-44xx.h>
 #include <mach/control.h>
 

@@ -21,7 +21,7 @@
 
 #include "powerdomain.h"
 #include <mach/prm.h>
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 #include <mach/prm-regbits-34xx.h>
 
 

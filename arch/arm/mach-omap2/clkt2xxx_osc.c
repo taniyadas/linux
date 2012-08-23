@@ -28,7 +28,7 @@
 #include <mach/clock.h>
 #include "clock2xxx.h"
 #include <mach/prm2xxx_3xxx.h>
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 
 /*
  * XXX This does not actually enable the osc_ck, since the osc_ck must

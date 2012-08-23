@@ -27,7 +27,7 @@
 #include <mach/clock.h>
 #include "clock2xxx.h"
 #include <mach/prm2xxx_3xxx.h>
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 
 void __iomem *prcm_clksrc_ctrl;
 

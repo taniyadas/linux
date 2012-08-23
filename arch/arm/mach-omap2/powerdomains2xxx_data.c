@@ -19,7 +19,7 @@
 
 #include <mach/prcm-common.h>
 #include <mach/prm2xxx_3xxx.h>
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 
 /* 24XX powerdomains and dependencies */
 

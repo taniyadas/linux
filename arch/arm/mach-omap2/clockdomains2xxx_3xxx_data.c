@@ -41,7 +41,7 @@
 #include "cm-regbits-24xx.h"
 #include <mach/cm-regbits-34xx.h>
 #include <mach/cm-regbits-44xx.h>
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 #include <mach/prm-regbits-34xx.h>
 
 /*

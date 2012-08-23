@@ -28,7 +28,7 @@
 #include "omap_hwmod_common_data.h"
 
 #include "cm-regbits-24xx.h"
-#include "prm-regbits-24xx.h"
+#include <mach/prm-regbits-24xx.h>
 #include "wd_timer.h"
 
 /*
