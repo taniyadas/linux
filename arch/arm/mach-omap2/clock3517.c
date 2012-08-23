@@ -24,7 +24,7 @@
 #include <plat/clock.h>
 
 #include <mach/clock.h>
-#include "clock3517.h"
+#include <mach/clock3517.h>
 #include "cm2xxx_3xxx.h"
 #include "cm-regbits-34xx.h"
 
