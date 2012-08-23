@@ -30,7 +30,7 @@
 #include <plat/sram.h>
 
 #include <mach/iomap.h>
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "prm2xxx_3xxx.h"
 #include "sdrc.h"
 #include "control.h"

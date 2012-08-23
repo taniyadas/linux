@@ -37,7 +37,7 @@
 
 #include "clockdomain.h"
 #include "prm2xxx_3xxx.h"
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "cm-regbits-24xx.h"
 #include "prm-regbits-24xx.h"
 

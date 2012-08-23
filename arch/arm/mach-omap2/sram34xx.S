@@ -33,7 +33,7 @@
 
 #include <mach/iomap.h>
 #include "sdrc.h"
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 
 /*
  * This file needs be built unconditionally as ARM to interoperate correctly

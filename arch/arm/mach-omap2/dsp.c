@@ -24,7 +24,7 @@
 #include <asm/memblock.h>
 
 #include "control.h"
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "prm2xxx_3xxx.h"
 #ifdef CONFIG_BRIDGE_DVFS
 #include <plat/omap-pm.h>

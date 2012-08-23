@@ -32,7 +32,7 @@
 #include <plat/clock.h>
 
 #include <mach/clock.h>
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "cm-regbits-34xx.h"
 
 /* CM_AUTOIDLE_PLL*.AUTO_* bit values */

@@ -36,7 +36,7 @@
 
 #include <mach/iomap.h>
 #include "prm2xxx_3xxx.h"
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "sdrc.h"
 
 	.text

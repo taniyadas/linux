@@ -147,7 +147,7 @@
 #include <plat/omap_hwmod.h>
 #include <plat/prcm.h>
 
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "cminst44xx.h"
 #include "prm2xxx_3xxx.h"
 #include <mach/prm44xx.h>

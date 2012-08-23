@@ -31,7 +31,7 @@
  * FIXME: Find a mechanism to enable/disable runtime the McBSP ICLK autoidle.
  * Sidetone needs non-gated ICLK and sidetone autoidle is broken.
  */
-#include "cm2xxx_3xxx.h"
+#include <mach/cm2xxx_3xxx.h>
 #include "cm-regbits-34xx.h"
 
 /* McBSP1 internal signal muxing function for OMAP2/3 */
