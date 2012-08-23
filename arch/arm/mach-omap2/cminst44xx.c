@@ -32,7 +32,7 @@
 #include "prcm44xx.h"
 #include "prm44xx.h"
 #include "prcm_mpu44xx.h"
-#include "prcm-common.h"
+#include <mach/prcm-common.h>
 
 /*
  * CLKCTRL_IDLEST_*: possible values for the CM_*_CLKCTRL.IDLEST bitfield:

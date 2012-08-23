@@ -16,7 +16,7 @@
 #ifndef __ARCH_ASM_MACH_OMAP2_CM2XXX_3XXX_H
 #define __ARCH_ASM_MACH_OMAP2_CM2XXX_3XXX_H
 
-#include "prcm-common.h"
+#include <mach/prcm-common.h>
 
 #define OMAP2420_CM_REGADDR(module, reg)				\
 			OMAP2_L4_IO_ADDRESS(OMAP2420_CM_BASE + (module) + (reg))

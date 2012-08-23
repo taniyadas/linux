@@ -24,7 +24,7 @@
 
 #include "powerdomain.h"
 
-#include "prcm-common.h"
+#include <mach/prcm-common.h>
 #include "prcm44xx.h"
 #include <mach/prm-regbits-44xx.h>
 #include "prm44xx.h"

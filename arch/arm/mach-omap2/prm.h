@@ -13,7 +13,7 @@
 #ifndef __ARCH_ARM_MACH_OMAP2_PRM_H
 #define __ARCH_ARM_MACH_OMAP2_PRM_H
 
-#include "prcm-common.h"
+#include <mach/prcm-common.h>
 
 /*
  * 24XX: PM_PWSTST_CORE, PM_PWSTST_GFX, PM_PWSTST_MPU, PM_PWSTST_DSP
