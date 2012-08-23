@@ -6,7 +6,7 @@
 #include "voltage.h"
 #include "vp.h"
 #include "prm-regbits-34xx.h"
-#include "prm-regbits-44xx.h"
+#include <mach/prm-regbits-44xx.h>
 #include "prm44xx.h"
 
 static u32 _vp_set_init_voltage(struct voltagedomain *voltdm, u32 volt)

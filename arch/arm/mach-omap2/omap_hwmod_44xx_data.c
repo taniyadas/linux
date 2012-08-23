@@ -36,7 +36,7 @@
 #include "cm1_44xx.h"
 #include "cm2_44xx.h"
 #include "prm44xx.h"
-#include "prm-regbits-44xx.h"
+#include <mach/prm-regbits-44xx.h>
 #include "wd_timer.h"
 
 /* Base offset for all OMAP4 interrupts external to MPUSS */

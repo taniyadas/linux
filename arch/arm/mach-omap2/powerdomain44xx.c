@@ -22,7 +22,7 @@
 #include "prm2xxx_3xxx.h"
 #include "prm44xx.h"
 #include "prminst44xx.h"
-#include "prm-regbits-44xx.h"
+#include <mach/prm-regbits-44xx.h>
 
 static int omap4_pwrdm_set_next_pwrst(struct powerdomain *pwrdm, u8 pwrst)
 {

@@ -37,7 +37,7 @@
 #include "prminst44xx.h"
 #include "cminst44xx.h"
 #include "prm-regbits-24xx.h"
-#include "prm-regbits-44xx.h"
+#include <mach/prm-regbits-44xx.h>
 #include "control.h"
 
 void __iomem *prm_base;
