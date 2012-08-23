@@ -26,7 +26,7 @@
 
 #include "cm.h"
 #include "cm33xx.h"
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 #include "cm-regbits-33xx.h"
 #include "prm33xx.h"
 

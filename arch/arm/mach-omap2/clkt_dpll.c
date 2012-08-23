@@ -26,7 +26,7 @@
 
 #include <mach/clock.h>
 #include "cm-regbits-24xx.h"
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 
 /* DPLL rate rounding: minimum DPLL multiplier, divider values */
 #define DPLL_MIN_MULTIPLIER		2

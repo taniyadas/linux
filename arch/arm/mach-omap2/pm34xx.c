@@ -43,7 +43,7 @@
 
 #include "common.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 #include "prm-regbits-34xx.h"
 
 #include "prm2xxx_3xxx.h"

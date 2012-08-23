@@ -29,7 +29,7 @@
 #include "prm2xxx_3xxx.h"
 #include "prm-regbits-34xx.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 
 /*
  * DPLL5_FREQ_FOR_USBHOST: USBHOST and USBTLL are the only clocks

@@ -25,7 +25,7 @@
 #include "cm.h"
 #include <mach/cm2xxx_3xxx.h>
 #include "cm-regbits-24xx.h"
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 
 /* CM_AUTOIDLE_PLL.AUTO_* bit values for DPLLs */
 #define DPLL_AUTOIDLE_DISABLE				0x0

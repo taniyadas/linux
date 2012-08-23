@@ -26,7 +26,7 @@
 #include <mach/clock.h>
 #include <mach/clock34xx.h>
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 
 /**
  * omap3430es2_clk_ssi_find_idlest - return CM_IDLEST info for SSI

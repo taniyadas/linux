@@ -32,7 +32,7 @@
  * Sidetone needs non-gated ICLK and sidetone autoidle is broken.
  */
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 
 /* McBSP1 internal signal muxing function for OMAP2/3 */
 static int omap2_mcbsp1_mux_rx_clk(struct device *dev, const char *signal,

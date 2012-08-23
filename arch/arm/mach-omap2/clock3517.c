@@ -26,7 +26,7 @@
 #include <mach/clock.h>
 #include <mach/clock3517.h>
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 
 /*
  * In AM35xx IPSS, the {ICK,FCK} enable bits for modules are exported

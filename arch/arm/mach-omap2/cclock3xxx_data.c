@@ -33,7 +33,7 @@
 #include <mach/clock36xx.h>
 #include <mach/clock3517.h>
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 #include "prm2xxx_3xxx.h"
 #include "prm-regbits-34xx.h"
 #include "control.h"

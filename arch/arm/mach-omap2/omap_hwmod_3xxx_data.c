@@ -32,7 +32,7 @@
 
 #include "omap_hwmod_common_data.h"
 #include "prm-regbits-34xx.h"
-#include "cm-regbits-34xx.h"
+#include <mach/cm-regbits-34xx.h>
 #include "wd_timer.h"
 #include <mach/am35xx.h>
 
