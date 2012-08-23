@@ -22,7 +22,7 @@
 
 #include <mach/prcm-common.h>
 #include <mach/prm2xxx_3xxx.h>
-#include "prm-regbits-34xx.h"
+#include <mach/prm-regbits-34xx.h>
 #include <mach/cm2xxx_3xxx.h>
 #include <mach/cm-regbits-34xx.h>
 

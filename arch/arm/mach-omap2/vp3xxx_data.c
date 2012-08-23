@@ -21,7 +21,7 @@
 
 #include "common.h"
 
-#include "prm-regbits-34xx.h"
+#include <mach/prm-regbits-34xx.h>
 #include "voltage.h"
 
 #include "vp.h"

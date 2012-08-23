@@ -22,7 +22,7 @@
 #include "powerdomain.h"
 #include <mach/prm.h>
 #include "prm-regbits-24xx.h"
-#include "prm-regbits-34xx.h"
+#include <mach/prm-regbits-34xx.h>
 
 
 /* Common functions across OMAP2 and OMAP3 */

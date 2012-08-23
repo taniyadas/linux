@@ -21,7 +21,7 @@
 #include "common.h"
 #include <plat/cpu.h>
 
-#include "prm-regbits-34xx.h"
+#include <mach/prm-regbits-34xx.h>
 #include "omap_opp_data.h"
 #include "voltage.h"
 #include "vc.h"
