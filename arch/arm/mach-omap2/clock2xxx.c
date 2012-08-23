@@ -28,7 +28,7 @@
 #include <mach/clock.h>
 #include "clock2xxx.h"
 #include "cm.h"
-#include "cm-regbits-24xx.h"
+#include <mach/cm-regbits-24xx.h>
 
 struct clk *vclk, *sclk, *dclk;
 struct clk_hw *dclk_hw;

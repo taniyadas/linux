@@ -27,7 +27,7 @@
 #include <mach/clock.h>
 #include "clock2xxx.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-24xx.h"
+#include <mach/cm-regbits-24xx.h>
 
 /* CM_CLKEN_PLL.EN_{54,96}M_PLL options (24XX) */
 #define EN_APLL_STOPPED			0

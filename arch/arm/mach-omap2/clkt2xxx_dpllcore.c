@@ -33,7 +33,7 @@
 #include "clock2xxx.h"
 #include "opp2xxx.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-24xx.h"
+#include <mach/cm-regbits-24xx.h>
 
 /* #define DOWN_VARIABLE_DPLL 1 */		/* Experimental */
 

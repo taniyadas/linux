@@ -18,7 +18,7 @@
 #include <mach/prm2xxx_3xxx.h>
 #include "cm.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-24xx.h"
+#include <mach/cm-regbits-24xx.h>
 #include <mach/cm-regbits-34xx.h>
 #include <mach/prm-regbits-24xx.h>
 #include "clockdomain.h"

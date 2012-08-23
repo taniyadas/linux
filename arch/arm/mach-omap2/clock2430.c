@@ -28,7 +28,7 @@
 #include <mach/clock.h>
 #include "clock2xxx.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "cm-regbits-24xx.h"
+#include <mach/cm-regbits-24xx.h>
 
 /**
  * omap2430_clk_i2chs_find_idlest - return CM_IDLEST info for 2430 I2CHS
