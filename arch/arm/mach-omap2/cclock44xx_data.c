@@ -41,7 +41,6 @@
 #include <mach/cm-regbits-44xx.h>
 #include <mach/prm44xx.h>
 #include <mach/prm-regbits-44xx.h>
-#include "control.h"
 #include <mach/scrm44xx.h>
 
 /* OMAP4 modulemode control */
