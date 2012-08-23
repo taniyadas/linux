@@ -31,7 +31,6 @@
 #include <mach/prm2xxx_3xxx.h>
 #include <mach/prm-regbits-24xx.h>
 #include <mach/cm-regbits-24xx.h>
-#include "sdrc.h"
 #include <mach/control.h>
 
 #define OMAP_CM_REGADDR                 OMAP2420_CM_REGADDR
