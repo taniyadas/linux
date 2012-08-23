@@ -18,7 +18,7 @@
 #include "vc.h"
 #include "prm-regbits-34xx.h"
 #include <mach/prm-regbits-44xx.h>
-#include "prm44xx.h"
+#include <mach/prm44xx.h>
 
 /**
  * struct omap_vc_channel_cfg - describe the cfg_channel bitfield

@@ -20,7 +20,7 @@
 
 #include "common.h"
 
-#include "prm44xx.h"
+#include <mach/prm44xx.h>
 #include <mach/prm-regbits-44xx.h>
 #include "voltage.h"
 

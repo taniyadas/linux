@@ -35,7 +35,7 @@
 #include "omap_hwmod_common_data.h"
 #include "cm1_44xx.h"
 #include "cm2_44xx.h"
-#include "prm44xx.h"
+#include <mach/prm44xx.h>
 #include <mach/prm-regbits-44xx.h>
 #include "wd_timer.h"
 

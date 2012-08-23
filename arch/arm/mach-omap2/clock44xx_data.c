@@ -37,7 +37,7 @@
 #include "cm1_44xx.h"
 #include "cm2_44xx.h"
 #include <mach/cm-regbits-44xx.h>
-#include "prm44xx.h"
+#include <mach/prm44xx.h>
 #include <mach/prm-regbits-44xx.h>
 #include "control.h"
 #include <mach/scrm44xx.h>

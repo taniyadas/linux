@@ -19,7 +19,7 @@
 #include <mach/iomap.h>
 #include "common.h"
 #include <mach/prcm-common.h>
-#include "prm44xx.h"
+#include <mach/prm44xx.h>
 #include "prminst44xx.h"
 #include <mach/prm-regbits-44xx.h>
 #include "prcm44xx.h"

@@ -29,7 +29,7 @@
 #include <plat/irqs.h>
 
 #include "prm2xxx_3xxx.h"
-#include "prm44xx.h"
+#include <mach/prm44xx.h>
 
 /*
  * OMAP_PRCM_MAX_NR_PENDING_REG: maximum number of PRM_IRQ*_MPU regs
