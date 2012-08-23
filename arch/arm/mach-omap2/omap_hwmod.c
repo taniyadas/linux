@@ -149,7 +149,7 @@
 
 #include <mach/cm2xxx_3xxx.h>
 #include "cminst44xx.h"
-#include "prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include <mach/prm44xx.h>
 #include "prminst44xx.h"
 #include "mux.h"

@@ -35,7 +35,7 @@
 #include <plat/omap_device.h>
 #include <plat/omap-pm.h>
 
-#include "prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include "pm.h"
 #include <mach/cm2xxx_3xxx.h>
 #include "prm-regbits-34xx.h"

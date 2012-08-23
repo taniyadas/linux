@@ -32,7 +32,7 @@
 #include <mach/clock.h>
 #include "clock2xxx.h"
 #include <mach/cm2xxx_3xxx.h>
-#include "prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include <mach/prm44xx.h>
 #include "prminst44xx.h"
 #include "cminst44xx.h"

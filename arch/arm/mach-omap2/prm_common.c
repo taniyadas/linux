@@ -28,7 +28,7 @@
 #include <plat/prcm.h>
 #include <plat/irqs.h>
 
-#include "prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include <mach/prm44xx.h>
 
 /*

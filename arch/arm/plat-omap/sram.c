@@ -33,7 +33,7 @@
 
 /* XXX These "sideways" includes will disappear when sram.c becomes a driver */
 #include <mach/iomap.h>
-#include "../mach-omap2/prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include "../mach-omap2/sdrc.h"
 
 #define OMAP1_SRAM_PA		0x20000000

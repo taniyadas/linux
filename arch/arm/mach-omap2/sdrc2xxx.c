@@ -31,7 +31,7 @@
 
 #include <mach/iomap.h>
 #include "common.h"
-#include "prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include <mach/clock.h>
 #include "sdrc.h"
 

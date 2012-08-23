@@ -15,7 +15,7 @@
 #include <linux/types.h>
 #include <plat/prcm.h>
 #include <mach/prm.h>
-#include "prm2xxx_3xxx.h"
+#include <mach/prm2xxx_3xxx.h>
 #include "cm.h"
 #include <mach/cm2xxx_3xxx.h>
 #include "cm-regbits-24xx.h"
