@@ -24,7 +24,7 @@
 #include "common.h"
 #include "cm.h"
 #include <mach/cm1_44xx.h>
-#include "cm2_44xx.h"
+#include <mach/cm2_44xx.h>
 #include "cm44xx.h"
 #include "cminst44xx.h"
 #include "cm-regbits-34xx.h"

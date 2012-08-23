@@ -22,7 +22,7 @@
 #include "common.h"
 #include "cm.h"
 #include <mach/cm1_44xx.h>
-#include "cm2_44xx.h"
+#include <mach/cm2_44xx.h>
 #include <mach/cm-regbits-44xx.h>
 
 /* CM1 hardware module low-level functions */
