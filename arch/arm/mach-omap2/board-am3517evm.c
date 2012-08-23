@@ -41,7 +41,7 @@
 
 #include "am35xx-emac.h"
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 #include "hsmmc.h"
 
 #define LCD_PANEL_PWR		176

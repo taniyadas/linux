@@ -33,7 +33,7 @@
 #include <plat/omap4-keypad.h>
 
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 #include "devices.h"
 
 #define L3_MODULES_MAX_LEN 12

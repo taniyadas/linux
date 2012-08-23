@@ -38,7 +38,7 @@
 
 #include <plat/omap_hwmod.h>
 
-#include "control.h"
+#include <mach/control.h>
 #include "mux.h"
 #include <mach/prm.h>
 #include "common.h"

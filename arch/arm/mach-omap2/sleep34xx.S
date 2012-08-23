@@ -33,7 +33,7 @@
 #include <mach/cm2xxx_3xxx.h>
 #include <mach/prm2xxx_3xxx.h>
 #include "sdrc.h"
-#include "control.h"
+#include <mach/control.h>
 
 /*
  * Registers access definitions

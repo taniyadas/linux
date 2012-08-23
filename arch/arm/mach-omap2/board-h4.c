@@ -42,7 +42,7 @@
 #include <video/omap-panel-generic-dpi.h>
 
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 
 #define H4_FLASH_CS	0
 #define H4_SMC91X_CS	1

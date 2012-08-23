@@ -21,7 +21,7 @@
 #include <plat/am33xx.h>
 
 #include <mach/iomap.h>
-#include "control.h"
+#include <mach/control.h>
 #include <mach/clock.h>
 #include "cm.h"
 #include "cm33xx.h"

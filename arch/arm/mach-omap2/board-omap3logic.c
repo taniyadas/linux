@@ -37,7 +37,7 @@
 
 #include "mux.h"
 #include "hsmmc.h"
-#include "control.h"
+#include <mach/control.h>
 #include "common-board-devices.h"
 
 #include <plat/mux.h>

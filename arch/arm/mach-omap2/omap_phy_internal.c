@@ -29,7 +29,7 @@
 #include <linux/usb.h>
 
 #include <plat/usb.h>
-#include "control.h"
+#include <mach/control.h>
 
 /* OMAP control module register for UTMI PHY */
 #define CONTROL_DEV_CONF		0x300

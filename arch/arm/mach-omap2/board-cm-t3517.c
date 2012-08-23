@@ -47,7 +47,7 @@
 #include <mach/am35xx.h>
 
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 #include "common-board-devices.h"
 #include "am35xx-emac.h"
 

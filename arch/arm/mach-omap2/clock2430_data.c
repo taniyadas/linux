@@ -29,7 +29,7 @@
 #include "prm-regbits-24xx.h"
 #include "cm-regbits-24xx.h"
 #include "sdrc.h"
-#include "control.h"
+#include <mach/control.h>
 
 #define OMAP_CM_REGADDR			OMAP2430_CM_REGADDR
 

@@ -33,7 +33,7 @@
 #include "clockdomain.h"
 
 #include "pm.h"
-#include "control.h"
+#include <mach/control.h>
 #include "common.h"
 
 /* Mach specific information to be recorded in the C-state driver_data */

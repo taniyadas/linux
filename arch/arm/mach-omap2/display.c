@@ -32,7 +32,7 @@
 
 #include <mach/iomap.h>
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 #include "display.h"
 
 #define DISPC_CONTROL		0x0040

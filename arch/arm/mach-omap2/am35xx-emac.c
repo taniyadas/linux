@@ -20,7 +20,7 @@
 #include <asm/system.h>
 #include <plat/omap_device.h>
 #include <mach/am35xx.h>
-#include "control.h"
+#include <mach/control.h>
 #include "am35xx-emac.h"
 
 static void am35xx_enable_emac_int(void)

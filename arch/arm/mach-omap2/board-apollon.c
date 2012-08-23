@@ -43,7 +43,7 @@
 #include <video/omap-panel-generic-dpi.h>
 
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 
 /* LED & Switch macros */
 #define LED0_GPIO13		13

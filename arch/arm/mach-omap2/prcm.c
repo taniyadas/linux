@@ -38,7 +38,7 @@
 #include "cminst44xx.h"
 #include "prm-regbits-24xx.h"
 #include <mach/prm-regbits-44xx.h>
-#include "control.h"
+#include <mach/control.h>
 
 void __iomem *prm_base;
 void __iomem *cm_base;

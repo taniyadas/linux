@@ -26,7 +26,7 @@
 
 #include <mach/id.h>
 
-#include "control.h"
+#include <mach/control.h>
 
 static unsigned int omap_revision;
 static const char *cpu_rev;

@@ -21,7 +21,7 @@
 
 #include <plat/cpu.h>
 
-#include "control.h"
+#include <mach/control.h>
 #include "omap_opp_data.h"
 #include "pm.h"
 

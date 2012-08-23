@@ -32,7 +32,7 @@
 
 #include "am35xx-emac.h"
 #include "mux.h"
-#include "control.h"
+#include <mach/control.h>
 
 #define GPIO_USB_POWER		35
 #define GPIO_USB_NRESET		38

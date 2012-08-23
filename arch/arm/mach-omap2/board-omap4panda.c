@@ -46,7 +46,7 @@
 #include <video/omap-panel-tfp410.h>
 
 #include "hsmmc.h"
-#include "control.h"
+#include <mach/control.h>
 #include "mux.h"
 #include "common-board-devices.h"
 

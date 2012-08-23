@@ -46,7 +46,7 @@
 #include "sdram-qimonda-hyb18m512160af-6.h"
 #include "hsmmc.h"
 #include "pm.h"
-#include "control.h"
+#include <mach/control.h>
 #include "common-board-devices.h"
 
 #define CONFIG_DISABLE_HFCLK 1

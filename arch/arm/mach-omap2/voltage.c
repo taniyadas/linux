@@ -34,7 +34,7 @@
 #include <mach/prm44xx.h>
 #include "prcm44xx.h"
 #include "prminst44xx.h"
-#include "control.h"
+#include <mach/control.h>
 
 #include "voltage.h"
 #include "powerdomain.h"

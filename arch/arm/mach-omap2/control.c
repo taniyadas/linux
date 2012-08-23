@@ -26,7 +26,7 @@
 #include <mach/cm2xxx_3xxx.h>
 #include "sdrc.h"
 #include "pm.h"
-#include "control.h"
+#include <mach/control.h>
 
 /* Used by omap3_ctrl_save_padconf() */
 #define START_PADCONF_SAVE		0x2

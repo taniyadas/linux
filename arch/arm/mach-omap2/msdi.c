@@ -29,7 +29,7 @@
 #include <plat/mmc.h>
 
 #include "common.h"
-#include "control.h"
+#include <mach/control.h>
 #include "mux.h"
 
 /*

@@ -23,7 +23,7 @@
 
 #include <asm/memblock.h>
 
-#include "control.h"
+#include <mach/control.h>
 #include <mach/cm2xxx_3xxx.h>
 #include <mach/prm2xxx_3xxx.h>
 #ifdef CONFIG_BRIDGE_DVFS

@@ -42,7 +42,7 @@
 #include "sdram-numonyx-m65kxxxxam.h"
 #include "common-board-devices.h"
 #include "board-flash.h"
-#include "control.h"
+#include <mach/control.h>
 
 #define IGEP2_SMSC911X_CS       5
 #define IGEP2_SMSC911X_GPIO     176

@@ -49,7 +49,7 @@
 #include "cm-regbits-24xx.h"
 #include "sdrc.h"
 #include "pm.h"
-#include "control.h"
+#include <mach/control.h>
 #include "powerdomain.h"
 #include "clockdomain.h"
 

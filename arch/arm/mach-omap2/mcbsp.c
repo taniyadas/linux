@@ -25,7 +25,7 @@
 #include <plat/omap_device.h>
 #include <linux/pm_runtime.h>
 
-#include "control.h"
+#include <mach/control.h>
 
 /*
  * FIXME: Find a mechanism to enable/disable runtime the McBSP ICLK autoidle.

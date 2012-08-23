@@ -49,7 +49,7 @@
 #include <mach/prm2xxx_3xxx.h>
 #include "pm.h"
 #include "sdrc.h"
-#include "control.h"
+#include <mach/control.h>
 
 /* pm34xx errata defined in pm.h */
 u16 pm34xx_errata;

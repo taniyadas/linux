@@ -47,7 +47,7 @@
 
 #include "mux.h"
 #include "hsmmc.h"
-#include "control.h"
+#include <mach/control.h>
 #include "common-board-devices.h"
 
 #define ETH_KS8851_IRQ			34

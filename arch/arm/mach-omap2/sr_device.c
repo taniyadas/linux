@@ -26,7 +26,7 @@
 #include <plat/omap_device.h>
 
 #include "voltage.h"
-#include "control.h"
+#include <mach/control.h>
 #include "pm.h"
 
 static bool sr_enable_on_init;

@@ -50,7 +50,7 @@
 #include "board-flash.h"
 #include "mux.h"
 #include "hsmmc.h"
-#include "control.h"
+#include <mach/control.h>
 #include "common-board-devices.h"
 
 #define LDP_SMSC911X_CS		1

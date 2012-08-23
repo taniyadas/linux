@@ -22,7 +22,7 @@
 
 #include "mux.h"
 #include "hsmmc.h"
-#include "control.h"
+#include <mach/control.h>
 
 #if defined(CONFIG_MMC_OMAP_HS) || defined(CONFIG_MMC_OMAP_HS_MODULE)
 
