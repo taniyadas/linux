@@ -33,7 +33,7 @@
 #include "common.h"
 #include <mach/prm2xxx_3xxx.h>
 #include <mach/clock.h>
-#include "sdrc.h"
+#include <mach/sdrc.h>
 
 /* Memory timing, DLL mode flags */
 #define M_DDR		1

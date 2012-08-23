@@ -24,7 +24,7 @@
 #include <mach/prm-regbits-34xx.h>
 #include <mach/prm2xxx_3xxx.h>
 #include <mach/cm2xxx_3xxx.h>
-#include "sdrc.h"
+#include <mach/sdrc.h>
 #include "pm.h"
 #include <mach/control.h>
 

@@ -30,7 +30,7 @@
 
 #include <plat/omap24xx.h>
 
-#include "sdrc.h"
+#include <mach/sdrc.h>
 
 /* First address of reserved address space?  apparently valid for OMAP2 & 3 */
 #define A_SDRC0_V		(0xC0000000)

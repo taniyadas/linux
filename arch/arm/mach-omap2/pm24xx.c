@@ -47,7 +47,7 @@
 #include <mach/prm-regbits-24xx.h>
 #include <mach/cm2xxx_3xxx.h>
 #include <mach/cm-regbits-24xx.h>
-#include "sdrc.h"
+#include <mach/sdrc.h>
 #include "pm.h"
 #include <mach/control.h>
 #include "powerdomain.h"

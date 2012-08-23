@@ -24,7 +24,7 @@
 
 #include <mach/iomap.h>
 #include "common.h"
-#include "sdrc.h"
+#include <mach/sdrc.h>
 #include <mach/control.h>
 
 /* Global address base setup code */

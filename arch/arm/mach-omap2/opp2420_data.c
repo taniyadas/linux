@@ -31,7 +31,7 @@
 #include <plat/hardware.h>
 
 #include <mach/opp2xxx.h>
-#include "sdrc.h"
+#include <mach/sdrc.h>
 #include <mach/clock.h>
 
 /*

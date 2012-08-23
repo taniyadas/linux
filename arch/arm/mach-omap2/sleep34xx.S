@@ -32,7 +32,7 @@
 #include <mach/iomap.h>
 #include <mach/cm2xxx_3xxx.h>
 #include <mach/prm2xxx_3xxx.h>
-#include "sdrc.h"
+#include <mach/sdrc.h>
 #include <mach/control.h>
 
 /*

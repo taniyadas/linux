@@ -28,7 +28,7 @@
 #include <plat/sram.h>
 
 #include <plat/sdrc.h>
-#include "sdrc.h"
+#include <mach/sdrc.h>
 
 static struct omap_sdrc_params *sdrc_init_params_cs0, *sdrc_init_params_cs1;
 
