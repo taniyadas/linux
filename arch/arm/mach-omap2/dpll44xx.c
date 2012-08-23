@@ -20,7 +20,7 @@
 
 #include "clock.h"
 #include "clock44xx.h"
-#include "cm-regbits-44xx.h"
+#include <mach/cm-regbits-44xx.h>
 
 /* Supported only on OMAP4 */
 int omap4_dpllmx_gatectrl_read(struct clk_hw_omap *clk)

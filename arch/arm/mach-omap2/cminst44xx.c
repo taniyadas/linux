@@ -28,7 +28,7 @@
 #include "cm44xx.h"
 #include "cminst44xx.h"
 #include "cm-regbits-34xx.h"
-#include "cm-regbits-44xx.h"
+#include <mach/cm-regbits-44xx.h>
 #include "prcm44xx.h"
 #include "prm44xx.h"
 #include "prcm_mpu44xx.h"
