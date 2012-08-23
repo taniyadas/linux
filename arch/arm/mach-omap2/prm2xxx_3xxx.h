@@ -17,7 +17,7 @@
 #define __ARCH_ARM_MACH_OMAP2_PRM2XXX_3XXX_H
 
 #include <mach/prcm-common.h>
-#include "prm.h"
+#include <mach/prm.h>
 
 #define OMAP2420_PRM_REGADDR(module, reg)				\
 		OMAP2_L4_IO_ADDRESS(OMAP2420_PRM_BASE + (module) + (reg))

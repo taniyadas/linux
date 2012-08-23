@@ -34,7 +34,7 @@
 #include "powerdomain.h"
 
 #include <mach/prcm-common.h>
-#include "prm.h"
+#include <mach/prm.h>
 
 /* OMAP2/3-common powerdomains */
 

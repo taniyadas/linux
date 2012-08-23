@@ -20,7 +20,7 @@
 #include <plat/prcm.h>
 
 #include "powerdomain.h"
-#include "prm.h"
+#include <mach/prm.h>
 #include "prm-regbits-24xx.h"
 #include "prm-regbits-34xx.h"
 

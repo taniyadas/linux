@@ -17,7 +17,7 @@
 #define __ARCH_ARM_MACH_OMAP2_PRM33XX_H
 
 #include <mach/prcm-common.h>
-#include "prm.h"
+#include <mach/prm.h>
 
 #define AM33XX_PRM_BASE               0x44E00000
 

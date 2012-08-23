@@ -26,7 +26,7 @@
 #include "cm.h"
 #include "cm33xx.h"
 #include "cm-regbits-33xx.h"
-#include "prm.h"
+#include <mach/prm.h>
 
 /* Maximum DPLL multiplier, divider values for AM33XX */
 #define AM33XX_MAX_DPLL_MULT		2047

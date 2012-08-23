@@ -16,7 +16,7 @@
 #ifndef __ARCH_ARM_MACH_OMAP2_PRM_REGBITS_33XX_H
 #define __ARCH_ARM_MACH_OMAP2_PRM_REGBITS_33XX_H
 
-#include "prm.h"
+#include <mach/prm.h>
 
 /* Used by PRM_LDO_SRAM_CORE_SETUP, PRM_LDO_SRAM_MPU_SETUP */
 #define AM33XX_ABBOFF_ACT_EXPORT_SHIFT			1
