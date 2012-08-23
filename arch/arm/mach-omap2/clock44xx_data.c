@@ -40,7 +40,7 @@
 #include "prm44xx.h"
 #include "prm-regbits-44xx.h"
 #include "control.h"
-#include "scrm44xx.h"
+#include <mach/scrm44xx.h>
 
 /* OMAP4 modulemode control */
 #define OMAP4430_MODULEMODE_HWCTRL			0
