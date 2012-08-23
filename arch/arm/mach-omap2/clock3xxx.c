@@ -25,7 +25,7 @@
 #include <plat/clock.h>
 
 #include <mach/clock.h>
-#include "clock3xxx.h"
+#include <mach/clock3xxx.h>
 #include "prm2xxx_3xxx.h"
 #include "prm-regbits-34xx.h"
 #include "cm2xxx_3xxx.h"

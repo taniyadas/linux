@@ -40,7 +40,7 @@
 #include "common.h"
 #include <mach/clock.h>
 #include "clock2xxx.h"
-#include "clock3xxx.h"
+#include <mach/clock3xxx.h>
 #include <mach/clock44xx.h>
 
 /*
