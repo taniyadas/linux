@@ -29,7 +29,7 @@
 #include <mach/omap-wakeupgen.h>
 #include <asm/cputype.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "clockdomain.h"
 

@@ -25,7 +25,7 @@
 
 #include <mach/hardware.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 
 /* selected INTC register offsets */

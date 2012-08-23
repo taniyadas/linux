@@ -23,7 +23,7 @@
 
 #include <mach/hardware.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Alexander Shishkin");

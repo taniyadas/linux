@@ -31,7 +31,7 @@
 
 #include <mach/hardware.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "sdrc.h"
 #include "cm2xxx_3xxx.h"
 

@@ -22,7 +22,7 @@
 #include <plat/mux.h>
 #include <plat/clock.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "sdrc.h"
 #include "control.h"

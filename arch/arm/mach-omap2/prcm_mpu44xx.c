@@ -15,7 +15,7 @@
 #include <linux/err.h>
 #include <linux/io.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "prcm_mpu44xx.h"
 #include "cm-regbits-44xx.h"

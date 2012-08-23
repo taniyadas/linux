@@ -32,7 +32,7 @@
 #include "sram.h"
 
 /* XXX These "sideways" includes will disappear when sram.c becomes a driver */
-#include "../mach-omap2/iomap.h"
+#include <mach/iomap.h>
 #include "../mach-omap2/prm2xxx_3xxx.h"
 #include "../mach-omap2/sdrc.h"
 

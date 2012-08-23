@@ -20,7 +20,7 @@
 
 #include <plat/hardware.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "cm.h"
 #include "cm2xxx_3xxx.h"

@@ -18,7 +18,7 @@
 #include <plat/hardware.h>
 #include <plat/sdrc.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "cm-regbits-34xx.h"
 #include "prm-regbits-34xx.h"

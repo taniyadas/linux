@@ -21,7 +21,7 @@
 #include <plat/irqs.h>
 #include <plat/prcm.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "vp.h"
 #include "prm44xx.h"

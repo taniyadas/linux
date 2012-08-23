@@ -34,7 +34,7 @@
 
 #include <mach/hardware.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "prm2xxx_3xxx.h"
 #include "cm2xxx_3xxx.h"
 #include "sdrc.h"

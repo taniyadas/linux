@@ -20,7 +20,7 @@
 #include <linux/err.h>
 #include <linux/io.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "common.h"
 #include "cm.h"
 #include "cm1_44xx.h"

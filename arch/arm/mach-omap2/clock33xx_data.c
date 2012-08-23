@@ -20,7 +20,7 @@
 #include <plat/clkdev_omap.h>
 #include <plat/am33xx.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "control.h"
 #include "clock.h"
 #include "cm.h"

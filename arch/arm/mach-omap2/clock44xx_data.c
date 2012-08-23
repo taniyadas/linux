@@ -31,7 +31,7 @@
 #include <plat/hardware.h>
 #include <plat/clkdev_omap.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "clock.h"
 #include "clock44xx.h"
 #include "cm1_44xx.h"

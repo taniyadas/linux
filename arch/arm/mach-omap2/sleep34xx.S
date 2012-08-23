@@ -29,7 +29,7 @@
 #include <plat/hardware.h>
 #include <plat/sram.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include "cm2xxx_3xxx.h"
 #include "prm2xxx_3xxx.h"
 #include "sdrc.h"

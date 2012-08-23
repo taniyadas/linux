@@ -25,7 +25,7 @@
 #include <asm/mach/map.h>
 #include <asm/pmu.h>
 
-#include "iomap.h"
+#include <mach/iomap.h>
 #include <plat/board.h>
 #include <plat/dma.h>
 #include <plat/omap_hwmod.h>
