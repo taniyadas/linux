@@ -376,10 +376,8 @@ const struct clk_hw_omap_ops clkhwops_omap3_dpll = {
 };
 
 const struct clk_hw_omap_ops clkhwops_iclk_wait = {
-#ifndef CONFIG_ARCH_OMAP4
 	.allow_idle	= omap2_clkt_iclk_allow_idle,
 	.deny_idle	= omap2_clkt_iclk_deny_idle,
-#endif
 	.find_idlest	= omap2_clk_dflt_find_idlest,
 	.find_companion	= omap2_clk_dflt_find_companion,
 };
