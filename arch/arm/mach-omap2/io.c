@@ -38,6 +38,7 @@
 #include "clock2xxx.h"
 #include "clock3xxx.h"
 #include "clock44xx.h"
+#include "clock7xx.h"
 #include "omap-pm.h"
 #include "sdrc.h"
 #include "control.h"
@@ -672,6 +673,7 @@ void __init dra7xx_init_early(void)
 	dra7xx_clockdomains_init();
 	dra7xx_hwmod_init();
 	omap_hwmod_init_postsetup();
+	omap_clk_init = dra7xx_clk_init;
 }
 #endif
 
