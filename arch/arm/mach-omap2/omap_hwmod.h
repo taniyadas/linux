@@ -459,6 +459,9 @@ struct omap_hwmod_omap4_prcm {
  *     correctly, or this is being abused to deal with some PM latency
  *     issues -- but we're currently suffering from a shortage of
  *     folks who are able to track these issues down properly.
+ * HWMOD_SWSUP_SIDLE_ACT: omap_hwmod code should manually bring the module
+ *     out of idle, but rely on smart-idle to the put it back in idle,
+ *     so the wakeups are still functional (Only known case for now is UART)
  */
 #define HWMOD_SWSUP_SIDLE			(1 << 0)
 #define HWMOD_SWSUP_MSTANDBY			(1 << 1)
@@ -471,6 +474,7 @@ struct omap_hwmod_omap4_prcm {
 #define HWMOD_16BIT_REG				(1 << 8)
 #define HWMOD_EXT_OPT_MAIN_CLK			(1 << 9)
 #define HWMOD_BLOCK_WFI				(1 << 10)
+#define HWMOD_SWSUP_SIDLE_ACT			(1 << 11)
 
 /*
  * omap_hwmod._int_flags definitions
