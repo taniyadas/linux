@@ -667,6 +667,11 @@ void __init dra7xx_init_early(void)
 	omap_prm_base_init();
 	omap_cm_base_init();
 	dra7xx_check_revision();
+	omap44xx_prm_init();
+	dra7xx_powerdomains_init();
+	dra7xx_clockdomains_init();
+	dra7xx_hwmod_init();
+	omap_hwmod_init_postsetup();
 }
 #endif
 
