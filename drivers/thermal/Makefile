@@ -39,4 +39,4 @@ obj-$(CONFIG_TI_SOC_THERMAL)	+= ti-soc-thermal/
 obj-$(CONFIG_INT340X_THERMAL)  += int340x_thermal/
 obj-$(CONFIG_ST_THERMAL)	+= st/
 obj-$(CONFIG_TEGRA_SOCTHERM)	+= tegra_soctherm.o
-obj-$(CONFIG_THERMAL_QCOM_TSENS)	+= qcom_tsens.o
+obj-$(CONFIG_THERMAL_QCOM_TSENS)	+= qcom_tsens.o qcom_tsens_b.o
