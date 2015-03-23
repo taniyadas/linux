@@ -129,6 +129,39 @@
 #define BKP_REDUN_SEL		0xe0000000
 #define BKP_REDUN_SHIFT		29
 
+/* eeprom layout data for 8916 */
+#define BASE0_8916_MASK		0x0000007f
+#define BASE1_8916_MASK		0xfe000000
+#define BASE0_8916_SHIFT	0
+#define BASE1_8916_SHIFT	25
+
+#define S0_8916_P1_MASK		0x00000f80
+#define S1_8916_P1_MASK		0x003e0000
+#define S2_8916_P1_MASK		0xf8000000
+#define S3_8916_P1_MASK		0x000003e0
+#define S4_8916_P1_MASK		0x000f8000
+
+#define S0_8916_P2_MASK		0x0001f000
+#define S1_8916_P2_MASK		0x07c00000
+#define S2_8916_P2_MASK		0x0000001f
+#define S3_8916_P2_MASK		0x00007c00
+#define S4_8916_P2_MASK		0x01f00000
+
+#define S0_8916_P1_SHIFT	7
+#define S1_8916_P1_SHIFT	17
+#define S2_8916_P1_SHIFT	27
+#define S3_8916_P1_SHIFT	5
+#define S4_8916_P1_SHIFT	15
+
+#define S0_8916_P2_SHIFT	12
+#define S1_8916_P2_SHIFT	22
+#define S2_8916_P2_SHIFT	0
+#define S3_8916_P2_SHIFT	10
+#define S4_8916_P2_SHIFT	20
+
+#define CAL_SEL_8916_MASK	0xe0000000
+#define CAL_SEL_8916_SHIFT	29
+
 /* TSENS register data */
 #define TSENS_THRESHOLD_MAX_CODE	0x3ff
 #define TSENS_THRESHOLD_MIN_CODE	0x0
@@ -230,6 +263,56 @@ static inline u32 *qfprom_read(struct device *dev, const char *cname)
 		return (u32 *)cell;
 
 	return (u32 *)eeprom_cell_read(cell, &data);
+}
+
+static int tsens_calib_8916_sensors(struct tsens_device *tmdev)
+{
+	int base0 = 0, base1 = 0, i;
+	u32 p1[5], p2[5];
+	int mode = 0;
+	u32 *qfprom_cdata, *qfprom_csel;
+
+	qfprom_cdata = qfprom_read(tmdev->dev, "calib_data");
+	if (IS_ERR(qfprom_cdata))
+		return PTR_ERR(qfprom_cdata);
+
+	qfprom_csel = qfprom_read(tmdev->dev, "calib_sel");
+	if (IS_ERR(qfprom_csel))
+		return PTR_ERR(qfprom_csel);
+
+	mode = (qfprom_csel[0] & CAL_SEL_8916_MASK) >> CAL_SEL_8916_SHIFT;
+	dev_dbg(tmdev->dev, "calibration mode is %d\n", mode);
+
+	switch (mode) {
+	case TWO_PT_CALIB:
+		base1 = (qfprom_cdata[1] & BASE1_8916_MASK) >> BASE1_8916_SHIFT;
+		p2[0] = (qfprom_cdata[0] & S0_8916_P2_MASK) >> S0_8916_P2_SHIFT;
+		p2[1] = (qfprom_cdata[0] & S1_8916_P2_MASK) >> S1_8916_P2_SHIFT;
+		p2[2] = (qfprom_cdata[1] & S2_8916_P2_MASK) >> S2_8916_P2_SHIFT;
+		p2[3] = (qfprom_cdata[1] & S3_8916_P2_MASK) >> S3_8916_P2_SHIFT;
+		p2[4] = (qfprom_cdata[1] & S4_8916_P2_MASK) >> S4_8916_P2_SHIFT;
+		for (i = 0; i < tmdev->num_sensor; i++)
+			p2[i] = ((base1 + p2[i]) << 3);
+		/* Fall through */
+	case ONE_PT_CALIB2:
+		base0 = (qfprom_cdata[0] & BASE0_8916_MASK);
+		p1[0] = (qfprom_cdata[0] & S0_8916_P1_MASK) >> S0_8916_P1_SHIFT;
+		p1[1] = (qfprom_cdata[0] & S1_8916_P1_MASK) >> S1_8916_P1_SHIFT;
+		p1[2] = (qfprom_cdata[0] & S2_8916_P1_MASK) >> S2_8916_P1_SHIFT;
+		p1[3] = (qfprom_cdata[1] & S3_8916_P1_MASK) >> S3_8916_P1_SHIFT;
+		p1[4] = (qfprom_cdata[1] & S4_8916_P1_MASK) >> S4_8916_P1_SHIFT;
+		for (i = 0; i < tmdev->num_sensor; i++)
+			p1[i] = (((base0) + p1[i]) << 3);
+		break;
+	default:
+		for (i = 0; i < tmdev->num_sensor; i++)
+			p1[i] = 500;
+		break;
+	}
+
+	compute_intercept_slope(tmdev, p1, p2, mode);
+
+	return 0;
 }
 
 static int tsens_calib_8974_sensors(struct tsens_device *tmdev)
@@ -370,6 +453,9 @@ static const struct thermal_zone_of_device_ops tsens_thermal_of_ops = {
 
 static const struct of_device_id tsens_match_table[] = {
 	{
+		.compatible = "qcom,msm8916-tsens",
+		.data = tsens_calib_8916_sensors,
+	}, {
 		.compatible = "qcom,msm8974-tsens",
 		.data = tsens_calib_8974_sensors,
 	},
