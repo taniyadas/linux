@@ -1,0 +1,10 @@
+menuconfig EEPROM
+	tristate "EEPROM Support"
+	select REGMAP
+	help
+	  Support for EEPROM alike devices.
+
+	  This framework is designed to provide a generic interface to EEPROM
+	  from both the Linux Kernel and the userspace.
+
+	  If unsure, say no.
