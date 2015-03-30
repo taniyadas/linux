@@ -4,3 +4,4 @@
 
 obj-$(CONFIG_EEPROM)		+= eeprom_core.o
 eeprom_core-y			:= core.o
+eeprom_core-y			+= eeprom-mmio.o
