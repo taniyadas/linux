@@ -5,3 +5,7 @@
 obj-$(CONFIG_EEPROM)		+= eeprom_core.o
 eeprom_core-y			:= core.o
 eeprom_core-y			+= eeprom-mmio.o
+
+# Devices
+obj-$(CONFIG_QCOM_QFPROM)	+= eeprom_qfprom.o
+eeprom_qfprom-y			:= qfprom.o
