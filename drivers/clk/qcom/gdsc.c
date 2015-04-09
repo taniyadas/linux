@@ -15,6 +15,7 @@
 #include <linux/err.h>
 #include <linux/jiffies.h>
 #include <linux/pm_clock.h>
+#include <linux/platform_device.h>
 #include <linux/slab.h>
 #include "gdsc.h"
 
@@ -226,3 +227,22 @@ void gdsc_unregister(struct device *dev)
 {
 	of_genpd_del_provider(dev->of_node);
 }
+
+static struct dev_pm_domain default_qcom_pm_domain = {
+	.ops = {
+		USE_PM_CLK_RUNTIME_OPS
+		USE_PLATFORM_PM_SLEEP_OPS
+	},
+};
+
+static struct pm_clk_notifier_block qcom_pm_notifier = {
+	.pm_domain	= &default_qcom_pm_domain,
+	.con_ids	= { "core", "iface" },
+};
+
+static int __init qcom_pm_runtime_init(void)
+{
+	pm_clk_add_notifier(&platform_bus_type, &qcom_pm_notifier);
+	return 0;
+}
+core_initcall(qcom_pm_runtime_init);
