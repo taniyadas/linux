@@ -16,6 +16,7 @@
 #include <linux/slab.h>
 #include <linux/err.h>
 #include <linux/pm_runtime.h>
+#include <linux/of.h>
 
 #ifdef CONFIG_PM
 
@@ -323,6 +324,7 @@ int pm_clk_resume(struct device *dev)
  * of PM clocks, depending on @action.
  *
  * If the device's pm_domain field is already populated with a value different
+ * or is expected to be populated with a different value later (in case of DT)
  * from the one stored in the struct pm_clk_notifier_block object, the function
  * does nothing.
  */
@@ -332,7 +334,7 @@ static int pm_clk_notify(struct notifier_block *nb,
 	struct pm_clk_notifier_block *clknb;
 	struct device *dev = data;
 	char **con_id;
-	int error;
+	int error, sz;
 
 	dev_dbg(dev, "%s() %ld\n", __func__, action);
 
@@ -341,6 +343,10 @@ static int pm_clk_notify(struct notifier_block *nb,
 	switch (action) {
 	case BUS_NOTIFY_ADD_DEVICE:
 		if (dev->pm_domain)
+			break;
+
+		/* With DT dev->pm_domain hookup happens later */
+		if (of_find_property(dev->of_node, "power-domains", &sz))
 			break;
 
 		error = pm_clk_create(dev);
