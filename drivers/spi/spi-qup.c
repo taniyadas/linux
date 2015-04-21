@@ -131,7 +131,6 @@ struct spi_qup {
 	void __iomem		*base;
 	struct device		*dev;
 	struct clk		*cclk;	/* core clock */
-	struct clk		*iclk;	/* interface clock */
 	int			irq;
 	spinlock_t		lock;
 
@@ -753,7 +752,7 @@ err_tx:
 static int spi_qup_probe(struct platform_device *pdev)
 {
 	struct spi_master *master;
-	struct clk *iclk, *cclk;
+	struct clk *cclk;
 	struct spi_qup *controller;
 	struct resource *res;
 	struct device *dev;
@@ -775,10 +774,6 @@ static int spi_qup_probe(struct platform_device *pdev)
 	if (IS_ERR(cclk))
 		return PTR_ERR(cclk);
 
-	iclk = devm_clk_get(dev, "iface");
-	if (IS_ERR(iclk))
-		return PTR_ERR(iclk);
-
 	/* This is optional parameter */
 	if (of_property_read_u32(dev->of_node, "spi-max-frequency", &max_freq))
 		max_freq = SPI_MAX_RATE;
@@ -788,23 +783,15 @@ static int spi_qup_probe(struct platform_device *pdev)
 		return -ENXIO;
 	}
 
-	ret = clk_prepare_enable(cclk);
-	if (ret) {
-		dev_err(dev, "cannot enable core clock\n");
-		return ret;
-	}
-
-	ret = clk_prepare_enable(iclk);
-	if (ret) {
-		clk_disable_unprepare(cclk);
-		dev_err(dev, "cannot enable iface clock\n");
-		return ret;
-	}
+	pm_runtime_set_autosuspend_delay(dev, MSEC_PER_SEC);
+	pm_runtime_use_autosuspend(dev);
+	pm_runtime_enable(dev);
+	pm_runtime_get_sync(dev);
 
 	master = spi_alloc_master(dev, sizeof(struct spi_qup));
 	if (!master) {
-		clk_disable_unprepare(cclk);
-		clk_disable_unprepare(iclk);
+		pm_runtime_set_suspended(dev);
+		pm_runtime_disable(dev);
 		dev_err(dev, "cannot allocate master\n");
 		return -ENOMEM;
 	}
@@ -832,7 +819,6 @@ static int spi_qup_probe(struct platform_device *pdev)
 
 	controller->dev = dev;
 	controller->base = base;
-	controller->iclk = iclk;
 	controller->cclk = cclk;
 	controller->irq = irq;
 
@@ -904,24 +890,17 @@ static int spi_qup_probe(struct platform_device *pdev)
 	if (ret)
 		goto error_dma;
 
-	pm_runtime_set_autosuspend_delay(dev, MSEC_PER_SEC);
-	pm_runtime_use_autosuspend(dev);
-	pm_runtime_set_active(dev);
-	pm_runtime_enable(dev);
-
 	ret = devm_spi_register_master(dev, master);
 	if (ret)
-		goto disable_pm;
+		goto error_dma;
 
 	return 0;
 
-disable_pm:
-	pm_runtime_disable(&pdev->dev);
 error_dma:
 	spi_qup_release_dma(master);
 error:
-	clk_disable_unprepare(cclk);
-	clk_disable_unprepare(iclk);
+	pm_runtime_set_suspended(&pdev->dev);
+	pm_runtime_disable(&pdev->dev);
 	spi_master_put(master);
 	return ret;
 }
@@ -969,8 +948,6 @@ static int spi_qup_suspend(struct device *device)
 	if (ret)
 		return ret;
 
-	clk_disable_unprepare(controller->cclk);
-	clk_disable_unprepare(controller->iclk);
 	return 0;
 }
 
@@ -979,14 +956,6 @@ static int spi_qup_resume(struct device *device)
 	struct spi_master *master = dev_get_drvdata(device);
 	struct spi_qup *controller = spi_master_get_devdata(master);
 	int ret;
-
-	ret = clk_prepare_enable(controller->iclk);
-	if (ret)
-		return ret;
-
-	ret = clk_prepare_enable(controller->cclk);
-	if (ret)
-		return ret;
 
 	ret = spi_qup_set_state(controller, QUP_STATE_RESET);
 	if (ret)
@@ -1011,9 +980,6 @@ static int spi_qup_remove(struct platform_device *pdev)
 		return ret;
 
 	spi_qup_release_dma(master);
-
-	clk_disable_unprepare(controller->cclk);
-	clk_disable_unprepare(controller->iclk);
 
 	pm_runtime_put_noidle(&pdev->dev);
 	pm_runtime_disable(&pdev->dev);
