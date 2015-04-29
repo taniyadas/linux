@@ -18,17 +18,21 @@
 #include <linux/pm_domain.h>
 #include <linux/regmap.h>
 
+#define GDSC_CLK_CONTROL		0x1
+
 /**
  * struct gdsc - Globally Distributed Switch Controller
  * @pd: generic power domain
  * @regmap: regmap for MMIO accesses
  * @gdscr: gsdc control register
+ * @flags: capabilities of the gdsc
  * @con_ids: List of clocks to be controlled for the gdsc
  */
 struct gdsc {
 	struct generic_pm_domain	pd;
 	struct regmap			*regmap;
 	unsigned int			gdscr;
+	const u8			flags;
 	char				*root_con_id;
 	struct clk			*root_clk;
 	char				*con_ids[];

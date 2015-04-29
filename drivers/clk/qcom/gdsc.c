@@ -40,6 +40,9 @@ static int gdsc_is_enabled(struct gdsc *sc)
 	u32 val;
 	int ret;
 
+	if (sc->flags & GDSC_CLK_CONTROL)
+		return 0;
+
 	ret = regmap_read(sc->regmap, sc->gdscr, &val);
 	if (ret)
 		return ret;
@@ -83,6 +86,9 @@ static int gdsc_enable(struct generic_pm_domain *domain)
 	struct gdsc *sc = domain_to_gdsc(domain);
 	int ret;
 
+	if (sc->flags & GDSC_CLK_CONTROL)
+		return 0;
+
 	if (sc->root_clk)
 		clk_prepare_enable(sc->root_clk);
 
@@ -105,6 +111,9 @@ static int gdsc_disable(struct generic_pm_domain *domain)
 {
 	int ret;
 	struct gdsc *sc = domain_to_gdsc(domain);
+
+	if (sc->flags & GDSC_CLK_CONTROL)
+		return 0;
 
 	ret = gdsc_toggle_logic(sc, false);
 
@@ -167,17 +176,20 @@ static int gdsc_init(struct gdsc *sc)
 	u32 mask, val;
 	int on, ret;
 
-	/*
-	 * Disable HW trigger: collapse/restore occur based on registers writes.
-	 * Disable SW override: Use hardware state-machine for sequencing.
-	 * Configure wait time between states.
-	 */
-	mask = HW_CONTROL_MASK | SW_OVERRIDE_MASK |
-	       EN_REST_WAIT_MASK | EN_FEW_WAIT_MASK | CLK_DIS_WAIT_MASK;
-	val = EN_REST_WAIT_VAL | EN_FEW_WAIT_VAL | CLK_DIS_WAIT_VAL;
-	ret = regmap_update_bits(sc->regmap, sc->gdscr, mask, val);
-	if (ret)
-		return ret;
+	if (!(sc->flags & GDSC_CLK_CONTROL)) {
+		/*
+		 * Disable HW trigger: collapse/restore occur based on
+		 * register writes.
+		 * Disable SW override: Use hardware state-machine for
+		 * sequencing. Configure wait time between states.
+		 */
+		mask = HW_CONTROL_MASK | SW_OVERRIDE_MASK |
+		       EN_REST_WAIT_MASK | EN_FEW_WAIT_MASK | CLK_DIS_WAIT_MASK;
+		val = EN_REST_WAIT_VAL | EN_FEW_WAIT_VAL | CLK_DIS_WAIT_VAL;
+		ret = regmap_update_bits(sc->regmap, sc->gdscr, mask, val);
+		if (ret)
+			return ret;
+	}
 
 	on = gdsc_is_enabled(sc);
 	if (on < 0)
