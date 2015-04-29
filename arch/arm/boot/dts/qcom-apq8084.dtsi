@@ -241,6 +241,7 @@
 			interrupts = <0 114 0x0>;
 			clocks = <&gcc GCC_BLSP2_UART2_APPS_CLK>, <&gcc GCC_BLSP2_AHB_CLK>;
 			clock-names = "core", "iface";
+			power-domains = <&gcc CLK_GDSC>;
 			status = "disabled";
 		};
 
@@ -252,6 +253,7 @@
 			interrupt-names = "hc_irq", "pwr_irq";
 			clocks = <&gcc GCC_SDCC1_APPS_CLK>, <&gcc GCC_SDCC1_AHB_CLK>;
 			clock-names = "core", "iface";
+			power-domains = <&gcc CLK_GDSC>;
 			status = "disabled";
 		};
 
@@ -263,6 +265,7 @@
 			interrupt-names = "hc_irq", "pwr_irq";
 			clocks = <&gcc GCC_SDCC2_APPS_CLK>, <&gcc GCC_SDCC2_AHB_CLK>;
 			clock-names = "core", "iface";
+			power-domains = <&gcc CLK_GDSC>;
 			status = "disabled";
 		};
 

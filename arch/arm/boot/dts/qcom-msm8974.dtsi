@@ -235,6 +235,7 @@
 			interrupts = <0 108 0x0>;
 			clocks = <&gcc GCC_BLSP1_UART2_APPS_CLK>, <&gcc GCC_BLSP1_AHB_CLK>;
 			clock-names = "core", "iface";
+			power-domains = <&gcc CLK_GDSC>;
 			status = "disabled";
 		};
 
@@ -284,6 +285,7 @@
 			interrupts = <0 105 IRQ_TYPE_NONE>;
 			clocks = <&gcc GCC_BLSP2_QUP5_I2C_APPS_CLK>, <&gcc GCC_BLSP2_AHB_CLK>;
 			clock-names = "core", "iface";
+			power-domains = <&gcc CLK_GDSC>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
