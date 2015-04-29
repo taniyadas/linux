@@ -353,5 +353,6 @@
 #define PCIE0_GDSC					1
 #define PCIE1_GDSC					2
 #define USB30_GDSC					3
+#define CLK_GDSC					4
 
 #endif

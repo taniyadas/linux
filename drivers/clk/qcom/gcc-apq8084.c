@@ -3282,6 +3282,14 @@ static struct gdsc usb30_gdsc = {
 	},
 };
 
+static struct gdsc clk_gdsc = {
+	.flags = GDSC_CLK_CONTROL,
+	.pd = {
+		.name = "clk",
+	},
+	.con_ids = { "core", "iface", NULL },
+};
+
 static struct clk_regmap *gcc_apq8084_clocks[] = {
 	[GPLL0] = &gpll0.clkr,
 	[GPLL0_VOTE] = &gpll0_vote,
@@ -3480,6 +3488,7 @@ static struct gdsc *gcc_apq8084_gdscs[] = {
 	[PCIE0_GDSC] = &pcie0_gdsc,
 	[PCIE1_GDSC] = &pcie1_gdsc,
 	[USB30_GDSC] = &usb30_gdsc,
+	[CLK_GDSC] = &clk_gdsc,
 };
 
 static const struct qcom_reset_map gcc_apq8084_resets[] = {

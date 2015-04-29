@@ -2599,6 +2599,14 @@ static struct gdsc oxili_gdsc = {
 	.root_con_id = "gfx3d_clk_src",
 };
 
+static struct gdsc clk_gdsc = {
+	.flags = GDSC_CLK_CONTROL,
+	.pd = {
+		.name = "clk",
+	},
+	.con_ids = { "core", "iface", NULL },
+};
+
 static struct clk_regmap *gcc_msm8916_clocks[] = {
 	[GPLL0] = &gpll0.clkr,
 	[GPLL0_VOTE] = &gpll0_vote,
@@ -2746,6 +2754,7 @@ static struct gdsc *gcc_msm8916_gdscs[] = {
 	[JPEG_GDSC] = &jpeg_gdsc,
 	[VFE_GDSC] = &vfe_gdsc,
 	[OXILI_GDSC] = &oxili_gdsc,
+	[CLK_GDSC] = &clk_gdsc,
 };
 
 static const struct qcom_reset_map gcc_msm8916_resets[] = {

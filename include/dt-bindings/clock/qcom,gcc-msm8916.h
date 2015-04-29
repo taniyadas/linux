@@ -160,5 +160,6 @@
 #define JPEG_GDSC				3
 #define VFE_GDSC				4
 #define OXILI_GDSC				5
+#define CLK_GDSC				6
 
 #endif

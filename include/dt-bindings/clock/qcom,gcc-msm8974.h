@@ -323,5 +323,6 @@
 
 /* gdscs */
 #define USB_HS_HSIC_GDSC					0
+#define CLK_GDSC						1
 
 #endif
