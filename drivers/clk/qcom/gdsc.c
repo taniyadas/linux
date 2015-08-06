@@ -12,6 +12,8 @@
  */
 
 #include <linux/bitops.h>
+#include <linux/clk.h>
+#include <linux/clk-provider.h>
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/jiffies.h>
@@ -21,6 +23,7 @@
 #include <linux/regmap.h>
 #include <linux/reset-controller.h>
 #include <linux/slab.h>
+#include "common.h"
 #include "gdsc.h"
 
 #define PWR_ON_MASK		BIT(31)
@@ -166,6 +169,30 @@ static inline void gdsc_assert_clamp_io(struct gdsc *sc)
 			   GMEM_CLAMP_IO_MASK, 1);
 }
 
+static int gdsc_clk_enable(struct gdsc *sc)
+{
+	int i, ret;
+
+	for (i = 0; i < sc->clk_count; i++) {
+		ret = clk_prepare_enable(sc->clks[i]);
+		if (ret) {
+			while (--i >= 0)
+				clk_disable_unprepare(sc->clks[i]);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+static void gdsc_clk_disable(struct gdsc *sc)
+{
+	int i = sc->clk_count;
+
+	while (--i >= 0)
+		clk_disable_unprepare(sc->clks[i]);
+}
+
 static int gdsc_enable(struct generic_pm_domain *domain)
 {
 	struct gdsc *sc = domain_to_gdsc(domain);
@@ -192,6 +219,10 @@ static int gdsc_enable(struct generic_pm_domain *domain)
 	 * memories.
 	 */
 	udelay(1);
+
+	ret = gdsc_clk_enable(sc);
+	if (ret)
+		return ret;
 
 	/* Turn on HW trigger mode if supported */
 	if (sc->flags & HW_CTRL) {
@@ -241,6 +272,8 @@ static int gdsc_disable(struct generic_pm_domain *domain)
 			return ret;
 	}
 
+	gdsc_clk_disable(sc);
+
 	if (sc->pwrsts & PWRSTS_OFF)
 		gdsc_clear_mem_on(sc);
 
@@ -252,6 +285,32 @@ static int gdsc_disable(struct generic_pm_domain *domain)
 		gdsc_assert_clamp_io(sc);
 
 	return 0;
+}
+
+static inline int gdsc_clk_get(struct device *dev, struct gdsc *sc)
+{
+	int i;
+
+	sc->clks = devm_kcalloc(dev, sc->clk_count, sizeof(*sc->clks),
+				GFP_KERNEL);
+	if (!sc->clks)
+		return -ENOMEM;
+
+	for (i = 0; i < sc->clk_count; i++) {
+		sc->clks[i] = devm_clk_hw_get_clk(dev, sc->clk_hws[i],
+						  NULL);
+		if (IS_ERR(sc->clks[i]))
+			return PTR_ERR(sc->clks[i]);
+	}
+
+	return 0;
+}
+
+static int gdsc_attach(struct generic_pm_domain *domain, struct device *dev)
+{
+	struct gdsc *sc = domain_to_gdsc(domain);
+
+	return  gdsc_clk_get(dev, sc);
 }
 
 static int gdsc_init(struct gdsc *sc)
@@ -286,10 +345,10 @@ static int gdsc_init(struct gdsc *sc)
 
 	/*
 	 * Votable GDSCs can be ON due to Vote from other masters.
-	 * If a Votable GDSC is ON, make sure we have a Vote.
+	 * If *we* haven't Voted for it, tell genpd its actually OFF.
 	 */
 	if ((sc->flags & VOTABLE) && on)
-		gdsc_enable(&sc->pd);
+		on = !on;
 
 	if (on || (sc->pwrsts & PWRSTS_RET))
 		gdsc_force_mem_on(sc);
@@ -298,6 +357,8 @@ static int gdsc_init(struct gdsc *sc)
 
 	sc->pd.power_off = gdsc_disable;
 	sc->pd.power_on = gdsc_enable;
+	if (sc->clk_count)
+		sc->pd.attach_dev = gdsc_attach;
 	pm_genpd_init(&sc->pd, NULL, !on);
 
 	return 0;
