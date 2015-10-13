@@ -1257,7 +1257,7 @@ static int __init qcom_smd_init(void)
 
 	return platform_driver_register(&qcom_smd_driver);
 }
-postcore_initcall(qcom_smd_init);
+core_initcall(qcom_smd_init);
 
 static void __exit qcom_smd_exit(void)
 {
