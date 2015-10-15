@@ -28,7 +28,6 @@
 			qcom,dest-bw = <600000>;
 		};
 
-
 		rule1 {
 			qcom,src-nodes = <&mas_apss>;
 			qcom,src-field = <FLD_IB>;
@@ -39,6 +38,7 @@
 			qcom,dest-bw = <1200000>;
 		};
 
+/*
 		rule2 {
 			qcom,src-nodes = <&mas_apss>;
 			qcom,src-field = <FLD_IB>;
@@ -47,6 +47,7 @@
 			qcom,mode = <THROTTLE_OFF>;
 			qcom,dest-node = <&mas_apss>;
 		};
+*/
 
 		rule3 {
 			qcom,src-nodes = <&mas_gfx>;
@@ -58,6 +59,7 @@
 			qcom,dest-bw = <600000>;
 		};
 
+/*
 		rule4 {
 			qcom,src-nodes = <&mas_gfx>;
 			qcom,src-field = <FLD_IB>;
@@ -76,6 +78,7 @@
 			qcom,mode = <THROTTLE_OFF>;
 			qcom,dest-node = <&mas_gfx>;
 		};
+*/
 	};
 };
 
