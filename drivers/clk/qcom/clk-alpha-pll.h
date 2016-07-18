@@ -37,8 +37,11 @@ struct clk_alpha_pll {
 #define SUPPORTS_OFFLINE_REQ	BIT(0)
 #define SUPPORTS_16BIT_ALPHA	BIT(1)
 #define SUPPORTS_FSM_MODE	BIT(2)
+#define SUPPORTS_DYNAMIC_UPDATE	BIT(3)
 	u8 flags;
 
+	unsigned long min_rate;
+	unsigned long max_rate;
 	struct clk_regmap clkr;
 };
 
