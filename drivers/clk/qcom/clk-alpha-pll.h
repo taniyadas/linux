@@ -38,7 +38,10 @@ struct clk_alpha_pll {
 #define SUPPORTS_16BIT_ALPHA	BIT(1)
 #define SUPPORTS_FSM_MODE	BIT(2)
 #define SUPPORTS_DYNAMIC_UPDATE	BIT(3)
+#define SUPPORTS_LATCHED_INPUT	BIT(4)
 	u8 flags;
+	u8 latch_ack_bit;
+	bool latch_ack_inverse;
 
 	unsigned long min_rate;
 	unsigned long max_rate;
