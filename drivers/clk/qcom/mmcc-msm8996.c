@@ -3341,7 +3341,7 @@ static int mmcc_msm8996_probe(struct platform_device *pdev)
 	/* Disable the NoC FSM for mmss_mmagic_cfg_ahb_clk */
 	regmap_update_bits(regmap, 0x5054, BIT(15), 0);
 
-	mmcc_change_hdmi_extp_src(regmap);
+	//mmcc_change_hdmi_extp_src(regmap);
 
 	for (i = 0; i < ARRAY_SIZE(mmcc_msm8996_hws); i++) {
 		clk = devm_clk_register(dev, mmcc_msm8996_hws[i]);

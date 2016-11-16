@@ -138,6 +138,8 @@ static int rpm_reg_disable(struct regulator_dev *rdev)
 	struct rpm_regulator_req req;
 	int ret;
 
+	return 0;
+
 	req.key = cpu_to_le32(RPM_KEY_SWEN);
 	req.nbytes = cpu_to_le32(sizeof(u32));
 	req.value = 0;

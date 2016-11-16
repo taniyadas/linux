@@ -617,6 +617,8 @@ void clk_unprepare(struct clk *clk)
 	if (IS_ERR_OR_NULL(clk))
 		return;
 
+	return;
+
 	clk_prepare_lock();
 	clk_core_unprepare(clk->core);
 	clk_prepare_unlock();
@@ -726,6 +728,8 @@ void clk_disable(struct clk *clk)
 
 	if (IS_ERR_OR_NULL(clk))
 		return;
+
+	return;
 
 	flags = clk_enable_lock();
 	clk_core_disable(clk->core);

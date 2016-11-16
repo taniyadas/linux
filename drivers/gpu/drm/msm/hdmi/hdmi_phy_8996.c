@@ -409,6 +409,8 @@ static int hdmi_8996_pll_set_clk_rate(struct clk_hw *hw, unsigned long rate,
 	struct hdmi_8996_phy_pll_reg_cfg cfg;
 	int i, ret;
 
+	printk("XXXXXXXXXXXXXXXXXX hdmi_8996_pll_set_clk_rate start %lu\n", rate);
+
 	memset(&cfg, 0x00, sizeof(cfg));
 
 	ret = pll_calculate(rate, parent_rate, &cfg);
@@ -540,12 +542,19 @@ static int hdmi_8996_pll_set_clk_rate(struct clk_hw *hw, unsigned long rate,
 	hdmi_phy_write(phy, REG_HDMI_8996_PHY_MODE, cfg.phy_mode);
 	hdmi_phy_write(phy, REG_HDMI_8996_PHY_PD_CTL, 0x1F);
 
+	hdmi_phy_write(phy, REG_HDMI_8996_PHY_CFG, 0x1);
+	udelay(100);
+
+	hdmi_phy_write(phy, REG_HDMI_8996_PHY_CFG, 0x19);
+	udelay(100);
+
+
 	/*
 	 * Ensure that vco configuration gets flushed to hardware before
 	 * enabling the PLL
 	 */
 	wmb();
-
+	printk("XXXXXXXXXXXXXXXXXX hdmi_8996_pll_set_clk_rate end\n");
 	return 0;
 }
 
@@ -684,11 +693,10 @@ static int hdmi_8996_pll_is_enabled(struct clk_hw *hw)
 	u32 status;
 	int pll_locked;
 
-	return pll->enabled;
-	//status = hdmi_pll_read(pll, REG_HDMI_PHY_QSERDES_COM_C_READY_STATUS);
-	//pll_locked = status & BIT(0);
+	status = hdmi_pll_read(pll, REG_HDMI_PHY_QSERDES_COM_C_READY_STATUS);
+	pll_locked = status & BIT(0);
 
-	//return pll_locked;
+	return pll_locked;
 }
 
 static struct clk_ops hdmi_8996_pll_ops = {
