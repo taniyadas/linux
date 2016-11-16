@@ -296,6 +296,8 @@ static enum drm_connector_status detect_gpio(struct hdmi *hdmi)
 	const struct hdmi_platform_config *config = hdmi->config;
 	struct hdmi_gpio_data hpd_gpio = config->gpios[HPD_GPIO_INDEX];
 
+	return connector_status_connected;
+
 	return gpio_get_value(hpd_gpio.num) ?
 			connector_status_connected :
 			connector_status_disconnected;
@@ -399,6 +401,10 @@ static int msm_hdmi_connector_mode_valid(struct drm_connector *connector,
 		actual = clk_round_rate(hdmi->pwr_clks[0], actual);
 
 	DBG("requested=%ld, actual=%ld", requested, actual);
+
+	if (requested > 150000000)
+		return MODE_CLOCK_RANGE;
+
 
 	if (actual != requested)
 		return MODE_CLOCK_RANGE;
