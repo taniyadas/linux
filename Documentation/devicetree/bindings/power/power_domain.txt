@@ -38,6 +38,40 @@ Optional properties:
   domain's idle states. In the absence of this property, the domain would be
   considered as capable of being powered-on or powered-off.
 
+- domain-performance-states : A phandle of the performance states node, which
+		defines all the performance states associated with a power
+		domain.
+  The domain-performance-states property reflects the performance states of this
+  PM domain and not the performance states of the devices or sub-domains in the
+  PM domain. Devices and sub-domains have their own performance states, which
+  are dependent on the performance state of the PM domain.
+
+* PM domain performance states node
+
+This describes the performance states of a PM domain.
+
+Required properties:
+- compatible: Allow performance states to express their compatibility. It should
+  be: "domain-performance-state".
+
+- Performance state nodes: This node shall have one or more "Performance State"
+  nodes.
+
+* Performance state node
+
+Required properties:
+- performance-level: A positive integer value representing the performance level
+  associated with a performance state. The integer value '1' represents the
+  lowest performance level and the highest value represents the highest
+  performance level.
+
+Optional properties:
+- domain-microvolt: voltage in micro Volts.
+
+  A single regulator's voltage is specified with an array of size one or three.
+  Single entry is for target voltage and three entries are for <target min max>
+  voltages.
+
 Example:
 
 	power: power-controller@12340000 {
@@ -117,5 +151,40 @@ Example:
 The node above defines a typical PM domain consumer device, which is located
 inside a PM domain with index 0 of a power controller represented by a node
 with the label "power".
+
+Optional properties:
+- domain-performance-state: A phandle of a Performance state node.
+
+Example:
+
+	parent: power-controller@12340000 {
+		compatible = "foo,power-controller";
+		reg = <0x12340000 0x1000>;
+		#power-domain-cells = <0>;
+		domain-performance-states = <&domain_perf_states>;
+	};
+
+	domain_perf_states: performance_states {
+		compatible = "domain-performance-state";
+		domain_perf_state1: pstate@1 {
+			performance-level = <1>;
+			domain-microvolt = <970000 975000 985000>;
+		};
+		domain_perf_state2: pstate@2 {
+			performance-level = <2>;
+			domain-microvolt = <1000000 1075000 1085000>;
+		};
+		domain_perf_state3: pstate@3 {
+			performance-level = <3>;
+			domain-microvolt = <1100000 1175000 1185000>;
+		};
+	}
+
+	leaky-device@12350000 {
+		compatible = "foo,i-leak-current";
+		reg = <0x12350000 0x1000>;
+		power-domains = <&power 0>;
+		domain-performance-state = <&domain_perf_state2>;
+	};
 
 [1]. Documentation/devicetree/bindings/power/domain-idle-state.txt
