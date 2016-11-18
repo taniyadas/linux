@@ -543,6 +543,63 @@ _generic_set_opp_clk_only(struct device *dev, struct clk *clk,
 	return ret;
 }
 
+static int _update_pm_qos_request(struct device *dev,
+				  struct dev_pm_qos_request *req,
+				  unsigned int perf)
+{
+	int ret;
+
+	if (likely(dev_pm_qos_request_active(req)))
+		ret = dev_pm_qos_update_request(req, perf);
+	else
+		ret = dev_pm_qos_add_request(dev, req, DEV_PM_QOS_PERFORMANCE,
+					     perf);
+
+	if (ret < 0)
+		return ret;
+
+	return 0;
+}
+
+static int _generic_set_opp_domain(struct device *dev, struct clk *clk,
+				   struct dev_pm_qos_request *req,
+				   unsigned long old_freq, unsigned long freq,
+				   int old_dps, int new_dps)
+{
+	int ret;
+
+	/* Scaling up? Scale voltage before frequency */
+	if (freq > old_freq) {
+		ret = _update_pm_qos_request(dev, req, new_dps);
+		if (ret)
+			return ret;
+	}
+
+	/* Change frequency */
+	ret = _generic_set_opp_clk_only(dev, clk, old_freq, freq);
+	if (ret)
+		goto restore_dps;
+
+	/* Scaling down? Scale voltage after frequency */
+	if (freq < old_freq) {
+		ret = _update_pm_qos_request(dev, req, new_dps);
+		if (ret)
+			goto restore_freq;
+	}
+
+	return 0;
+
+restore_freq:
+	if (_generic_set_opp_clk_only(dev, clk, freq, old_freq))
+		dev_err(dev, "%s: failed to restore old-freq (%lu Hz)\n",
+			__func__, old_freq);
+restore_dps:
+	if (old_dps != -1)
+		_update_pm_qos_request(dev, req, old_dps);
+
+	return ret;
+}
+
 static int _generic_set_opp(struct dev_pm_set_opp_data *data)
 {
 	struct dev_pm_opp_supply *old_supply = data->old_opp.supplies;
@@ -662,6 +719,19 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
 		old_freq, freq);
 
 	regulators = opp_table->regulators;
+
+	/* Has power domains performance states */
+	if (opp_table->has_domain_perf_states) {
+		int old_dps = -1, new_dps;
+		struct dev_pm_qos_request *req = &opp_table->qos_request;
+
+		new_dps = opp->domain_perf_state;
+		if (!IS_ERR(old_opp))
+			old_dps = old_opp->domain_perf_state;
+
+		return _generic_set_opp_domain(dev, clk, req, old_freq, freq,
+					       old_dps, new_dps);
+	}
 
 	/* Only frequency scaling */
 	if (!regulators) {
@@ -808,6 +878,9 @@ static void _opp_table_kref_release(struct kref *kref)
 	struct opp_table *opp_table = container_of(kref, struct opp_table, kref);
 	struct opp_device *opp_dev;
 
+	if (dev_pm_qos_request_active(&opp_table->qos_request))
+		dev_pm_qos_remove_request(&opp_table->qos_request);
+
 	/* Release clk */
 	if (!IS_ERR(opp_table->clk))
 		clk_put(opp_table->clk);
@@ -950,18 +1023,8 @@ static bool _opp_supported_by_regulators(struct dev_pm_opp *opp,
 	return true;
 }
 
-/*
- * Returns:
- * 0: On success. And appropriate error message for duplicate OPPs.
- * -EBUSY: For OPP with same freq/volt and is available. The callers of
- *  _opp_add() must return 0 if they receive -EBUSY from it. This is to make
- *  sure we don't print error messages unnecessarily if different parts of
- *  kernel try to initialize the OPP table.
- * -EEXIST: For OPP with same freq but different volt or is unavailable. This
- *  should be considered an error by the callers of _opp_add().
- */
-int _opp_add(struct device *dev, struct dev_pm_opp *new_opp,
-	     struct opp_table *opp_table)
+struct list_head *_opp_add_freq(struct device *dev, struct dev_pm_opp *new_opp,
+				struct opp_table *opp_table)
 {
 	struct dev_pm_opp *opp;
 	struct list_head *head;
@@ -975,7 +1038,6 @@ int _opp_add(struct device *dev, struct dev_pm_opp *new_opp,
 	 * loop, don't replace it with head otherwise it will become an infinite
 	 * loop.
 	 */
-	mutex_lock(&opp_table->lock);
 	head = &opp_table->opp_list;
 
 	list_for_each_entry(opp, &opp_table->opp_list, node) {
@@ -997,8 +1059,81 @@ int _opp_add(struct device *dev, struct dev_pm_opp *new_opp,
 		ret = opp->available &&
 		      new_opp->supplies[0].u_volt == opp->supplies[0].u_volt ? -EBUSY : -EEXIST;
 
+		return ERR_PTR(ret);
+	}
+
+	return head;
+}
+
+struct list_head *_opp_add_domain(struct device *dev, struct dev_pm_opp *new_opp,
+				  struct opp_table *opp_table)
+{
+	struct dev_pm_opp *opp;
+	struct list_head *head;
+	int ret;
+
+	/*
+	 * Insert new OPP in order of increasing performance level and discard
+	 * if already present.
+	 *
+	 * Need to use &opp_table->opp_list in the condition part of the 'for'
+	 * loop, don't replace it with head otherwise it will become an infinite
+	 * loop.
+	 */
+	head = &opp_table->opp_list;
+
+	list_for_each_entry(opp, &opp_table->opp_list, node) {
+		if (new_opp->domain_perf_state > opp->domain_perf_state) {
+			head = &opp->node;
+			continue;
+		}
+
+		if (new_opp->domain_perf_state < opp->domain_perf_state)
+			break;
+
+		/* Duplicate OPPs */
+		dev_warn(dev, "%s: duplicate OPPs detected. Existing: DPS: %u, volt: %lu, enabled: %d. New-DPS: %u, volt: %lu, enabled: %d\n",
+			 __func__, opp->domain_perf_state,
+			 opp->supplies[0].u_volt, opp->available,
+			 new_opp->domain_perf_state,
+			 new_opp->supplies[0].u_volt, new_opp->available);
+
+		/* Should we compare voltages for all regulators here ? */
+		ret = opp->available &&
+		      new_opp->supplies[0].u_volt == opp->supplies[0].u_volt ? -EBUSY : -EEXIST;
+
+		return ERR_PTR(ret);
+	}
+
+	return head;
+}
+
+/*
+ * Returns:
+ * 0: On success. And appropriate error message for duplicate OPPs.
+ * -EBUSY: For OPP with same freq/dps and volt and is available. The callers of
+ *  _opp_add() must return 0 if they receive -EBUSY from it. This is to make
+ *  sure we don't print error messages unnecessarily if different parts of
+ *  kernel try to initialize the OPP table.
+ * -EEXIST: For OPP with same freq/dps but different volt or is unavailable.
+ *  This should be considered an error by the callers of _opp_add().
+ */
+int _opp_add(struct device *dev, struct dev_pm_opp *new_opp,
+	     struct opp_table *opp_table)
+{
+	struct list_head *head;
+	int ret;
+
+	mutex_lock(&opp_table->lock);
+
+	if (new_opp->rate)
+		head = _opp_add_freq(dev, new_opp, opp_table);
+	else
+		head = _opp_add_domain(dev, new_opp, opp_table);
+
+	if (IS_ERR(head)) {
 		mutex_unlock(&opp_table->lock);
-		return ret;
+		return PTR_ERR(head);
 	}
 
 	list_add(&new_opp->node, head);

@@ -20,6 +20,7 @@
 #include <linux/list.h>
 #include <linux/limits.h>
 #include <linux/pm_opp.h>
+#include <linux/pm_qos.h>
 #include <linux/notifier.h>
 
 struct clk;
@@ -58,6 +59,7 @@ extern struct list_head opp_tables;
  * @dynamic:	not-created from static DT entries.
  * @turbo:	true if turbo (boost) OPP
  * @suspend:	true if suspend OPP
+ * @domain_perf_state: Performance state of power domain
  * @rate:	Frequency in hertz
  * @supplies:	Power supplies voltage/current values
  * @clock_latency_ns: Latency (in nanoseconds) of switching to this OPP's
@@ -76,6 +78,7 @@ struct dev_pm_opp {
 	bool dynamic;
 	bool turbo;
 	bool suspend;
+	unsigned int domain_perf_state;
 	unsigned long rate;
 
 	struct dev_pm_opp_supply *supplies;
@@ -137,6 +140,12 @@ enum opp_table_access {
  * @regulator_count: Number of power supply regulators
  * @set_opp: Platform specific set_opp callback
  * @set_opp_data: Data to be passed to set_opp callback
+ * @is_domain: True if the device node contains "#power-domain-cells" property
+ * @has_domain: True if the device node contains "power-domain" property
+ * @has_domain_perf_states: Can have value of 0, 1 or -1. -1 means uninitialized
+ * state, 0 means that OPP nodes don't have perf states and 1 means that OPP
+ * nodes have perf states.
+ * @qos_request: Qos request.
  * @dentry:	debugfs dentry pointer of the real device directory (not links).
  * @dentry_name: Name of the real dentry.
  *
@@ -173,6 +182,11 @@ struct opp_table {
 
 	int (*set_opp)(struct dev_pm_set_opp_data *data);
 	struct dev_pm_set_opp_data *set_opp_data;
+
+	bool is_domain;
+	bool has_domain;
+	int has_domain_perf_states;
+	struct dev_pm_qos_request qos_request;
 
 #ifdef CONFIG_DEBUG_FS
 	struct dentry *dentry;

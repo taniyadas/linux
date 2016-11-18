@@ -81,8 +81,9 @@ int opp_debug_create_one(struct dev_pm_opp *opp, struct opp_table *opp_table)
 	struct dentry *d;
 	char name[25];	/* 20 chars for 64 bit value + 5 (opp:\0) */
 
-	/* Rate is unique to each OPP, use it to give opp-name */
-	snprintf(name, sizeof(name), "opp:%lu", opp->rate);
+	/* Rate and perf-state are unique to each OPP, use them for opp-name */
+	snprintf(name, sizeof(name), "opp:%lu",
+		 opp->rate ? opp->rate : opp->domain_perf_state);
 
 	/* Create per-opp directory */
 	d = debugfs_create_dir(name, pdentry);
@@ -102,6 +103,10 @@ int opp_debug_create_one(struct dev_pm_opp *opp, struct opp_table *opp_table)
 		return -ENOMEM;
 
 	if (!debugfs_create_ulong("rate_hz", S_IRUGO, d, &opp->rate))
+		return -ENOMEM;
+
+	if (!debugfs_create_u32("power_domain_perf_state", S_IRUGO, d,
+				&opp->domain_perf_state))
 		return -ENOMEM;
 
 	if (!opp_debug_create_supplies(opp, opp_table, d))

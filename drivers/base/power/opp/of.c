@@ -284,24 +284,70 @@ static int _opp_add_static_v2(struct opp_table *opp_table, struct device *dev,
 	if (!new_opp)
 		return -ENOMEM;
 
+	/* Check if the OPP supports hardware's hierarchy of versions or not */
+	if (!_opp_is_supported(dev, opp_table, np)) {
+		dev_dbg(dev, "OPP %s not supported by hardware\n",
+			np->full_name);
+		ret = 0;
+		goto free_opp;
+	}
+
 	ret = of_property_read_u64(np, "opp-hz", &rate);
-	if (ret < 0) {
+	if (!ret) {
+		/*
+		 * Rate is defined as an unsigned long in clk API, and so
+		 * casting explicitly to its type. Must be fixed once rate is 64
+		 * bit guaranteed in clk API.
+		 */
+		new_opp->rate = (unsigned long)rate;
+	} else if (unlikely(!opp_table->is_domain)) {
+		/* All devices except power-domains must have opp-hz */
 		dev_err(dev, "%s: opp-hz not found\n", __func__);
 		goto free_opp;
 	}
 
-	/* Check if the OPP supports hardware's hierarchy of versions or not */
-	if (!_opp_is_supported(dev, opp_table, np)) {
-		dev_dbg(dev, "OPP not supported by hardware: %llu\n", rate);
-		goto free_opp;
+	/*
+	 * Nodes can contain domain-performance-state property only if they are
+	 * power-domains or they have parent power domain. And either all nodes
+	 * must have domain-performance-state property or none.
+	 */
+	if (!of_property_read_u32(np, "domain-performance-state",
+				  &new_opp->domain_perf_state)) {
+		if (unlikely(!(opp_table->has_domain ||
+			       opp_table->is_domain))) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: OPP node can't have domain-performance-state\n",
+				__func__);
+			goto free_opp;
+		}
+
+		if (opp_table->has_domain_perf_states == -1) {
+			opp_table->has_domain_perf_states = 1;
+		} else if (unlikely(!opp_table->has_domain_perf_states)) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: Not all OPP nodes have domain-performance-state\n",
+				__func__);
+			goto free_opp;
+		}
+	} else {
+		/* Power-domains must have this property */
+		if (unlikely(opp_table->is_domain)) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: OPP node doesn't have domain-performance-state property\n",
+				__func__);
+			goto free_opp;
+		}
+
+		if (opp_table->has_domain_perf_states == -1) {
+			opp_table->has_domain_perf_states = 0;
+		} else if (unlikely(opp_table->has_domain_perf_states)) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: Not all OPP nodes have domain-performance-state\n",
+				__func__);
+			goto free_opp;
+		}
 	}
 
-	/*
-	 * Rate is defined as an unsigned long in clk API, and so casting
-	 * explicitly to its type. Must be fixed once rate is 64 bit
-	 * guaranteed in clk API.
-	 */
-	new_opp->rate = (unsigned long)rate;
 	new_opp->turbo = of_property_read_bool(np, "turbo-mode");
 
 	new_opp->np = np;
@@ -374,6 +420,20 @@ static int _of_add_opp_table_v2(struct device *dev, struct device_node *opp_np)
 	opp_table = dev_pm_opp_get_opp_table(dev);
 	if (!opp_table)
 		return -ENOMEM;
+
+	/*
+	 * Only power domains or devices with parent power-domains can have
+	 * domain-performance states.
+	 */
+	if (of_find_property(dev->of_node, "power-domains", NULL)) {
+		opp_table->has_domain = true;
+		opp_table->has_domain_perf_states = -1;
+	}
+
+	if (of_find_property(dev->of_node, "#power-domain-cells", NULL)) {
+		opp_table->is_domain = true;
+		opp_table->has_domain_perf_states = -1;
+	}
 
 	/* We have opp-table node now, iterate over it and add OPPs */
 	for_each_available_child_of_node(opp_np, np) {
