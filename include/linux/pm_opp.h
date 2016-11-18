@@ -102,6 +102,8 @@ struct dev_pm_opp *dev_pm_opp_find_freq_floor(struct device *dev,
 
 struct dev_pm_opp *dev_pm_opp_find_freq_ceil(struct device *dev,
 					     unsigned long *freq);
+struct dev_pm_opp *dev_pm_opp_find_dps(struct device *dev, unsigned int freq,
+				       bool available);
 void dev_pm_opp_put(struct dev_pm_opp *opp);
 
 int dev_pm_opp_add(struct device *dev, unsigned long freq,
@@ -190,6 +192,12 @@ static inline struct dev_pm_opp *dev_pm_opp_find_freq_floor(struct device *dev,
 
 static inline struct dev_pm_opp *dev_pm_opp_find_freq_ceil(struct device *dev,
 					unsigned long *freq)
+{
+	return ERR_PTR(-ENOTSUPP);
+}
+
+static inline struct dev_pm_opp *dev_pm_opp_find_dps(struct device *dev,
+					unsigned int freq, bool available)
 {
 	return ERR_PTR(-ENOTSUPP);
 }
