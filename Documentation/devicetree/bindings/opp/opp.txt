@@ -154,6 +154,9 @@ Optional properties:
 
 - status: Marks the node enabled/disabled.
 
+- domain-performance-state: A phandle of a Performance state node as defined by
+  ../power/power_domain.txt binding document.
+
 Example 1: Single cluster Dual-core ARM cortex A9, switch DVFS states together.
 
 / {
@@ -525,6 +528,62 @@ Example 6: opp-microvolt-<name>, opp-microamp-<name>:
 			opp-microvolt-fast = <970000 975000 985000>, /* Supply vcc0 */
 					     <960000 965000 975000>; /* Supply vcc1 */
 			opp-microamp =  <70000>; /* Will be used for both slow/fast */
+		};
+	};
+};
+
+Example 7: domain-Performance-state:
+(example: For 1GHz require domain state 1 and for 1.1 & 1.2 GHz require state 2)
+
+/ {
+	foo_domain: power-controller@12340000 {
+		compatible = "foo,power-controller";
+		reg = <0x12340000 0x1000>;
+		#power-domain-cells = <0>;
+		domain-performance-states = <&domain_perf_states>;
+	};
+
+	domain_perf_states: performance_states {
+		compatible = "domain-performance-state";
+		domain_perf_state1: pstate@1 {
+			performance-level = <1>;
+			domain-microvolt = <970000 975000 985000>;
+		};
+		domain_perf_state2: pstate@2 {
+			performance-level = <2>;
+			domain-microvolt = <1000000 1075000 1085000>;
+		};
+	}
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "arm,cortex-a9";
+			reg = <0>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			operating-points-v2 = <&cpu0_opp_table>;
+			power-domains = <&foo_domain>;
+		};
+	};
+
+	cpu0_opp_table: opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			domain-performance-state = <&domain_perf_state1>;
+		};
+		opp@1100000000 {
+			opp-hz = /bits/ 64 <1100000000>;
+			domain-performance-state = <&domain_perf_state2>;
+		};
+		opp@1200000000 {
+			opp-hz = /bits/ 64 <1200000000>;
+			domain-performance-state = <&domain_perf_state2>;
 		};
 	};
 };
