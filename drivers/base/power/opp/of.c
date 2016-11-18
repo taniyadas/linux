@@ -316,6 +316,45 @@ static int _opp_add_static_v2(struct opp_table *opp_table, struct device *dev,
 	if (!of_property_read_u32(np, "clock-latency-ns", &val))
 		new_opp->clock_latency_ns = val;
 
+	/*
+	 * Make sure that all information is present around domain power states
+	 * and nothing is left out.
+	 */
+	if (!of_property_read_u32(np, "domain-performance-state",
+				  &new_opp->pd_perf_state)) {
+		if (!opp_table->has_pd) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: OPP node can't have performance state as device doesn't have power-domain\n",
+				__func__);
+			goto free_opp;
+		}
+
+		if (!new_opp->pd_perf_state) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: OPP node can't have performance state as 0\n",
+				__func__);
+			goto free_opp;
+		}
+
+		if (opp_table->has_pd_perf_states == -1) {
+			opp_table->has_pd_perf_states = 1;
+		} else if (!opp_table->has_pd_perf_states) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: Not all OPP nodes have performance state\n",
+				__func__);
+			goto free_opp;
+		}
+	} else {
+		if (opp_table->has_pd_perf_states == -1) {
+			opp_table->has_pd_perf_states = 0;
+		} else if (opp_table->has_pd_perf_states) {
+			ret = -EINVAL;
+			dev_err(dev, "%s: Not all OPP nodes have performance state\n",
+				__func__);
+			goto free_opp;
+		}
+	}
+
 	ret = opp_parse_supplies(new_opp, dev, opp_table);
 	if (ret)
 		goto free_opp;
@@ -382,6 +421,11 @@ static int _of_add_opp_table_v2(struct device *dev, struct device_node *opp_np)
 	if (!opp_table) {
 		ret = -ENOMEM;
 		goto unlock;
+	}
+
+	if (of_find_property(dev->of_node, "power-domains", NULL)) {
+		opp_table->has_pd = true;
+		opp_table->has_pd_perf_states = -1;
 	}
 
 	/* We have opp-table node now, iterate over it and add OPPs */
