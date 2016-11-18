@@ -1034,9 +1034,6 @@ int _opp_add(struct device *dev, struct dev_pm_opp *new_opp,
 		return ret;
 	}
 
-	if (opp_table->get_pstate)
-		new_opp->pstate = opp_table->get_pstate(dev, new_opp->rate);
-
 	list_add(&new_opp->node, head);
 	mutex_unlock(&opp_table->lock);
 
