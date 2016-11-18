@@ -76,10 +76,9 @@ Optional properties:
 This defines voltage-current-frequency combinations along with other related
 properties.
 
-Required properties:
+Optional properties:
 - opp-hz: Frequency in Hz, expressed as a 64-bit big-endian integer.
 
-Optional properties:
 - opp-microvolt: voltage in micro Volts.
 
   A single regulator's voltage is specified with an array of size one or three.
@@ -153,6 +152,19 @@ Optional properties:
   above example, Z1 & Z2 refer to the version hierarchy Z.
 
 - status: Marks the node enabled/disabled.
+
+- domain-performance-state: A positive integer value representing the minimum
+  power-domain performance level required by the device for the OPP node. The
+  integer value '0' represents the lowest performance level and the higher
+  values represent higher performance levels. When present in the OPP table of a
+  power-domain, it represents the performance level of the domain. When present
+  in the OPP table of a normal device, it represents the performance level of
+  the parent power-domain. The OPP table can contain the
+  "domain-performance-state" property, only if the device node contains the
+  "power-domains" or "#power-domain-cells" property. The OPP nodes aren't
+  allowed to contain the "domain-performance-state" property partially, i.e.
+  Either all OPP nodes in the OPP table have the "domain-performance-state"
+  property or none of them have it.
 
 Example 1: Single cluster Dual-core ARM cortex A9, switch DVFS states together.
 
@@ -525,6 +537,63 @@ Example 6: opp-microvolt-<name>, opp-microamp-<name>:
 			opp-microvolt-fast = <975000 970000 985000>, /* Supply vcc0 */
 					     <965000 960000 975000>; /* Supply vcc1 */
 			opp-microamp =  <70000>; /* Will be used for both slow/fast */
+		};
+	};
+};
+
+Example 7: domain-Performance-state:
+(example: For 1GHz require domain state 1 and for 1.1 & 1.2 GHz require state 2)
+
+/ {
+	domain_opp_table: opp_table0 {
+		compatible = "operating-points-v2";
+
+		opp@1 {
+			domain-performance-state = <1>;
+			opp-microvolt = <975000 970000 985000>;
+		};
+		opp@2 {
+			domain-performance-state = <2>;
+			opp-microvolt = <1075000 1000000 1085000>;
+		};
+	};
+
+	foo_domain: power-controller@12340000 {
+		compatible = "foo,power-controller";
+		reg = <0x12340000 0x1000>;
+		#power-domain-cells = <0>;
+		operating-points-v2 = <&domain_opp_table>;
+	}
+
+	cpu0_opp_table: opp_table1 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			domain-performance-state = <1>;
+		};
+		opp@1100000000 {
+			opp-hz = /bits/ 64 <1100000000>;
+			domain-performance-state = <2>;
+		};
+		opp@1200000000 {
+			opp-hz = /bits/ 64 <1200000000>;
+			domain-performance-state = <2>;
+		};
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "arm,cortex-a9";
+			reg = <0>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			operating-points-v2 = <&cpu0_opp_table>;
+			power-domains = <&foo_domain>;
 		};
 	};
 };
