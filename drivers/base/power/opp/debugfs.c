@@ -104,6 +104,10 @@ int opp_debug_create_one(struct dev_pm_opp *opp, struct opp_table *opp_table)
 	if (!debugfs_create_ulong("rate_hz", S_IRUGO, d, &opp->rate))
 		return -ENOMEM;
 
+	if (!debugfs_create_u32("power_domain_perf_state", S_IRUGO, d,
+				&opp->pd_perf_state))
+		return -ENOMEM;
+
 	if (!opp_debug_create_supplies(opp, opp_table, d))
 		return -ENOMEM;
 

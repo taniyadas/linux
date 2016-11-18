@@ -624,6 +624,63 @@ _generic_set_opp_clk_only(struct device *dev, struct clk *clk,
 	return ret;
 }
 
+static int _update_pm_qos_request(struct device *dev,
+				  struct dev_pm_qos_request *req,
+				  unsigned int perf)
+{
+	int ret;
+
+	if (likely(dev_pm_qos_request_active(req)))
+		ret = dev_pm_qos_update_request(req, perf);
+	else
+		ret = dev_pm_qos_add_request(dev, req, DEV_PM_QOS_PERFORMANCE,
+					     perf);
+
+	if (ret < 0)
+		return ret;
+
+	return 0;
+}
+
+static int _generic_set_opp_pd(struct device *dev, struct clk *clk,
+			       struct dev_pm_qos_request *req,
+			       unsigned long old_freq, unsigned long freq,
+			       unsigned int old_perf, unsigned int new_perf)
+{
+	int ret;
+
+	/* Scaling up? Scale voltage before frequency */
+	if (freq > old_freq) {
+		ret = _update_pm_qos_request(dev, req, new_perf);
+		if (ret)
+			return ret;
+	}
+
+	/* Change frequency */
+	ret = _generic_set_opp_clk_only(dev, clk, old_freq, freq);
+	if (ret)
+		goto restore_perf;
+
+	/* Scaling down? Scale voltage after frequency */
+	if (freq < old_freq) {
+		ret = _update_pm_qos_request(dev, req, new_perf);
+		if (ret)
+			goto restore_freq;
+	}
+
+	return 0;
+
+restore_freq:
+	if (_generic_set_opp_clk_only(dev, clk, freq, old_freq))
+		dev_err(dev, "%s: failed to restore old-freq (%lu Hz)\n",
+			__func__, old_freq);
+restore_perf:
+	if (old_perf)
+		_update_pm_qos_request(dev, req, old_perf);
+
+	return ret;
+}
+
 static int _generic_set_opp(struct dev_pm_set_opp_data *data)
 {
 	struct dev_pm_opp_supply *old_supply = data->old_opp.supplies;
@@ -744,6 +801,21 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
 		old_freq, freq);
 
 	regulators = opp_table->regulators;
+
+	/* Has power domains performance states */
+	if (opp_table->has_pd_perf_states) {
+		unsigned int old_perf = 0, new_perf;
+		struct dev_pm_qos_request *req = &opp_table->qos_request;
+
+		new_perf = opp->pd_perf_state;
+		if (!IS_ERR(old_opp))
+			old_perf = old_opp->pd_perf_state;
+
+		rcu_read_unlock();
+
+		return _generic_set_opp_pd(dev, clk, req, old_freq, freq,
+					   old_perf, new_perf);
+	}
 
 	/* Only frequency scaling */
 	if (!regulators) {
@@ -896,6 +968,9 @@ static void _kfree_device_rcu(struct rcu_head *head)
 static void _free_opp_table(struct opp_table *opp_table)
 {
 	struct opp_device *opp_dev;
+
+	if (dev_pm_qos_request_active(&opp_table->qos_request))
+		dev_pm_qos_remove_request(&opp_table->qos_request);
 
 	/* Release clk */
 	if (!IS_ERR(opp_table->clk))
