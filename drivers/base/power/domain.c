@@ -452,6 +452,79 @@ static int __resume_latency_notifier(struct generic_pm_domain_data *gpd_data,
 	return NOTIFY_DONE;
 }
 
+static void __update_domain_performance_state(struct generic_pm_domain *genpd,
+					      int depth)
+{
+	struct generic_pm_domain_data *pd_data;
+	struct generic_pm_domain *subdomain;
+	struct pm_domain_data *pdd;
+	unsigned int state = 0;
+	struct gpd_link *link;
+
+	/* Traverse all devices within the domain */
+	list_for_each_entry(pdd, &genpd->dev_list, list_node) {
+		pd_data = to_gpd_data(pdd);
+
+		if (pd_data->performance_state > state)
+			state = pd_data->performance_state;
+	}
+
+	/* Traverse all subdomains within the domain */
+	list_for_each_entry(link, &genpd->master_links, master_node) {
+		subdomain = link->slave;
+
+		if (subdomain->performance_state > state)
+			state = subdomain->performance_state;
+	}
+
+	if (genpd->performance_state == state)
+		return;
+
+	genpd->performance_state = state;
+
+	if (genpd->set_performance_state) {
+		genpd->set_performance_state(genpd, state);
+		return;
+	}
+
+	/* Propagate to parent power domains */
+	list_for_each_entry(link, &genpd->slave_links, slave_node) {
+		struct generic_pm_domain *master = link->master;
+
+		genpd_lock_nested(master, depth + 1);
+		__update_domain_performance_state(master, depth + 1);
+		genpd_unlock(master);
+	}
+}
+
+static int __performance_notifier(struct generic_pm_domain_data *gpd_data,
+				  unsigned long val)
+{
+	struct generic_pm_domain *genpd = ERR_PTR(-ENODATA);
+	struct device *dev = gpd_data->base.dev;
+	struct pm_domain_data *pdd;
+
+	spin_lock_irq(&dev->power.lock);
+
+	pdd = dev->power.subsys_data ?
+		dev->power.subsys_data->domain_data : NULL;
+
+	if (pdd && pdd->dev)
+		genpd = dev_to_genpd(dev);
+
+	spin_unlock_irq(&dev->power.lock);
+
+	if (IS_ERR(genpd))
+		return NOTIFY_DONE;
+
+	genpd_lock(genpd);
+	gpd_data->performance_state = val;
+	__update_domain_performance_state(genpd, 0);
+	genpd_unlock(genpd);
+
+	return NOTIFY_DONE;
+}
+
 static int genpd_dev_pm_qos_notifier(struct notifier_block *nb,
 				     unsigned long val, void *ptr)
 {
@@ -463,6 +536,9 @@ static int genpd_dev_pm_qos_notifier(struct notifier_block *nb,
 
 	if (dev_pm_qos_notifier_is_resume_latency(dev, ptr))
 		return __resume_latency_notifier(gpd_data, val);
+
+	if (dev_pm_qos_notifier_is_performance(dev, ptr))
+		return __performance_notifier(gpd_data, val);
 
 	dev_err(dev, "%s: Unexpected notifier call\n", __func__);
 	return NOTIFY_BAD;
@@ -1157,6 +1233,7 @@ static struct generic_pm_domain_data *genpd_alloc_dev_data(struct device *dev,
 	gpd_data->td.constraint_changed = true;
 	gpd_data->td.effective_constraint_ns = -1;
 	gpd_data->nb.notifier_call = genpd_dev_pm_qos_notifier;
+	gpd_data->performance_state = 0;
 
 	spin_lock_irq(&dev->power.lock);
 
