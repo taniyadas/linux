@@ -110,6 +110,7 @@ struct generic_pm_domain_data {
 	struct notifier_block nb;
 	struct notifier_block perf_nb;
 	unsigned int performance_state;
+	unsigned int cached_performance_state;
 };
 
 #ifdef CONFIG_PM_GENERIC_DOMAINS

@@ -472,7 +472,8 @@ static int genpd_runtime_suspend(struct device *dev)
 {
 	struct generic_pm_domain *genpd;
 	bool (*suspend_ok)(struct device *__dev);
-	struct gpd_timing_data *td = &dev_gpd_data(dev)->td;
+	struct generic_pm_domain_data *pd_data = dev_gpd_data(dev);
+	struct gpd_timing_data *td = &pd_data->td;
 	bool runtime_pm = pm_runtime_enabled(dev);
 	ktime_t time_start;
 	s64 elapsed_ns;
@@ -528,7 +529,14 @@ static int genpd_runtime_suspend(struct device *dev)
 		return 0;
 
 	mutex_lock(&genpd->lock);
+
+	/* Re-evaluate performance state of the domain */
+	pd_data->cached_performance_state = pd_data->performance_state;
+	pd_data->performance_state = 0;
+	update_domain_performance_state(genpd);
+
 	genpd_poweroff(genpd, false);
+
 	mutex_unlock(&genpd->lock);
 
 	return 0;
@@ -545,7 +553,8 @@ static int genpd_runtime_suspend(struct device *dev)
 static int genpd_runtime_resume(struct device *dev)
 {
 	struct generic_pm_domain *genpd;
-	struct gpd_timing_data *td = &dev_gpd_data(dev)->td;
+	struct generic_pm_domain_data *pd_data = dev_gpd_data(dev);
+	struct gpd_timing_data *td = &pd_data->td;
 	bool runtime_pm = pm_runtime_enabled(dev);
 	ktime_t time_start;
 	s64 elapsed_ns;
@@ -565,7 +574,13 @@ static int genpd_runtime_resume(struct device *dev)
 	}
 
 	mutex_lock(&genpd->lock);
+
 	ret = genpd_poweron(genpd, 0);
+
+	/* Re-evaluate performance state of the domain */
+	pd_data->performance_state = pd_data->cached_performance_state;
+	update_domain_performance_state(genpd);
+
 	mutex_unlock(&genpd->lock);
 
 	if (ret)
