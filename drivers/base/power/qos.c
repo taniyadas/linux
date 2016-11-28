@@ -150,6 +150,10 @@ static int apply_constraint(struct dev_pm_qos_request *req,
 			req->dev->power.set_latency_tolerance(req->dev, value);
 		}
 		break;
+	case DEV_PM_QOS_PERFORMANCE:
+		ret = pm_qos_update_target(&qos->performance, &req->data.pnode,
+					   action, value);
+		break;
 	case DEV_PM_QOS_FLAGS:
 		ret = pm_qos_update_flags(&qos->flags, &req->data.flr,
 					  action, value);
@@ -193,6 +197,14 @@ static int dev_pm_qos_constraints_allocate(struct device *dev)
 	c->default_value = PM_QOS_LATENCY_TOLERANCE_DEFAULT_VALUE;
 	c->no_constraint_value = PM_QOS_LATENCY_TOLERANCE_NO_CONSTRAINT;
 	c->type = PM_QOS_MIN;
+
+	c = &qos->performance;
+	plist_head_init(&c->list);
+	c->target_value = PM_QOS_PERFORMANCE_DEFAULT_VALUE;
+	c->default_value = PM_QOS_PERFORMANCE_DEFAULT_VALUE;
+	c->no_constraint_value = PM_QOS_PERFORMANCE_DEFAULT_VALUE;
+	c->type = PM_QOS_MAX;
+	c->notifiers = &qos->notifiers;
 
 	INIT_LIST_HEAD(&qos->flags.list);
 
@@ -248,6 +260,11 @@ void dev_pm_qos_constraints_destroy(struct device *dev)
 		memset(req, 0, sizeof(*req));
 	}
 	c = &qos->latency_tolerance;
+	plist_for_each_entry_safe(req, tmp, &c->list, data.pnode) {
+		apply_constraint(req, PM_QOS_REMOVE_REQ, PM_QOS_DEFAULT_VALUE);
+		memset(req, 0, sizeof(*req));
+	}
+	c = &qos->performance;
 	plist_for_each_entry_safe(req, tmp, &c->list, data.pnode) {
 		apply_constraint(req, PM_QOS_REMOVE_REQ, PM_QOS_DEFAULT_VALUE);
 		memset(req, 0, sizeof(*req));
@@ -362,6 +379,7 @@ static int __dev_pm_qos_update_request(struct dev_pm_qos_request *req,
 	switch(req->type) {
 	case DEV_PM_QOS_RESUME_LATENCY:
 	case DEV_PM_QOS_LATENCY_TOLERANCE:
+	case DEV_PM_QOS_PERFORMANCE:
 		curr_value = req->data.pnode.prio;
 		break;
 	case DEV_PM_QOS_FLAGS:
@@ -571,6 +589,9 @@ static void __dev_pm_qos_drop_user_request(struct device *dev,
 		req = dev->power.qos->flags_req;
 		dev->power.qos->flags_req = NULL;
 		break;
+	case DEV_PM_QOS_PERFORMANCE:
+		dev_err(dev, "Invalid user request (performance)\n");
+		return;
 	}
 	__dev_pm_qos_remove_request(req);
 	kfree(req);
