@@ -152,6 +152,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	const char *name;
 	int ret;
 
+	printk("XXXXXXXXXXXXXXXXXXXXXXX cpufreq_init called\n");
 	cpu_dev = get_cpu_device(policy->cpu);
 	if (!cpu_dev) {
 		pr_err("failed to get cpu%d device\n", policy->cpu);
@@ -357,6 +358,8 @@ static int dt_cpufreq_probe(struct platform_device *pdev)
 {
 	struct cpufreq_dt_platform_data *data = dev_get_platdata(&pdev->dev);
 	int ret;
+
+	printk("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX dt_cpufreq_probe called\n");
 
 	/*
 	 * All per-cluster (CPUs sharing clock/voltages) initialization is done
