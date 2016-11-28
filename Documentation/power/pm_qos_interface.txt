@@ -172,7 +172,7 @@ type.
 
 The callback is called when the aggregated value of the device constraints list
 is changed. Currently it only supports the notifier to be registered for resume
-latency device PM QoS.
+latency and performance device PM QoS.
 
 int dev_pm_qos_remove_notifier(device, notifier, type):
 Removes the notification callback function for the device.
