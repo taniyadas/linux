@@ -163,6 +163,10 @@ static int apply_constraint(struct dev_pm_qos_request *req,
 			req->dev->power.set_latency_tolerance(req->dev, value);
 		}
 		break;
+	case DEV_PM_QOS_PERFORMANCE:
+		ret = pm_qos_update_target(&qos->performance, &req->data.pnode,
+					   action, value);
+		break;
 	case DEV_PM_QOS_FLAGS:
 		ret = pm_qos_update_flags(&qos->flags, &req->data.flr,
 					  action, value);
@@ -191,12 +195,13 @@ static int dev_pm_qos_constraints_allocate(struct device *dev)
 	if (!qos)
 		return -ENOMEM;
 
-	n = kzalloc(sizeof(*n), GFP_KERNEL);
+	n = kzalloc(2 * sizeof(*n), GFP_KERNEL);
 	if (!n) {
 		kfree(qos);
 		return -ENOMEM;
 	}
 	BLOCKING_INIT_NOTIFIER_HEAD(n);
+	BLOCKING_INIT_NOTIFIER_HEAD(n + 1);
 
 	c = &qos->resume_latency;
 	plist_head_init(&c->list);
@@ -212,6 +217,14 @@ static int dev_pm_qos_constraints_allocate(struct device *dev)
 	c->default_value = PM_QOS_LATENCY_TOLERANCE_DEFAULT_VALUE;
 	c->no_constraint_value = PM_QOS_LATENCY_TOLERANCE_NO_CONSTRAINT;
 	c->type = PM_QOS_MIN;
+
+	c = &qos->performance;
+	plist_head_init(&c->list);
+	c->target_value = PM_QOS_PERFORMANCE_DEFAULT_VALUE;
+	c->default_value = PM_QOS_PERFORMANCE_DEFAULT_VALUE;
+	c->no_constraint_value = PM_QOS_PERFORMANCE_DEFAULT_VALUE;
+	c->type = PM_QOS_MAX;
+	c->notifiers = n + 1;
 
 	INIT_LIST_HEAD(&qos->flags.list);
 
@@ -267,6 +280,11 @@ void dev_pm_qos_constraints_destroy(struct device *dev)
 		memset(req, 0, sizeof(*req));
 	}
 	c = &qos->latency_tolerance;
+	plist_for_each_entry_safe(req, tmp, &c->list, data.pnode) {
+		apply_constraint(req, PM_QOS_REMOVE_REQ, PM_QOS_DEFAULT_VALUE);
+		memset(req, 0, sizeof(*req));
+	}
+	c = &qos->performance;
 	plist_for_each_entry_safe(req, tmp, &c->list, data.pnode) {
 		apply_constraint(req, PM_QOS_REMOVE_REQ, PM_QOS_DEFAULT_VALUE);
 		memset(req, 0, sizeof(*req));
@@ -382,6 +400,7 @@ static int __dev_pm_qos_update_request(struct dev_pm_qos_request *req,
 	switch(req->type) {
 	case DEV_PM_QOS_RESUME_LATENCY:
 	case DEV_PM_QOS_LATENCY_TOLERANCE:
+	case DEV_PM_QOS_PERFORMANCE:
 		curr_value = req->data.pnode.prio;
 		break;
 	case DEV_PM_QOS_FLAGS:
@@ -492,10 +511,8 @@ EXPORT_SYMBOL_GPL(dev_pm_qos_remove_request);
 int dev_pm_qos_add_notifier(struct device *dev, struct notifier_block *notifier,
 			    enum dev_pm_qos_req_type type)
 {
+	struct dev_pm_qos *qos;
 	int ret = 0;
-
-	if (WARN_ON(type != DEV_PM_QOS_RESUME_LATENCY))
-		return -EINVAL;
 
 	mutex_lock(&dev_pm_qos_mtx);
 
@@ -504,10 +521,26 @@ int dev_pm_qos_add_notifier(struct device *dev, struct notifier_block *notifier,
 	else if (!dev->power.qos)
 		ret = dev_pm_qos_constraints_allocate(dev);
 
-	if (!ret)
-		ret = blocking_notifier_chain_register(dev->power.qos->resume_latency.notifiers,
-						       notifier);
+	if (ret)
+		goto unlock;
 
+	qos = dev->power.qos;
+
+	switch (type) {
+	case DEV_PM_QOS_RESUME_LATENCY:
+		ret = blocking_notifier_chain_register(qos->resume_latency.notifiers,
+						       notifier);
+		break;
+	case DEV_PM_QOS_PERFORMANCE:
+		ret = blocking_notifier_chain_register(qos->performance.notifiers,
+						       notifier);
+		break;
+	default:
+		WARN_ON(1);
+		ret = -EINVAL;
+	}
+
+unlock:
 	mutex_unlock(&dev_pm_qos_mtx);
 	return ret;
 }
@@ -528,18 +561,32 @@ int dev_pm_qos_remove_notifier(struct device *dev,
 			       struct notifier_block *notifier,
 			       enum dev_pm_qos_req_type type)
 {
+	struct dev_pm_qos *qos;
 	int retval = 0;
-
-	if (WARN_ON(type != DEV_PM_QOS_RESUME_LATENCY))
-		return -EINVAL;
 
 	mutex_lock(&dev_pm_qos_mtx);
 
-	/* Silently return if the constraints object is not present. */
-	if (!IS_ERR_OR_NULL(dev->power.qos))
-		retval = blocking_notifier_chain_unregister(dev->power.qos->resume_latency.notifiers,
-							    notifier);
+	qos = dev->power.qos;
 
+	/* Silently return if the constraints object is not present. */
+	if (IS_ERR_OR_NULL(qos))
+		goto unlock;
+
+	switch (type) {
+	case DEV_PM_QOS_RESUME_LATENCY:
+		retval = blocking_notifier_chain_unregister(qos->resume_latency.notifiers,
+							    notifier);
+		break;
+	case DEV_PM_QOS_PERFORMANCE:
+		retval = blocking_notifier_chain_unregister(qos->performance.notifiers,
+							    notifier);
+		break;
+	default:
+		WARN_ON(1);
+		retval = -EINVAL;
+	}
+
+unlock:
 	mutex_unlock(&dev_pm_qos_mtx);
 	return retval;
 }
