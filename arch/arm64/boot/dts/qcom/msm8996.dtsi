@@ -252,7 +252,9 @@
 
 		kryocc: clock-controller@6400000 {
 			compatible = "qcom,cpu-clk-msm8996";
-			reg = <0x6400000 0x90000>;
+			reg = <0x6400000 0x90000>,
+			      <0x74000 0x1000>,
+			      <0x99e0098 0x4>;
 			#clock-cells = <1>;
 			qcom,cbf = <&cbfcc>;
 		};

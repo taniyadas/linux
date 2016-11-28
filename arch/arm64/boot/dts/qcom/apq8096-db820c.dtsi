@@ -13,6 +13,7 @@
 
 #include "msm8996.dtsi"
 #include "apq8096-db820c-pins.dtsi"
+#include "pm8994.dtsi"
 
 / {
 	aliases {

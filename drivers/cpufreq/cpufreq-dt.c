@@ -149,7 +149,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	struct dev_pm_opp *suspend_opp;
 	unsigned int transition_latency;
 	bool fallback = false;
-	const char *name;
+	const char *name = NULL;
 	int ret;
 
 	cpu_dev = get_cpu_device(policy->cpu);
@@ -180,17 +180,19 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 			fallback = true;
 	}
 
-	/*
-	 * OPP layer will be taking care of regulators now, but it needs to know
-	 * the name of the regulator first.
-	 */
-	name = find_supply_name(cpu_dev);
-	if (name) {
-		ret = dev_pm_opp_set_regulator(cpu_dev, name);
-		if (ret) {
-			dev_err(cpu_dev, "Failed to set regulator for cpu%d: %d\n",
-				policy->cpu, ret);
-			goto out_put_clk;
+	if (!dev_pm_opp_get_opp_count(cpu_dev)) {
+		/*
+	 	 * OPP layer will be taking care of regulators now, but it needs to know
+	 	 * the name of the regulator first.
+	 	 */
+		name = find_supply_name(cpu_dev);
+		if (name) {
+			ret = dev_pm_opp_set_regulator(cpu_dev, name);
+			if (ret) {
+				dev_err(cpu_dev, "Failed to set regulator for cpu%d: %d\n",
+					policy->cpu, ret);
+				goto out_put_clk;
+			}
 		}
 	}
 
@@ -236,7 +238,8 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 		goto out_free_opp;
 	}
 
-	priv->reg_name = name;
+	if (name)
+		priv->reg_name = name;
 
 	ret = dev_pm_opp_init_cpufreq_table(cpu_dev, &freq_table);
 	if (ret) {

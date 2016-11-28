@@ -13,7 +13,9 @@
 
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
+#include <linux/cpu.h>
 #include <linux/platform_device.h>
+#include <linux/pm_opp.h>
 #include <linux/regmap.h>
 #include <linux/mfd/syscon.h>
 
@@ -21,6 +23,142 @@
 #include "clk-pll.h"
 #include "clk-regmap.h"
 #include "clk-regmap-mux.h"
+
+struct opp_data {
+	unsigned int fuse_corner;
+	unsigned long freq;
+};
+
+struct opp_data pwr_speedbin0[] = {
+	//{ 0, 307200000 },
+	//{ 1, 422400000 },
+	//{ 2, 480000000 },
+	//{ 2, 556800000 },
+	{ 2, 652800000 },
+	{ 2, 729600000 },
+	{ 2, 844800000 },
+	{ 3, 960000000 },
+	{ 3, 1036800000 },
+	{ 3, 1113600000 },
+	{ 3, 1190400000 },
+	{ 3, 1228800000 },
+	{ 4, 1324800000 },
+	{ 4, 1401600000 },
+	{ 4, 1478400000 },
+	{ 4, 1593600000 },
+};
+
+struct opp_data pwr_speedbin1[] = {
+	//{ 0, 307200000 },
+	//{ 1, 422400000 },
+	//{ 2, 480000000 },
+	//{ 2, 556800000 },
+	{ 2, 652800000 },
+	{ 2, 729600000 },
+	{ 2, 844800000 },
+	{ 3, 960000000 },
+	{ 3, 1036800000 },
+	{ 3, 1113600000 },
+	{ 3, 1190400000 },
+	{ 3, 1228800000 },
+	{ 4, 1363200000 },
+};
+
+struct opp_data perf_speedbin0[] = {
+	//{ 0, 307200000 },
+	//{ 0, 403200000 },
+	//{ 0, 480000000 },
+	//{ 1, 556800000 },
+	{ 2, 652800000 },
+	{ 2, 729600000 },
+	{ 2, 806400000 },
+	{ 2, 883200000 },
+	{ 2, 940800000 },
+	{ 3, 1036800000 },
+	{ 3, 1113600000 }, 
+	{ 3, 1190400000 },
+	{ 3, 1248000000 },
+	{ 4, 1324800000 },
+	{ 4, 1401600000 },
+	{ 4, 1478400000 },
+	{ 4, 1555200000 },
+	{ 4, 1632000000 },
+	{ 4, 1708800000 },
+	{ 4, 1785600000 },
+	{ 4, 1824000000 },
+	{ 4, 1920000000 },
+	{ 4, 1996800000 },
+	{ 4, 2073600000 },
+	{ 4, 2150400000 },
+};
+
+struct opp_data perf_speedbin1[] = {
+	//{ 0, 307200000 },
+	//{ 0, 403200000 },
+	//{ 0, 480000000 },
+	//{ 1, 556800000 },
+	{ 2, 652800000 },
+	{ 2, 729600000 },
+	{ 2, 806400000 },
+	{ 2, 883200000 },
+	{ 2, 940800000 },
+	{ 3, 1036800000 },
+	{ 3, 1113600000 },
+	{ 3, 1190400000 },
+	{ 3, 1248000000 },
+	{ 4, 1324800000 },
+	{ 4, 1401600000 },
+	{ 4, 1478400000 },
+	{ 4, 1555200000 },
+	{ 4, 1632000000 },
+	{ 4, 1708800000 },
+	{ 4, 1785600000 },
+	{ 4, 1804800000 },
+};
+
+struct fuse_param {
+	unsigned row;
+	unsigned bit_start;
+	unsigned bit_end;
+};
+
+static const struct fuse_param cpr_rev_param[] = {
+	{39, 51, 53},
+	{},
+};
+
+static const struct fuse_param speed_bin_param[] = {
+	{38, 29, 31},
+	{},
+};
+
+#define MSM8996_HMSS_FUSE_CORNERS 5
+
+static const struct fuse_param pwr_fuse_voltage[MSM8996_HMSS_FUSE_CORNERS][3] = {
+	{{67,  0,  5}, {} },
+	{{66, 58, 63}, {} },
+	{{66, 58, 63}, {} },
+	{{66, 52, 57}, {} },
+	{{66, 46, 51}, {} },
+};
+
+static const struct fuse_param perf_fuse_voltage[MSM8996_HMSS_FUSE_CORNERS][3] = {
+	{{65, 16, 21}, {} },
+	{{65, 10, 15}, {} },
+	{{65, 10, 15}, {} },
+	{{65,  4,  9}, {} },
+	{{64, 62, 63}, {65,  0,  3}, {} },
+};
+
+static const int fuse_ref_volt[MSM8996_HMSS_FUSE_CORNERS] = {
+	605000,
+	745000,
+	745000,
+	905000,
+	1140000,
+};
+
+#define BYTES_PER_FUSE_ROW 8
 
 #define VCO(a, b, c) { \
 	.val = a,\
@@ -74,7 +212,7 @@ static const struct pll_vco alt_pll_vco_modes[] = {
 };
 
 static const struct alpha_pll_config altpll_config = {
-	.l = 16,
+	.l = 10,
 	.vco_val = 0x3 << 20,
 	.vco_mask = 0x3 << 20,
 	.config_ctl_val = 0x4001051b,
@@ -337,21 +475,98 @@ static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
 	clk_prepare_enable(pwr_alt_pll);
 
 	/* init boot frequency setting for perf/pwr cluster */
-	clk_set_rate(pwr_clk, 1228800000);
-	clk_set_rate(perf_clk, 1555200000);
+	clk_set_rate(pwr_clk, 652800000);
+	clk_set_rate(perf_clk, 652800000);
+	clk_set_rate(pwr_alt_pll, 652800000);
+	clk_set_rate(perf_alt_pll, 652800000);
+
+	printk("pwr clk is at  %lu\n", clk_get_rate(pwr_clk));
+	printk("perf clk is at %lu\n", clk_get_rate(perf_clk));
+	printk("alt pwr  clk is at %lu\n", clk_get_rate(pwr_alt_pll));
+	printk("alt perf clk is at %lu\n", clk_get_rate(perf_alt_pll));
+
+	return 0;
+}
+
+int convert_open_loop_voltage_fuse(int ref_volt, int step_volt, u32 fuse, int fuse_len)
+{
+	int sign, steps;
+
+	sign = (fuse & (1 << (fuse_len - 1))) ? -1 : 1;
+	steps = fuse & ((1 << (fuse_len - 1)) - 1);
+
+	return ref_volt + sign * steps * step_volt;
+}
+
+int read_fuse_param(void __iomem *base, const struct fuse_param *param, u64 *param_value)
+{
+	u64 fuse_val, val;
+	int bits;
+	int bits_total = 0;
+
+	*param_value = 0;
+
+	while (param->row || param->bit_start || param->bit_end) {
+		bits = param->bit_end - param->bit_start + 1;
+		if (bits_total + bits > 64) {
+			pr_err("Invalid fuse parameter segments; total bits = %d\n",
+				bits_total + bits);
+			return -EINVAL;
+		}
+
+		fuse_val = readq_relaxed(base + param->row * BYTES_PER_FUSE_ROW);
+		val = (fuse_val >> param->bit_start) & ((1ULL << bits) - 1);
+		*param_value |= val << bits_total;
+		bits_total += bits;
+
+		param++;
+	}
 
 	return 0;
 }
 
 static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 {
-	int ret;
-	void __iomem *base;
+	int ret, i;
+	void __iomem *base, *fuse_base, *apm_base;
 	struct resource *res;
 	struct clk_hw_onecell_data *data;
-	struct device *dev = &pdev->dev;
+	struct device *dev = &pdev->dev, *cpu0_dev, *cpu2_dev;
 	struct regmap *regmap_cpu;
+	u64 speed_bin;
+	u64 pwr_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
+	u64 perf_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
+	u32 pwr_open_volt[MSM8996_HMSS_FUSE_CORNERS+1];
+	u32 perf_open_volt[MSM8996_HMSS_FUSE_CORNERS+1];
+	struct opp_data *pwr_opp, *perf_opp;
+	int nr_pwr_opp, nr_perf_opp;
+	struct platform_device *pd;
+	struct cpumask mask0, mask2;
+	const char *name;
+	
+	cpu0_dev = get_cpu_device(0);
+	if (!cpu0_dev)
+		return -ENODEV;
 
+	cpu2_dev = get_cpu_device(2);
+	if (!cpu2_dev)
+		return -ENODEV;
+
+	cpumask_copy(&mask0, topology_core_cpumask(0));
+	cpumask_copy(&mask2, topology_core_cpumask(2));
+	
+	name = "cpu";
+	ret = dev_pm_opp_set_regulator(cpu0_dev, name);
+	if (ret) {
+		dev_err(cpu0_dev, "Failed to set regulator for cpu0: %d\n", ret);
+		return ret;
+	}
+
+	ret = dev_pm_opp_set_regulator(cpu2_dev, name);
+	if (ret) {
+		dev_err(cpu2_dev, "Failed to set regulator for cpu2: %d\n", ret);
+		return ret;
+	}
 
 	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
 		            GFP_KERNEL);
@@ -362,6 +577,18 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	base = devm_ioremap_resource(dev, res);
 	if (IS_ERR(base))
 		return PTR_ERR(base);
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+	fuse_base = devm_ioremap_resource(dev, res);
+	if (IS_ERR(fuse_base))
+		return PTR_ERR(fuse_base);
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+	apm_base = devm_ioremap_resource(dev, res);
+	if (IS_ERR(apm_base))
+		return PTR_ERR(apm_base);
+
+	printk("APM register = %x\n", readl_relaxed(apm_base));
 
 	regmap_cpu = devm_regmap_init_mmio(dev, base,
 					   &cpu_msm8996_regmap_config);
@@ -375,6 +602,78 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	data->hws[0] = &pwrcl_clk.clkr.hw;
 	data->hws[1] = &perfcl_clk.clkr.hw;
 	data->num = 2;
+
+	ret = read_fuse_param(fuse_base, speed_bin_param, &speed_bin);
+	if (!ret)
+		printk("SPEED bin is %llu\n", speed_bin);
+
+	for (i = 0; i < MSM8996_HMSS_FUSE_CORNERS; i++) {
+		ret = read_fuse_param(fuse_base, pwr_fuse_voltage[i], &pwr_fuse_open_volt[i]);
+		if (ret)
+			return ret;
+
+		pwr_open_volt[i] =  convert_open_loop_voltage_fuse(fuse_ref_volt[i], 10000, pwr_fuse_open_volt[i], 6);
+		printk("PWR %d VOLTAGE = %u\n", i, pwr_open_volt[i]);
+
+		ret = read_fuse_param(fuse_base, perf_fuse_voltage[i], &perf_fuse_open_volt[i]);
+		if (ret)
+			return ret;
+
+		perf_open_volt[i] = convert_open_loop_voltage_fuse(fuse_ref_volt[i], 10000, perf_fuse_open_volt[i], 6);
+		printk("PERF %d VOLTAGE = %u\n", i, perf_open_volt[i]);
+	}
+
+	/* Pick the right OPP tables */
+	if (speed_bin == 0) {
+		pwr_opp = pwr_speedbin0;
+		perf_opp = perf_speedbin0;
+		nr_pwr_opp = ARRAY_SIZE(pwr_speedbin0);
+		nr_perf_opp = ARRAY_SIZE(perf_speedbin0);
+	} else if (speed_bin == 1) {
+		pwr_opp = pwr_speedbin1;
+		perf_opp = perf_speedbin1;
+		nr_pwr_opp = ARRAY_SIZE(pwr_speedbin1);
+		nr_perf_opp = ARRAY_SIZE(perf_speedbin1);
+	} else
+		return -EINVAL;
+
+	/* Add OPPs for the power cluster */
+	/* TODO: Figure a way to distinguish pwr and perf cpus */
+	for (i = 0; i < nr_pwr_opp; i++, pwr_opp++) {
+		u32 freq = pwr_opp->freq;
+		u32 volt = pwr_open_volt[pwr_opp->fuse_corner];
+		volt += 90000; /* Add ACD margin */
+
+		if (volt < 900000)
+			volt = 900000;
+		else if (volt > 1140000)
+			volt = 1140000;
+
+		if (dev_pm_opp_add(cpu0_dev, freq, volt))
+			pr_warn("failed to add power OPP %u\n", freq);
+	}
+
+	/* Add OPPs for the performance cluster */
+	for (i = 0; i < nr_perf_opp; i++, perf_opp++) {
+		u32 freq = perf_opp->freq;
+		u32 volt = perf_open_volt[perf_opp->fuse_corner];
+		volt += 100000; /* Add ACD margin */
+
+		if (volt < 900000)
+			volt = 900000;
+		else if (volt > 1140000)
+			volt = 1140000;
+
+		if (dev_pm_opp_add(cpu2_dev, freq, volt))
+			pr_warn("failed to add perf OPP %u\n", freq);
+	}
+
+	dev_pm_opp_set_sharing_cpus(cpu0_dev, &mask0);
+	dev_pm_opp_set_sharing_cpus(cpu2_dev, &mask2);
+	
+	pd = platform_device_register_simple("cpufreq-dt", -1, NULL, 0);
+	if (IS_ERR(pd))
+		return PTR_ERR(pd);
 
 	return of_clk_add_hw_provider(dev->of_node, of_clk_hw_onecell_get, data);
 }
