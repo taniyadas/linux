@@ -22,6 +22,50 @@
 #include "clk-regmap.h"
 #include "clk-regmap-mux.h"
 
+struct fuse_param {
+	unsigned row;
+	unsigned bit_start;
+	unsigned bit_end;
+};
+
+static const struct fuse_param cpr_rev_param[] = {
+	{39, 51, 53},
+	{},
+};
+
+static const struct fuse_param speed_bin_param[] = {
+	{38, 29, 31},
+	{},
+};
+
+#define MSM8996_HMSS_FUSE_CORNERS 5
+
+static const struct fuse_param pwr_fuse_voltage[MSM8996_HMSS_FUSE_CORNERS][3] = {
+	{{67,  0,  5}, {} },
+	{{66, 58, 63}, {} },
+	{{66, 58, 63}, {} },
+	{{66, 52, 57}, {} },
+	{{66, 46, 51}, {} },
+};
+
+static const struct fuse_param perf_fuse_voltage[MSM8996_HMSS_FUSE_CORNERS][3] = {
+	{{65, 16, 21}, {} },
+	{{65, 10, 15}, {} },
+	{{65, 10, 15}, {} },
+	{{65,  4,  9}, {} },
+	{{64, 62, 63}, {65,  0,  3}, {} },
+};
+
+static const int fuse_ref_volt[MSM8996_HMSS_FUSE_CORNERS] = {
+	605000,
+	745000,
+	745000,
+	905000,
+	1140000,
+};
+
+#define BYTES_PER_FUSE_ROW 8
+
 #define VCO(a, b, c) { \
 	.val = a,\
 	.min_freq = b,\
@@ -343,14 +387,54 @@ static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
 	return 0;
 }
 
+int convert_open_loop_voltage_fuse(int ref_volt, int step_volt, u32 fuse, int fuse_len)
+{
+	int sign, steps;
+
+	sign = (fuse & (1 << (fuse_len - 1))) ? -1 : 1;
+	steps = fuse & ((1 << (fuse_len - 1)) - 1);
+
+	return ref_volt + sign * steps * step_volt;
+}
+
+int read_fuse_param(void __iomem *base, const struct fuse_param *param, u64 *param_value)
+{
+	u64 fuse_val, val;
+	int bits;
+	int bits_total = 0;
+
+	*param_value = 0;
+
+	while (param->row || param->bit_start || param->bit_end) {
+		bits = param->bit_end - param->bit_start + 1;
+		if (bits_total + bits > 64) {
+			pr_err("Invalid fuse parameter segments; total bits = %d\n",
+				bits_total + bits);
+			return -EINVAL;
+		}
+
+		fuse_val = readq_relaxed(base + param->row * BYTES_PER_FUSE_ROW);
+		val = (fuse_val >> param->bit_start) & ((1ULL << bits) - 1);
+		*param_value |= val << bits_total;
+		bits_total += bits;
+
+		param++;
+	}
+
+	return 0;
+}
+
 static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 {
-	int ret;
-	void __iomem *base;
+	int ret, i;
+	void __iomem *base, *fuse_base, *apm_base;
 	struct resource *res;
 	struct clk_hw_onecell_data *data;
 	struct device *dev = &pdev->dev;
 	struct regmap *regmap_cpu;
+	u64 cpr_rev, speed_bin;
+	u64 pwr_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
+	u64 perf_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
 
 
 	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
@@ -362,6 +446,19 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	base = devm_ioremap_resource(dev, res);
 	if (IS_ERR(base))
 		return PTR_ERR(base);
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+	fuse_base = devm_ioremap_resource(dev, res);
+	if (IS_ERR(fuse_base))
+		return PTR_ERR(fuse_base);
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+	apm_base = devm_ioremap_resource(dev, res);
+	if (IS_ERR(apm_base))
+		return PTR_ERR(apm_base);
+
+	printk("APM register = %x\n", readl_relaxed(apm_base));
+
 
 	regmap_cpu = devm_regmap_init_mmio(dev, base,
 					   &cpu_msm8996_regmap_config);
@@ -375,6 +472,28 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	data->hws[0] = &pwrcl_clk.clkr.hw;
 	data->hws[1] = &perfcl_clk.clkr.hw;
 	data->num = 2;
+
+	ret = read_fuse_param(fuse_base, cpr_rev_param, &cpr_rev);
+	if (!ret)
+		printk("CPR rev is %llu\n", cpr_rev);
+
+	ret = read_fuse_param(fuse_base, speed_bin_param, &speed_bin);
+	if (!ret)
+		printk("SPEED bin is %llu\n", speed_bin);
+
+	for (i = 0; i < MSM8996_HMSS_FUSE_CORNERS; i++) {
+		ret = read_fuse_param(fuse_base, pwr_fuse_voltage[i], &pwr_fuse_open_volt[i]);
+		if (ret)
+			return ret;
+
+		printk("PWR %d VOLTAGE = %u\n", i, convert_open_loop_voltage_fuse(fuse_ref_volt[i], 10000, pwr_fuse_open_volt[i], 6));
+
+		ret = read_fuse_param(fuse_base, perf_fuse_voltage[i], &perf_fuse_open_volt[i]);
+		if (ret)
+			return ret;
+
+		printk("PERF %d VOLTAGE = %u\n", i, convert_open_loop_voltage_fuse(fuse_ref_volt[i], 10000, perf_fuse_open_volt[i], 6));
+	}
 
 	return of_clk_add_hw_provider(dev->of_node, of_clk_hw_onecell_get, data);
 }
