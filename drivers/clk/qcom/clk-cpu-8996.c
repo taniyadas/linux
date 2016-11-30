@@ -75,7 +75,7 @@ struct opp_data perf_speedbin0[] = {
 	{ 2, 883200000 },
 	{ 2, 940800000 },
 	{ 3, 1036800000 },
-	{ 3, 1113600000 },
+	{ 3, 1113600000 }, 
 	{ 3, 1190400000 },
 	{ 3, 1248000000 },
 	{ 4, 1324800000 },
@@ -475,8 +475,8 @@ static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
 	clk_prepare_enable(pwr_alt_pll);
 
 	/* init boot frequency setting for perf/pwr cluster */
-	clk_set_rate(pwr_clk, 1228800000);
-	clk_set_rate(perf_clk, 1555200000);
+	clk_set_rate(pwr_clk, 307200000);
+	clk_set_rate(perf_clk, 307200000);
 
 	return 0;
 }
@@ -524,16 +524,15 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	void __iomem *base, *fuse_base, *apm_base;
 	struct resource *res;
 	struct clk_hw_onecell_data *data;
-	struct device *dev = &pdev->dev;
+	struct device *dev = &pdev->dev, *cpu_dev;
 	struct regmap *regmap_cpu;
 	u64 speed_bin;
 	u64 pwr_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
 	u64 perf_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
-	u32 pwr_open_volt[MSM8996_HMSS_FUSE_CORNERS];
-	u32 perf_open_volt[MSM8996_HMSS_FUSE_CORNERS];
+	u32 pwr_open_volt[MSM8996_HMSS_FUSE_CORNERS+1];
+	u32 perf_open_volt[MSM8996_HMSS_FUSE_CORNERS+1];
 	struct opp_data *pwr_opp, *perf_opp;
 	int nr_pwr_opp, nr_perf_opp;
-	int cpu = 0;
 	struct platform_device *pd;
 
 	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
@@ -609,28 +608,48 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	for (i = 0; i < nr_pwr_opp; i++, pwr_opp++) {
 		u32 freq = pwr_opp->freq;
 		u32 volt = pwr_open_volt[pwr_opp->fuse_corner];
+		volt += 80000; /* Add ACD margin */
 
-		for (cpu = 0; cpu < 2; cpu++) {
-			dev = get_cpu_device(cpu);
-			if (!dev)
-				return -ENODEV;
-			if (dev_pm_opp_add(dev, freq, volt))
-				pr_warn("failed to add power OPP %u\n", freq);
-		}
+		cpu_dev = get_cpu_device(0);
+		if (!cpu_dev)
+			return -ENODEV;
+
+		if (volt < 900000)
+			volt = 900000;
+		else if (volt > 1140000)
+			volt = 1140000;
+
+		if (dev_pm_opp_add(cpu_dev, freq, volt))
+			pr_warn("failed to add power OPP %u\n", freq);
+
+		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(0));
+		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(1));
+		if (ret)
+			dev_err(cpu_dev, "%s: failed to mark OPPs as shared: %d\n", __func__, ret);
 	}
 
 	/* Add OPPs for the performance cluster */
 	for (i = 0; i < nr_perf_opp; i++, perf_opp++) {
 		u32 freq = perf_opp->freq;
 		u32 volt = perf_open_volt[perf_opp->fuse_corner];
+		volt += 80000; /* Add ACD margin */
 
-		for (cpu = 2; cpu < 4; cpu++) {
-			dev = get_cpu_device(cpu);
-			if (!dev)
-				return -ENODEV;
-			if (dev_pm_opp_add(dev, freq, volt))
-				pr_warn("failed to add perf OPP %u\n", freq);
-		}
+		cpu_dev = get_cpu_device(2);
+		if (!cpu_dev)
+			return -ENODEV;
+
+		if (volt < 900000)
+			volt = 900000;
+		else if (volt > 1140000)
+			volt = 1140000;
+
+		if (dev_pm_opp_add(cpu_dev, freq, volt))
+			pr_warn("failed to add perf OPP %u\n", freq);
+
+		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(2));
+		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(3));
+		if (ret)
+			dev_err(cpu_dev, "%s: failed to mark OPPs as shared: %d\n", __func__, ret);
 	}
 
 	pd = platform_device_register_simple("cpufreq-dt", -1, NULL, 0);

@@ -532,6 +532,8 @@ static struct clk *_get_opp_clk(struct device *dev)
 	}
 
 	clk = opp_table->clk;
+	if (PTR_ERR(clk) == -EPROBE_DEFER)
+		clk = opp_table->clk = clk_get(dev, NULL);
 	if (IS_ERR(clk))
 		dev_err(dev, "%s: No clock available for the device\n",
 			__func__);
@@ -554,7 +556,7 @@ static int _set_opp_voltage(struct device *dev, struct regulator *reg,
 		return 0;
 	}
 
-	dev_dbg(dev, "%s: voltages (mV): %lu %lu %lu\n", __func__, u_volt_min,
+	dev_err(dev, "%s: voltages (mV): %lu %lu %lu\n", __func__, u_volt_min,
 		u_volt, u_volt_max);
 
 	ret = regulator_set_voltage_triplet(reg, u_volt_min, u_volt,
@@ -651,7 +653,7 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
 
 	/* Change frequency */
 
-	dev_dbg(dev, "%s: switching OPP: %lu Hz --> %lu Hz\n",
+	dev_err(dev, "%s: switching OPP: %lu Hz --> %lu Hz\n",
 		__func__, old_freq, freq);
 
 	ret = clk_set_rate(clk, freq);
@@ -1331,10 +1333,10 @@ int dev_pm_opp_set_regulator(struct device *dev, const char *name)
 	}
 
 	/* This should be called before OPPs are initialized */
-	if (WARN_ON(!list_empty(&opp_table->opp_list))) {
-		ret = -EBUSY;
-		goto err;
-	}
+	//if (WARN_ON(!list_empty(&opp_table->opp_list))) {
+	//	ret = -EBUSY;
+	//	goto err;
+	//}
 
 	/* Already have a regulator set */
 	if (WARN_ON(!IS_ERR(opp_table->regulator))) {

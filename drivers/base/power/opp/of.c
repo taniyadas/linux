@@ -514,6 +514,9 @@ int dev_pm_opp_of_cpumask_add_table(const struct cpumask *cpumask)
 			continue;
 		}
 
+		if (dev_pm_opp_get_opp_count(cpu_dev))
+			continue;
+
 		ret = dev_pm_opp_of_add_table(cpu_dev);
 		if (ret) {
 			pr_err("%s: couldn't find opp table for cpu:%d, %d\n",
