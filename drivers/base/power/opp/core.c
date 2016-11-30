@@ -559,8 +559,7 @@ static int _set_opp_voltage(struct device *dev, struct regulator *reg,
 	dev_err(dev, "%s: voltages (mV): %lu %lu %lu\n", __func__, u_volt_min,
 		u_volt, u_volt_max);
 
-	ret = regulator_set_voltage_triplet(reg, u_volt_min, u_volt,
-					    u_volt_max);
+	ret = regulator_set_voltage_triplet(reg, 0, u_volt, INT_MAX);
 	if (ret)
 		dev_err(dev, "%s: failed to set voltage (%lu %lu %lu mV): %d\n",
 			__func__, u_volt_min, u_volt, u_volt_max, ret);
@@ -721,9 +720,9 @@ struct opp_device *_add_opp_dev(const struct device *dev,
 
 	/* Create debugfs entries for the opp_table */
 	ret = opp_debug_register(opp_dev, opp_table);
-	if (ret)
-		dev_err(dev, "%s: Failed to register opp debugfs (%d)\n",
-			__func__, ret);
+	//if (ret)
+	//	dev_err(dev, "%s: Failed to register opp debugfs (%d)\n",
+	//		__func__, ret);
 
 	return opp_dev;
 }

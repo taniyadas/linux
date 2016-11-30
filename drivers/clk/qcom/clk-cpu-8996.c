@@ -30,10 +30,10 @@ struct opp_data {
 };
 
 struct opp_data pwr_speedbin0[] = {
-	{ 0, 307200000 },
-	{ 1, 422400000 },
-	{ 2, 480000000 },
-	{ 2, 556800000 },
+	//{ 0, 307200000 },
+	//{ 1, 422400000 },
+	//{ 2, 480000000 },
+	//{ 2, 556800000 },
 	{ 2, 652800000 },
 	{ 2, 729600000 },
 	{ 2, 844800000 },
@@ -49,10 +49,10 @@ struct opp_data pwr_speedbin0[] = {
 };
 
 struct opp_data pwr_speedbin1[] = {
-	{ 0, 307200000 },
-	{ 1, 422400000 },
-	{ 2, 480000000 },
-	{ 2, 556800000 },
+	//{ 0, 307200000 },
+	//{ 1, 422400000 },
+	//{ 2, 480000000 },
+	//{ 2, 556800000 },
 	{ 2, 652800000 },
 	{ 2, 729600000 },
 	{ 2, 844800000 },
@@ -65,10 +65,10 @@ struct opp_data pwr_speedbin1[] = {
 };
 
 struct opp_data perf_speedbin0[] = {
-	{ 0, 307200000 },
-	{ 0, 403200000 },
-	{ 0, 480000000 },
-	{ 1, 556800000 },
+	//{ 0, 307200000 },
+	//{ 0, 403200000 },
+	//{ 0, 480000000 },
+	//{ 1, 556800000 },
 	{ 2, 652800000 },
 	{ 2, 729600000 },
 	{ 2, 806400000 },
@@ -93,10 +93,10 @@ struct opp_data perf_speedbin0[] = {
 };
 
 struct opp_data perf_speedbin1[] = {
-	{ 0, 307200000 },
-	{ 0, 403200000 },
-	{ 0, 480000000 },
-	{ 1, 556800000 },
+	//{ 0, 307200000 },
+	//{ 0, 403200000 },
+	//{ 0, 480000000 },
+	//{ 1, 556800000 },
 	{ 2, 652800000 },
 	{ 2, 729600000 },
 	{ 2, 806400000 },
@@ -212,7 +212,7 @@ static const struct pll_vco alt_pll_vco_modes[] = {
 };
 
 static const struct alpha_pll_config altpll_config = {
-	.l = 16,
+	.l = 10,
 	.vco_val = 0x3 << 20,
 	.vco_mask = 0x3 << 20,
 	.config_ctl_val = 0x4001051b,
@@ -475,8 +475,15 @@ static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
 	clk_prepare_enable(pwr_alt_pll);
 
 	/* init boot frequency setting for perf/pwr cluster */
-	clk_set_rate(pwr_clk, 307200000);
-	clk_set_rate(perf_clk, 307200000);
+	clk_set_rate(pwr_clk, 652800000);
+	clk_set_rate(perf_clk, 652800000);
+	clk_set_rate(pwr_alt_pll, 652800000);
+	clk_set_rate(perf_alt_pll, 652800000);
+
+	printk("pwr clk is at  %lu\n", clk_get_rate(pwr_clk));
+	printk("perf clk is at %lu\n", clk_get_rate(perf_clk));
+	printk("alt pwr  clk is at %lu\n", clk_get_rate(pwr_alt_pll));
+	printk("alt perf clk is at %lu\n", clk_get_rate(perf_alt_pll));
 
 	return 0;
 }
@@ -608,7 +615,7 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	for (i = 0; i < nr_pwr_opp; i++, pwr_opp++) {
 		u32 freq = pwr_opp->freq;
 		u32 volt = pwr_open_volt[pwr_opp->fuse_corner];
-		volt += 80000; /* Add ACD margin */
+		volt += 90000; /* Add ACD margin */
 
 		cpu_dev = get_cpu_device(0);
 		if (!cpu_dev)
@@ -632,7 +639,7 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	for (i = 0; i < nr_perf_opp; i++, perf_opp++) {
 		u32 freq = perf_opp->freq;
 		u32 volt = perf_open_volt[perf_opp->fuse_corner];
-		volt += 80000; /* Add ACD margin */
+		volt += 100000; /* Add ACD margin */
 
 		cpu_dev = get_cpu_device(2);
 		if (!cpu_dev)
