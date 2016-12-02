@@ -531,7 +531,7 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	void __iomem *base, *fuse_base, *apm_base;
 	struct resource *res;
 	struct clk_hw_onecell_data *data;
-	struct device *dev = &pdev->dev, *cpu_dev;
+	struct device *dev = &pdev->dev, *cpu0_dev, *cpu2_dev;
 	struct regmap *regmap_cpu;
 	u64 speed_bin;
 	u64 pwr_fuse_open_volt[MSM8996_HMSS_FUSE_CORNERS];
@@ -541,6 +541,7 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	struct opp_data *pwr_opp, *perf_opp;
 	int nr_pwr_opp, nr_perf_opp;
 	struct platform_device *pd;
+	struct cpumask mask0, mask2;
 
 	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
 		            GFP_KERNEL);
@@ -610,6 +611,23 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 		nr_perf_opp = ARRAY_SIZE(perf_speedbin1);
 	}
 
+	cpu0_dev = get_cpu_device(0);
+	if (!cpu0_dev)
+		return -ENODEV;
+
+	cpu2_dev = get_cpu_device(2);
+	if (!cpu2_dev)
+		return -ENODEV;
+
+	//cpumask_set_cpu(0, &mask0);
+	//cpumask_set_cpu(1, &mask0);
+
+	//cpumask_set_cpu(2, &mask2);
+	//cpumask_set_cpu(3, &mask2);
+
+	//dev_pm_opp_set_sharing_cpus(cpu0_dev, &mask0);
+	//dev_pm_opp_set_sharing_cpus(cpu2_dev, &mask2);
+
 	/* Add OPPs for the power cluster */
 	/* TODO: Figure a way to distinguish pwr and perf cpus */
 	for (i = 0; i < nr_pwr_opp; i++, pwr_opp++) {
@@ -617,22 +635,13 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 		u32 volt = pwr_open_volt[pwr_opp->fuse_corner];
 		volt += 90000; /* Add ACD margin */
 
-		cpu_dev = get_cpu_device(0);
-		if (!cpu_dev)
-			return -ENODEV;
-
 		if (volt < 900000)
 			volt = 900000;
 		else if (volt > 1140000)
 			volt = 1140000;
 
-		if (dev_pm_opp_add(cpu_dev, freq, volt))
+		if (dev_pm_opp_add(cpu0_dev, freq, volt))
 			pr_warn("failed to add power OPP %u\n", freq);
-
-		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(0));
-		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(1));
-		if (ret)
-			dev_err(cpu_dev, "%s: failed to mark OPPs as shared: %d\n", __func__, ret);
 	}
 
 	/* Add OPPs for the performance cluster */
@@ -641,22 +650,13 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 		u32 volt = perf_open_volt[perf_opp->fuse_corner];
 		volt += 100000; /* Add ACD margin */
 
-		cpu_dev = get_cpu_device(2);
-		if (!cpu_dev)
-			return -ENODEV;
-
 		if (volt < 900000)
 			volt = 900000;
 		else if (volt > 1140000)
 			volt = 1140000;
 
-		if (dev_pm_opp_add(cpu_dev, freq, volt))
+		if (dev_pm_opp_add(cpu2_dev, freq, volt))
 			pr_warn("failed to add perf OPP %u\n", freq);
-
-		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(2));
-		ret = dev_pm_opp_set_sharing_cpus(cpu_dev, cpumask_of(3));
-		if (ret)
-			dev_err(cpu_dev, "%s: failed to mark OPPs as shared: %d\n", __func__, ret);
 	}
 
 	pd = platform_device_register_simple("cpufreq-dt", -1, NULL, 0);

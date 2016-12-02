@@ -720,9 +720,11 @@ struct opp_device *_add_opp_dev(const struct device *dev,
 
 	/* Create debugfs entries for the opp_table */
 	ret = opp_debug_register(opp_dev, opp_table);
-	//if (ret)
-	//	dev_err(dev, "%s: Failed to register opp debugfs (%d)\n",
-	//		__func__, ret);
+	if (ret) {
+		dev_err(dev, "%s: Failed to register opp debugfs (%d)\n",
+			__func__, ret);
+		WARN_ON_ONCE(1);
+	}
 
 	return opp_dev;
 }
