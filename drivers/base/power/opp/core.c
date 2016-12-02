@@ -1334,10 +1334,10 @@ int dev_pm_opp_set_regulator(struct device *dev, const char *name)
 	}
 
 	/* This should be called before OPPs are initialized */
-	//if (WARN_ON(!list_empty(&opp_table->opp_list))) {
-	//	ret = -EBUSY;
-	//	goto err;
-	//}
+	if (WARN_ON(!list_empty(&opp_table->opp_list))) {
+		ret = -EBUSY;
+		goto err;
+	}
 
 	/* Already have a regulator set */
 	if (WARN_ON(!IS_ERR(opp_table->regulator))) {

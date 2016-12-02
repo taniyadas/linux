@@ -180,17 +180,19 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 			fallback = true;
 	}
 
-	/*
-	 * OPP layer will be taking care of regulators now, but it needs to know
-	 * the name of the regulator first.
-	 */
-	name = find_supply_name(cpu_dev);
-	if (name) {
-		ret = dev_pm_opp_set_regulator(cpu_dev, name);
-		if (ret) {
-			dev_err(cpu_dev, "Failed to set regulator for cpu%d: %d\n",
-				policy->cpu, ret);
-			goto out_put_clk;
+	if (!dev_pm_opp_get_opp_count(cpu_dev)) {
+		/*
+	 	 * OPP layer will be taking care of regulators now, but it needs to know
+	 	 * the name of the regulator first.
+	 	 */
+		name = find_supply_name(cpu_dev);
+		if (name) {
+			ret = dev_pm_opp_set_regulator(cpu_dev, name);
+			if (ret) {
+				dev_err(cpu_dev, "Failed to set regulator for cpu%d: %d\n",
+					policy->cpu, ret);
+				goto out_put_clk;
+			}
 		}
 	}
 

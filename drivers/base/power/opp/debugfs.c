@@ -116,7 +116,7 @@ static int opp_list_debug_create_link(struct opp_device *opp_dev,
 	/* Create device specific directory link */
 	d = debugfs_create_symlink(name, rootdir, opp_table->dentry_name);
 	if (!d) {
-		//dev_err(dev, "%s: Failed to create link\n", __func__);
+		dev_err(dev, "%s: Failed to create link\n", __func__);
 		return -ENOMEM;
 	}
 

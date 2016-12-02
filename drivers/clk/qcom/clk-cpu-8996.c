@@ -542,6 +542,31 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 	int nr_pwr_opp, nr_perf_opp;
 	struct platform_device *pd;
 	struct cpumask mask0, mask2;
+	const char *name;
+	
+	cpu0_dev = get_cpu_device(0);
+	if (!cpu0_dev)
+		return -ENODEV;
+
+	cpu2_dev = get_cpu_device(2);
+	if (!cpu2_dev)
+		return -ENODEV;
+
+	cpumask_copy(&mask0, topology_core_cpumask(0));
+	cpumask_copy(&mask2, topology_core_cpumask(2));
+	
+	name = "cpu";
+	ret = dev_pm_opp_set_regulator(cpu0_dev, name);
+	if (ret) {
+		dev_err(cpu0_dev, "Failed to set regulator for cpu0: %d\n", ret);
+		return ret;
+	}
+
+	ret = dev_pm_opp_set_regulator(cpu2_dev, name);
+	if (ret) {
+		dev_err(cpu2_dev, "Failed to set regulator for cpu2: %d\n", ret);
+		return ret;
+	}
 
 	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
 		            GFP_KERNEL);
@@ -611,23 +636,6 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 		nr_perf_opp = ARRAY_SIZE(perf_speedbin1);
 	}
 
-	cpu0_dev = get_cpu_device(0);
-	if (!cpu0_dev)
-		return -ENODEV;
-
-	cpu2_dev = get_cpu_device(2);
-	if (!cpu2_dev)
-		return -ENODEV;
-
-	//cpumask_set_cpu(0, &mask0);
-	//cpumask_set_cpu(1, &mask0);
-
-	//cpumask_set_cpu(2, &mask2);
-	//cpumask_set_cpu(3, &mask2);
-
-	//dev_pm_opp_set_sharing_cpus(cpu0_dev, &mask0);
-	//dev_pm_opp_set_sharing_cpus(cpu2_dev, &mask2);
-
 	/* Add OPPs for the power cluster */
 	/* TODO: Figure a way to distinguish pwr and perf cpus */
 	for (i = 0; i < nr_pwr_opp; i++, pwr_opp++) {
@@ -659,6 +667,9 @@ static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 			pr_warn("failed to add perf OPP %u\n", freq);
 	}
 
+	dev_pm_opp_set_sharing_cpus(cpu0_dev, &mask0);
+	dev_pm_opp_set_sharing_cpus(cpu2_dev, &mask2);
+	
 	pd = platform_device_register_simple("cpufreq-dt", -1, NULL, 0);
 	if (IS_ERR(pd))
 		return PTR_ERR(pd);
