@@ -15,6 +15,7 @@ clk-qcom-y += clk-hfpll.o
 clk-qcom-y += reset.o
 clk-qcom-y += clk-cpu-8996.o
 clk-qcom-$(CONFIG_QCOM_GDSC) += gdsc.o
+clk-qcom-y += rpmpd.o
 
 # Keep alphabetically sorted by config
 obj-$(CONFIG_APQ_GCC_8084) += gcc-apq8084.o

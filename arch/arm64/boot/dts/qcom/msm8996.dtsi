@@ -1106,6 +1106,26 @@
 					#clock-cells = <1>;
 				};
 
+				rpmpd: qcom,rpmpd {
+					compatible = "qcom,rpmpd-msm8996", "qcom,rpmpd";
+					#power-domain-cells = <1>;
+				};
+
+				rpmpd_perf_states: performance_states {
+					compatible = "domain-performance-state";
+					rpmpd_perf_state1: pstate@1 {
+						performance-level = <1>;
+					};
+
+					rpmpd_perf_state2: pstate@2 {
+						performance-level = <2>;
+					};
+
+					rpmpd_perf_state3: pstate@3 {
+						performance-level = <3>;
+					};
+				};
+
 				pm8994-regulators {
 					compatible = "qcom,rpm-pm8994-regulators";
 
