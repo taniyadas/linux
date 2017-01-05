@@ -294,6 +294,26 @@
 				#clock-cells = <1>;
 			};
 
+			rpmpd_opp_table: opp_table {
+				compatible = "operating-points-v2";
+
+				opp@1 {
+					domain-performance-state = <1>;
+				};
+				opp@2 {
+					domain-performance-state = <2>;
+				};
+				opp@3 {
+					domain-performance-state = <3>;
+				};
+			};
+
+			rpmpd: qcom,rpmpd {
+				compatible = "qcom,rpmpd-msm8996", "qcom,rpmpd";
+				#power-domain-cells = <1>;
+				operating-points-v2 = <&rpmpd_opp_table>;
+			};
+
 			pm8994-regulators {
 				compatible = "qcom,rpm-pm8994-regulators";
 
