@@ -297,6 +297,11 @@
 				#clock-cells = <1>;
 			};
 
+			rpmpd: qcom,rpmpd {
+				compatible = "qcom,rpmpd-msm8996", "qcom,rpmpd";
+				#power-domain-cells = <1>;
+			};
+
 			pm8994-regulators {
 				compatible = "qcom,rpm-pm8994-regulators";
 
