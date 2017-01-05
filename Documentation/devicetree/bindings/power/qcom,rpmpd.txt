@@ -1,0 +1,14 @@
+Qualcomm RPM Powerdomains
+
+* For RPM powerdomains, we communicate a performance state to RPM
+which then translates it into a corresponding voltage on a rail
+
+Required Properties:
+ - compatible: Should be one of the following
+	* qcom,rpmpd-msm8996: RPM Powerdomain for the msm8996 family of SoC
+ - power-domain-cells: number of cells in power domain specifier
+	must be 1.
+ - domain-performance-state: One or more nodes describing the performance-states
+	supported by the powerdomain.
+	For domain-performance-state bindings refer to
+	Documentation/devicetree/bindings/power/power_domain.txt
