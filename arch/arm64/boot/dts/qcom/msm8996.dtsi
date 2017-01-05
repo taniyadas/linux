@@ -297,6 +297,51 @@
 				#clock-cells = <1>;
 			};
 
+			rpmpd: qcom,rpmpd {
+				compatible = "qcom,rpmpd-msm8996", "qcom,rpmpd";
+				#power-domain-cells = <1>;
+				operating-points-v2 = <&rpmpd_opp_table>,
+						      <&rpmpd_opp_table>,
+						      <&rpmpd_opp_table>,
+						      <&rpmpd_opp_table>,
+						      <&rpmpd_opp_table>,
+						      <&rpmpd_opp_table>,
+						      <&rpmpd_opp_table>;
+			};
+
+			rpmpd_opp_table: opp-table {
+				compatible = "operating-points-v2";
+
+				rpmpd_opp1: opp@1 {
+					/*
+					 * opp-hz is mandatory for now in the
+					 * OPP code, will change that later.
+					*/
+					opp-hz = /bits/ 64 <1>;
+					qcom-corner = <1>;
+				};
+
+				rpmpd_opp2: opp@2 {
+					opp-hz = /bits/ 64 <2>;
+					qcom-corner = <2>;
+				};
+
+				rpmpd_opp3: opp@3 {
+					opp-hz = /bits/ 64 <3>;
+					qcom-corner = <3>;
+				};
+
+				rpmpd_opp4: opp@4 {
+					opp-hz = /bits/ 64 <4>;
+					qcom-corner = <4>;
+				};
+
+				rpmpd_opp5: opp@5 {
+					opp-hz = /bits/ 64 <5>;
+					qcom-corner = <5>;
+				};
+			};
+
 			pm8994-regulators {
 				compatible = "qcom,rpm-pm8994-regulators";
 
