@@ -20,6 +20,7 @@
 #include <linux/mmc/mmc.h>
 #include <linux/slab.h>
 #include <linux/iopoll.h>
+#include <linux/pm_opp.h>
 
 #include "sdhci-pltfm.h"
 
@@ -940,6 +941,8 @@ static void sdhci_msm_set_clock(struct sdhci_host *host, unsigned int clock)
 {
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
 	struct sdhci_msm_host *msm_host = sdhci_pltfm_priv(pltfm_host);
+	struct device *dev = &msm_host->pdev->dev;
+	struct dev_pm_opp *opp;
 	struct mmc_ios curr_ios = host->mmc->ios;
 	u32 config, dll_lock;
 	int rc;
@@ -1052,15 +1055,18 @@ static void sdhci_msm_set_clock(struct sdhci_host *host, unsigned int clock)
 	wmb();
 
 	if (clock != msm_host->clk_rate) {
-		rc = clk_set_rate(msm_host->clk, clock);
-		if (rc) {
-			pr_err("%s: Failed to set clock at rate %u at timing %d\n",
-			       mmc_hostname(host->mmc), clock,
-			       curr_ios.timing);
-			spin_lock_irq(&host->lock);
-			goto out;
-		}
-		msm_host->clk_rate = clock;
+		unsigned long freq = clock;
+
+		opp = dev_pm_opp_find_freq_floor(dev, &freq);
+		if (IS_ERR(opp))
+			pr_err("%s: failed to find OPP for %u at timing %d\n",
+			       mmc_hostname(host->mmc), clock, curr_ios.timing);
+
+		rc = dev_pm_opp_set_rate(dev, freq);
+		if (rc)
+			pr_err("%s: error in setting opp\n", __func__);
+
+		msm_host->clk_rate = clk_get_rate(msm_host->clk);
 		pr_debug("%s: Setting clock at rate %lu\n",
 			 mmc_hostname(host->mmc), clk_get_rate(msm_host->clk));
 	}
@@ -1121,6 +1127,10 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 		goto pltfm_free;
 
 	sdhci_get_of_property(pdev);
+
+	ret = dev_pm_opp_of_add_table(&pdev->dev);
+	if (ret)
+		dev_warn(&pdev->dev, "%s: No OPP table specified\n", __func__);
 
 	msm_host->saved_tuning_phase = INVALID_TUNING_PHASE;
 
