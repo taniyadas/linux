@@ -508,6 +508,40 @@
 			status = "disabled";
 		};
 
+		sdhc2_opp_table: opp_table2 {
+			compatible = "operating-points-v2";
+
+			opp0 {
+				opp-hz = /bits/ 64 <400000>;
+				domain-performance-state = <1>;
+			};
+
+			opp1 {
+				opp-hz = /bits/ 64 <20000000>;
+				domain-performance-state = <1>;
+			};
+
+			opp2 {
+				opp-hz = /bits/ 64 <25000000>;
+				domain-performance-state = <2>;
+			};
+
+			opp3 {
+				opp-hz = /bits/ 64 <50000000>;
+				domain-performance-state = <2>;
+			};
+
+			opp4 {
+				opp-hz = /bits/ 64 <100000000>;
+				domain-performance-state = <3>;
+			};
+
+			opp5 {
+				opp-hz = /bits/ 64 <200000000>;
+				domain-performance-state = <3>;
+			};
+		};
+
 		sdhc2: sdhci@74a4900 {
 			 status = "disabled";
 			 compatible = "qcom,sdhci-msm-v4";
@@ -522,6 +556,8 @@
 			 <&gcc GCC_SDCC2_AHB_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
+			power-domains = <&rpmpd 0>;
+			operating-points-v2 = <&sdhc2_opp_table>;
 		 };
 
 		msmgpio: pinctrl@1010000 {
