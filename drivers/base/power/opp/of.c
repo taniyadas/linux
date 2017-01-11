@@ -284,6 +284,7 @@ static int _opp_add_static_v2(struct opp_table *opp_table, struct device *dev,
 	u64 rate;
 	u32 val;
 	int ret;
+	struct device_node *dps;
 
 	new_opp = _opp_allocate(opp_table);
 	if (!new_opp)
@@ -316,12 +317,14 @@ static int _opp_add_static_v2(struct opp_table *opp_table, struct device *dev,
 	if (!of_property_read_u32(np, "clock-latency-ns", &val))
 		new_opp->clock_latency_ns = val;
 
+
 	/*
 	 * Make sure that all information is present around domain power states
 	 * and nothing is left out.
 	 */
-	if (!of_property_read_u32(np, "domain-performance-state",
-				  &new_opp->pd_perf_state)) {
+	dps = of_parse_phandle(np, "domain-performance-state", 0);
+	if (dps && (!of_property_read_u32(dps, "performance-level",
+				  &new_opp->pd_perf_state))) {
 		if (!opp_table->has_pd) {
 			ret = -EINVAL;
 			dev_err(dev, "%s: OPP node can't have performance state as device doesn't have power-domain\n",
