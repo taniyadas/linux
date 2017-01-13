@@ -268,15 +268,16 @@ static int genpd_dev_pm_qos_notifier(struct notifier_block *nb,
 	return NOTIFY_DONE;
 }
 
-static void update_domain_performance_state(struct generic_pm_domain *genpd)
+static void update_domain_performance_state(struct generic_pm_domain *genpd,
+					    int depth)
 {
 	struct generic_pm_domain_data *pd_data;
+	struct generic_pm_domain *subdomain;
 	struct pm_domain_data *pdd;
 	unsigned int state = 0;
+	struct gpd_link *link;
 
-	if (!genpd->set_performance_state)
-		return;
-
+	/* Traverse all devices within the domain */
 	list_for_each_entry(pdd, &genpd->dev_list, list_node) {
 		pd_data = to_gpd_data(pdd);
 
@@ -284,11 +285,37 @@ static void update_domain_performance_state(struct generic_pm_domain *genpd)
 			state = pd_data->performance_state;
 	}
 
+	/* Traverse all subdomains within the domain */
+	list_for_each_entry(link, &genpd->master_links, master_node) {
+		subdomain = link->slave;
+
+		if (subdomain->performance_state > state)
+			state = subdomain->performance_state;
+	}
+
 	if (genpd->performance_state == state)
 		return;
 
 	genpd->performance_state = state;
-	genpd->set_performance_state(genpd, state);
+
+	if (genpd->set_performance_state) {
+		genpd->set_performance_state(genpd, state);
+		return;
+	}
+
+	/* Propagate only if this domain has a single parent */
+	if (list_is_singular(&genpd->slave_links)) {
+		/* Performance levels are managed by parent power domain */
+
+		struct generic_pm_domain *master;
+
+		link = list_first_entry(&genpd->slave_links, struct gpd_link, slave_node);
+		master = link->master;
+
+		mutex_lock_nested(&master->lock, depth + 1);
+		update_domain_performance_state(master, depth + 1);
+		mutex_unlock(&master->lock);
+	}
 }
 
 static int genpd_dev_pm_qos_perf_notifier(struct notifier_block *nb,
@@ -317,7 +344,7 @@ static int genpd_dev_pm_qos_perf_notifier(struct notifier_block *nb,
 
 	mutex_lock(&genpd->lock);
 	gpd_data->performance_state = val;
-	update_domain_performance_state(genpd);
+	update_domain_performance_state(genpd, 0);
 	mutex_unlock(&genpd->lock);
 
 	return NOTIFY_DONE;
@@ -533,7 +560,7 @@ static int genpd_runtime_suspend(struct device *dev)
 	/* Re-evaluate performance state of the domain */
 	pd_data->cached_performance_state = pd_data->performance_state;
 	pd_data->performance_state = 0;
-	update_domain_performance_state(genpd);
+	update_domain_performance_state(genpd, 0);
 
 	genpd_poweroff(genpd, false);
 
@@ -579,7 +606,7 @@ static int genpd_runtime_resume(struct device *dev)
 
 	/* Re-evaluate performance state of the domain */
 	pd_data->performance_state = pd_data->cached_performance_state;
-	update_domain_performance_state(genpd);
+	update_domain_performance_state(genpd, 0);
 
 	mutex_unlock(&genpd->lock);
 
@@ -1089,8 +1116,7 @@ static struct generic_pm_domain_data *genpd_alloc_dev_data(struct device *dev,
 	gpd_data->nb.notifier_call = genpd_dev_pm_qos_notifier;
 	gpd_data->performance_state = 0;
 
-	if (genpd->set_performance_state)
-		gpd_data->perf_nb.notifier_call = genpd_dev_pm_qos_perf_notifier;
+	gpd_data->perf_nb.notifier_call = genpd_dev_pm_qos_perf_notifier;
 
 	spin_lock_irq(&dev->power.lock);
 
@@ -1170,9 +1196,8 @@ static int genpd_add_device(struct generic_pm_domain *genpd, struct device *dev,
 		dev_pm_qos_add_notifier(dev, &gpd_data->nb,
 					DEV_PM_QOS_RESUME_LATENCY);
 
-		if (genpd->set_performance_state)
-			dev_pm_qos_add_notifier(dev, &gpd_data->perf_nb,
-						DEV_PM_QOS_PERFORMANCE);
+		dev_pm_qos_add_notifier(dev, &gpd_data->perf_nb,
+					DEV_PM_QOS_PERFORMANCE);
 	}
 
 	return ret;
@@ -1208,9 +1233,8 @@ static int genpd_remove_device(struct generic_pm_domain *genpd,
 
 	pdd = dev->power.subsys_data->domain_data;
 	gpd_data = to_gpd_data(pdd);
-	if (genpd->set_performance_state)
-		dev_pm_qos_remove_notifier(dev, &gpd_data->perf_nb,
-					   DEV_PM_QOS_PERFORMANCE);
+	dev_pm_qos_remove_notifier(dev, &gpd_data->perf_nb,
+				   DEV_PM_QOS_PERFORMANCE);
 	dev_pm_qos_remove_notifier(dev, &gpd_data->nb,
 				   DEV_PM_QOS_RESUME_LATENCY);
 
@@ -1239,9 +1263,8 @@ static int genpd_remove_device(struct generic_pm_domain *genpd,
 	mutex_unlock(&genpd->lock);
 	dev_pm_qos_add_notifier(dev, &gpd_data->nb, DEV_PM_QOS_RESUME_LATENCY);
 
-	if (genpd->set_performance_state)
-		dev_pm_qos_add_notifier(dev, &gpd_data->perf_nb,
-					DEV_PM_QOS_PERFORMANCE);
+	dev_pm_qos_add_notifier(dev, &gpd_data->perf_nb,
+				DEV_PM_QOS_PERFORMANCE);
 
 	return ret;
 }
