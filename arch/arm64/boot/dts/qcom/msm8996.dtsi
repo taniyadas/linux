@@ -310,6 +310,7 @@
 			#clock-cells = <1>;
 			#reset-cells = <1>;
 			#power-domain-cells = <1>;
+			power-domains = <&rpmpd 0>;
 			reg = <0x300000 0x90000>;
 		};
 
@@ -485,7 +486,7 @@
 			 <&gcc GCC_SDCC2_AHB_CLK>,
 			 <&xo_board 0>;
 			 bus-width = <4>;
-			power-domains = <&rpmpd 0>;
+			power-domains = <&gcc UFS_GDSC>;
 			operating-points-v2 = <&sdhc2_opp_table>;
 		 };
 

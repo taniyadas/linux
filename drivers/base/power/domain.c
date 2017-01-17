@@ -1347,6 +1347,19 @@ int pm_genpd_add_subdomain(struct generic_pm_domain *genpd,
 }
 EXPORT_SYMBOL_GPL(pm_genpd_add_subdomain);
 
+int pm_genpd_add_subdomain_dev(struct device *dev,
+			       struct generic_pm_domain *subdomain)
+{
+	struct generic_pm_domain *genpd;
+
+	genpd = genpd_lookup_dev(dev);
+	if (!genpd)
+		return -EINVAL;
+
+	return pm_genpd_add_subdomain(genpd, subdomain);
+}
+EXPORT_SYMBOL_GPL(pm_genpd_add_subdomain_dev);
+
 /**
  * pm_genpd_remove_subdomain - Remove a subdomain from an I/O PM domain.
  * @genpd: Master PM domain to remove the subdomain from.

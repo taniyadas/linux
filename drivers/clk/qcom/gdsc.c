@@ -17,6 +17,7 @@
 #include <linux/jiffies.h>
 #include <linux/kernel.h>
 #include <linux/ktime.h>
+#include <linux/of.h>
 #include <linux/pm_domain.h>
 #include <linux/regmap.h>
 #include <linux/reset-controller.h>
@@ -296,6 +297,7 @@ static int gdsc_init(struct gdsc *sc)
 
 	sc->pd.power_off = gdsc_disable;
 	sc->pd.power_on = gdsc_enable;
+
 	if (sc->pd.state_count)
 		pm_genpd_init(&sc->pd, &simple_qos_governor, !on);
 	else
@@ -340,6 +342,8 @@ int gdsc_register(struct gdsc_desc *desc,
 			continue;
 		if (scs[i]->parent)
 			pm_genpd_add_subdomain(scs[i]->parent, &scs[i]->pd);
+		else
+			pm_genpd_add_subdomain_dev(dev, &scs[i]->pd);
 	}
 
 	return of_genpd_add_provider_onecell(dev->of_node, data);
