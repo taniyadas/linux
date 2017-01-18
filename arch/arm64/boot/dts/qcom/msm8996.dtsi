@@ -517,9 +517,9 @@
 			 interrupts = <0 125 0>, <0 221 0>;
 			 interrupt-names = "hc_irq", "pwr_irq";
 
-			 clock-names = "iface", "core", "xo";
-			 clocks = <&gcc GCC_SDCC2_AHB_CLK>,
-			 <&gcc GCC_SDCC2_APPS_CLK>,
+			 clock-names = "core", "iface", "xo";
+			 clocks = <&gcc GCC_SDCC2_APPS_CLK>,
+			 <&gcc GCC_SDCC2_AHB_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
 		 };
