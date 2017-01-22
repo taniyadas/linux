@@ -17,7 +17,9 @@
 #include <linux/jiffies.h>
 #include <linux/kernel.h>
 #include <linux/ktime.h>
+#include <linux/module.h>
 #include <linux/pm_domain.h>
+#include <linux/platform_device.h>
 #include <linux/regmap.h>
 #include <linux/reset-controller.h>
 #include <linux/slab.h>
@@ -303,14 +305,25 @@ static int gdsc_init(struct gdsc *sc)
 	return 0;
 }
 
-int gdsc_register(struct gdsc_desc *desc,
-		  struct reset_controller_dev *rcdev, struct regmap *regmap)
+int gdsc_probe(struct platform_device *pdev)
 {
 	int i, ret;
+	size_t num;
+	struct gdsc **scs;
+	struct device *dev = pdev->dev.parent;
+	struct gdsc_desc *desc;
+	struct gdsc_pd *gpd = pdev->dev.platform_data;
 	struct genpd_onecell_data *data;
-	struct device *dev = desc->dev;
-	struct gdsc **scs = desc->scs;
-	size_t num = desc->num;
+
+	if (!gpd)
+		return -EINVAL;
+
+	desc = gpd->desc;
+	if (!desc)
+		return -EINVAL;
+
+	scs = desc->gdscs;
+	num = desc->num_gdscs;
 
 	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
 	if (!data)
@@ -325,8 +338,8 @@ int gdsc_register(struct gdsc_desc *desc,
 	for (i = 0; i < num; i++) {
 		if (!scs[i])
 			continue;
-		scs[i]->regmap = regmap;
-		scs[i]->rcdev = rcdev;
+		scs[i]->regmap = gpd->regmap;
+		scs[i]->rcdev = gpd->rcdev;
 		ret = gdsc_init(scs[i]);
 		if (ret)
 			return ret;
@@ -344,12 +357,13 @@ int gdsc_register(struct gdsc_desc *desc,
 	return of_genpd_add_provider_onecell(dev->of_node, data);
 }
 
-void gdsc_unregister(struct gdsc_desc *desc)
+static int gdsc_remove(struct platform_device *pdev)
 {
 	int i;
-	struct device *dev = desc->dev;
-	struct gdsc **scs = desc->scs;
-	size_t num = desc->num;
+	struct gdsc_desc *desc = pdev->dev.platform_data;
+	struct device *dev = pdev->dev.parent;
+	struct gdsc **scs = desc->gdscs;
+	size_t num = desc->num_gdscs;
 
 	/* Remove subdomains */
 	for (i = 0; i < num; i++) {
@@ -359,4 +373,19 @@ void gdsc_unregister(struct gdsc_desc *desc)
 			pm_genpd_remove_subdomain(scs[i]->parent, &scs[i]->pd);
 	}
 	of_genpd_del_provider(dev->of_node);
+
+	return 0;
 }
+
+static struct platform_driver gdsc_driver = {
+	.probe = gdsc_probe,
+	.remove = gdsc_remove,
+	.driver = {
+		.name = "qcom-gdsc",
+	},
+};
+module_platform_driver(gdsc_driver);
+
+MODULE_LICENSE("GPL v2");
+MODULE_DESCRIPTION("QCOM GDSC powerdomain driver");
+MODULE_ALIAS("platform:qcom-gdsc");

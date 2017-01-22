@@ -59,9 +59,14 @@ struct gdsc {
 };
 
 struct gdsc_desc {
-	struct device *dev;
-	struct gdsc **scs;
-	size_t num;
+	struct gdsc **gdscs;
+	size_t num_gdscs;
+};
+
+struct gdsc_pd {
+	struct gdsc_desc *desc;
+	struct reset_controller_dev *rcdev;
+	struct regmap *regmap;
 };
 
 #ifdef CONFIG_QCOM_GDSC

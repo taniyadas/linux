@@ -3369,14 +3369,18 @@ static const struct regmap_config gcc_msm8996_regmap_config = {
 	.fast_io	= true,
 };
 
+static struct gdsc_desc gdsc_msm8996_desc = {
+	.gdscs = gcc_msm8996_gdscs,
+	.num_gdscs = ARRAY_SIZE(gcc_msm8996_gdscs),
+};
+
 static const struct qcom_cc_desc gcc_msm8996_desc = {
 	.config = &gcc_msm8996_regmap_config,
 	.clks = gcc_msm8996_clocks,
 	.num_clks = ARRAY_SIZE(gcc_msm8996_clocks),
 	.resets = gcc_msm8996_resets,
 	.num_resets = ARRAY_SIZE(gcc_msm8996_resets),
-	.gdscs = gcc_msm8996_gdscs,
-	.num_gdscs = ARRAY_SIZE(gcc_msm8996_gdscs),
+	.gdesc = &gdsc_msm8996_desc,
 };
 
 static const struct of_device_id gcc_msm8996_match_table[] = {

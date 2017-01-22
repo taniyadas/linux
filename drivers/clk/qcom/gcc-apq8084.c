@@ -3589,14 +3589,18 @@ static const struct regmap_config gcc_apq8084_regmap_config = {
 	.fast_io	= true,
 };
 
+static struct gdsc_desc gdsc_apq8084_desc = {
+	.gdscs = gcc_apq8084_gdscs,
+	.num_gdscs = ARRAY_SIZE(gcc_apq8084_gdscs),
+};
+
 static const struct qcom_cc_desc gcc_apq8084_desc = {
 	.config = &gcc_apq8084_regmap_config,
 	.clks = gcc_apq8084_clocks,
 	.num_clks = ARRAY_SIZE(gcc_apq8084_clocks),
 	.resets = gcc_apq8084_resets,
 	.num_resets = ARRAY_SIZE(gcc_apq8084_resets),
-	.gdscs = gcc_apq8084_gdscs,
-	.num_gdscs = ARRAY_SIZE(gcc_apq8084_gdscs),
+	.gdesc = &gdsc_apq8084_desc,
 };
 
 static const struct of_device_id gcc_apq8084_match_table[] = {

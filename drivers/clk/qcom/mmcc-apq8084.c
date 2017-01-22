@@ -3370,14 +3370,18 @@ static const struct regmap_config mmcc_apq8084_regmap_config = {
 	.fast_io	= true,
 };
 
+static struct gdsc_desc gdsc_apq8084_desc = {
+	.gdscs = mmcc_apq8084_gdscs,
+	.num_gdscs = ARRAY_SIZE(mmcc_apq8084_gdscs),
+};
+
 static const struct qcom_cc_desc mmcc_apq8084_desc = {
 	.config = &mmcc_apq8084_regmap_config,
 	.clks = mmcc_apq8084_clocks,
 	.num_clks = ARRAY_SIZE(mmcc_apq8084_clocks),
 	.resets = mmcc_apq8084_resets,
 	.num_resets = ARRAY_SIZE(mmcc_apq8084_resets),
-	.gdscs = mmcc_apq8084_gdscs,
-	.num_gdscs = ARRAY_SIZE(mmcc_apq8084_gdscs),
+	.gdesc = &gdsc_apq8084_desc,
 };
 
 static const struct of_device_id mmcc_apq8084_match_table[] = {

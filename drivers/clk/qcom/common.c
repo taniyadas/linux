@@ -123,7 +123,7 @@ static void qcom_cc_reset_unregister(void *data)
 
 static void qcom_cc_gdsc_unregister(void *data)
 {
-	gdsc_unregister(data);
+	platform_device_unregister(data);
 }
 
 /*
@@ -228,9 +228,11 @@ int qcom_cc_really_probe(struct platform_device *pdev,
 	struct device *dev = &pdev->dev;
 	struct qcom_reset_controller *reset;
 	struct qcom_cc *cc;
-	struct gdsc_desc *scd;
+	struct gdsc_pd *gpd;
 	size_t num_clks = desc->num_clks;
 	struct clk_regmap **rclks = desc->clks;
+	struct platform_device *gdsc;
+	static int dev_id;
 
 	cc = devm_kzalloc(dev, sizeof(*cc), GFP_KERNEL);
 	if (!cc)
@@ -276,18 +278,21 @@ int qcom_cc_really_probe(struct platform_device *pdev,
 	if (ret)
 		return ret;
 
-	if (desc->gdscs && desc->num_gdscs) {
-		scd = devm_kzalloc(dev, sizeof(*scd), GFP_KERNEL);
-		if (!scd)
+	if (desc->gdesc) {
+		gpd = devm_kzalloc(dev, sizeof(*gpd), GFP_KERNEL);
+		if (!gpd)
 			return -ENOMEM;
-		scd->dev = dev;
-		scd->scs = desc->gdscs;
-		scd->num = desc->num_gdscs;
-		ret = gdsc_register(scd, &reset->rcdev, regmap);
-		if (ret)
-			return ret;
+		gpd->desc = desc->gdesc;
+		gpd->rcdev = &reset->rcdev;
+		gpd->regmap = regmap;
+
+		gdsc = platform_device_register_data(dev, "qcom-gdsc", dev_id++,
+						     gpd, sizeof(*gpd));
+		if (IS_ERR(gdsc))
+			return PTR_ERR(gdsc);
+
 		ret = devm_add_action_or_reset(dev, qcom_cc_gdsc_unregister,
-					       scd);
+					       pdev);
 		if (ret)
 			return ret;
 	}
