@@ -405,6 +405,12 @@
 			#reset-cells = <1>;
 			#power-domain-cells = <1>;
 			reg = <0x300000 0x90000>;
+
+			ufs_gdsc: gdsc {
+				compatible = "qcom,msm8996-ufs-gdsc";
+				#power-domain-cells = <0>;
+				power-domains = <&rpmpd 0>;
+			};
 		};
 
 		blsp1_spi0: spi@07575000 {
@@ -556,7 +562,7 @@
 			 <&gcc GCC_SDCC2_AHB_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
-			power-domains = <&rpmpd 0>;
+			power-domains = <&ufs_gdsc>;
 			operating-points-v2 = <&sdhc2_opp_table>;
 		 };
 
