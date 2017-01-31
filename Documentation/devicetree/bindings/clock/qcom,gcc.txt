@@ -24,6 +24,8 @@ Required properties :
 
 Optional properties :
 - #power-domain-cells : shall contain 1
+- One or more sub powerdomain nodes described as per bindings documentaion from
+ Documentation/devicetree/bindings/power/power_domain.txt
 - Qualcomm TSENS (thermal sensor device) on some devices can
 be part of GCC and hence the TSENS properties can also be
 part of the GCC/clock-controller node.

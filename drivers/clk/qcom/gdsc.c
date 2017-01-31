@@ -305,6 +305,43 @@ static int gdsc_init(struct gdsc *sc)
 	return 0;
 }
 
+int of_gdsc_register(struct gdsc_pd *gpd, struct device_node *np)
+{
+	int i, j, ret;
+	struct gdsc_desc *desc = gpd->desc;
+	struct of_gdsc **of_scs;
+	struct gdsc **scs;
+	size_t num;
+
+	if (!desc)
+		return -EINVAL;
+
+	num = desc->num_of_gdscs;
+	of_scs = desc->of_gdscs;
+	scs = desc->gdscs;
+
+	for (i = 0; i < num; i++) {
+		if (!of_device_is_compatible(np, of_scs[i]->compat))
+			continue;
+		j = of_scs[i]->index;
+
+		if (scs[j]->of_initialized)
+			return 0;
+
+		scs[j]->regmap = gpd->regmap;
+		scs[j]->rcdev = gpd->rcdev;
+
+		ret = gdsc_init(scs[j]);
+		if (ret)
+			return ret;
+		scs[j]->of_initialized = true;
+		return of_genpd_add_provider_simple(np, &scs[j]->pd);
+	}
+
+	/* could not register the DT powerdomain */
+	return 0;
+}
+
 int gdsc_probe(struct platform_device *pdev)
 {
 	int i, ret;
@@ -313,6 +350,7 @@ int gdsc_probe(struct platform_device *pdev)
 	struct device *dev = pdev->dev.parent;
 	struct gdsc_desc *desc;
 	struct gdsc_pd *gpd = pdev->dev.platform_data;
+	struct device_node *np = dev->of_node, *child;
 	struct genpd_onecell_data *data;
 
 	if (!gpd)
@@ -325,6 +363,27 @@ int gdsc_probe(struct platform_device *pdev)
 	scs = desc->gdscs;
 	num = desc->num_gdscs;
 
+	/* Register all of_gdscs first */
+	for_each_child_of_node(np, child) {
+		struct of_phandle_args sub_domain, domain;
+
+		sub_domain.np = child;
+		sub_domain.args_count = 0;
+
+		if (of_parse_phandle_with_args(child, "power-domains",
+					       "#power-domain-cells", 0,
+					       &domain) != 0)
+			continue;
+
+		ret = of_gdsc_register(gpd, child);
+		if (ret)
+			return ret;
+
+		ret = of_genpd_add_subdomain(&domain, &sub_domain);
+		if (ret)
+			return ret;
+	}
+
 	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
 	if (!data)
 		return -ENOMEM;
@@ -336,7 +395,7 @@ int gdsc_probe(struct platform_device *pdev)
 
 	data->num_domains = num;
 	for (i = 0; i < num; i++) {
-		if (!scs[i])
+		if (!scs[i] || scs[i]->of_initialized)
 			continue;
 		scs[i]->regmap = gpd->regmap;
 		scs[i]->rcdev = gpd->rcdev;
@@ -348,7 +407,7 @@ int gdsc_probe(struct platform_device *pdev)
 
 	/* Add subdomains */
 	for (i = 0; i < num; i++) {
-		if (!scs[i])
+		if (!scs[i] || scs[i]->of_initialized)
 			continue;
 		if (scs[i]->parent)
 			pm_genpd_add_subdomain(scs[i]->parent, &scs[i]->pd);
@@ -364,6 +423,7 @@ static int gdsc_remove(struct platform_device *pdev)
 	struct device *dev = pdev->dev.parent;
 	struct gdsc **scs = desc->gdscs;
 	size_t num = desc->num_gdscs;
+	struct device_node *child;
 
 	/* Remove subdomains */
 	for (i = 0; i < num; i++) {
@@ -373,6 +433,9 @@ static int gdsc_remove(struct platform_device *pdev)
 			pm_genpd_remove_subdomain(scs[i]->parent, &scs[i]->pd);
 	}
 	of_genpd_del_provider(dev->of_node);
+
+	for_each_child_of_node(dev->of_node, child)
+		of_genpd_del_provider(child);
 
 	return 0;
 }

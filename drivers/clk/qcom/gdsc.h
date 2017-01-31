@@ -56,11 +56,19 @@ struct gdsc {
 	struct reset_controller_dev	*rcdev;
 	unsigned int			*resets;
 	unsigned int			reset_count;
+	bool				of_initialized;
+};
+
+struct of_gdsc {
+	const char *compat;
+	int index;
 };
 
 struct gdsc_desc {
 	struct gdsc **gdscs;
 	size_t num_gdscs;
+	struct of_gdsc **of_gdscs;
+	size_t num_of_gdscs;
 };
 
 struct gdsc_pd {

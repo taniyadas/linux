@@ -3252,6 +3252,15 @@ static struct gdsc *gcc_msm8996_gdscs[] = {
 	[UFS_GDSC] = &ufs_gdsc,
 };
 
+static struct of_gdsc msm8996_ufs_of_gdsc = {
+	.compat = "qcom,msm8996-ufs-gdsc",
+	.index = UFS_GDSC,
+};
+
+static struct of_gdsc *gcc_msm8996_of_gdscs[] = {
+	[0] = &msm8996_ufs_of_gdsc,
+};
+
 static const struct qcom_reset_map gcc_msm8996_resets[] = {
 	[GCC_SYSTEM_NOC_BCR] = { 0x4000 },
 	[GCC_CONFIG_NOC_BCR] = { 0x5000 },
@@ -3372,6 +3381,8 @@ static const struct regmap_config gcc_msm8996_regmap_config = {
 static struct gdsc_desc gdsc_msm8996_desc = {
 	.gdscs = gcc_msm8996_gdscs,
 	.num_gdscs = ARRAY_SIZE(gcc_msm8996_gdscs),
+	.of_gdscs = gcc_msm8996_of_gdscs,
+	.num_of_gdscs = ARRAY_SIZE(gcc_msm8996_of_gdscs),
 };
 
 static const struct qcom_cc_desc gcc_msm8996_desc = {
