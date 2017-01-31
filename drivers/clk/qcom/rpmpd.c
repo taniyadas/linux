@@ -79,14 +79,14 @@ MODULE_DEVICE_TABLE(of, rpmpd_match_table);
 static int rpmpd_power_on(struct generic_pm_domain *domain)
 {
 	/* Nothing to be done for RPM powerdomains */
-	pr_debug("%s: %d\n", __func__, __LINE__);
+	pr_err("%s: %d\n", __func__, __LINE__);
 	return 0;
 }
 
 static int rpmpd_power_off(struct generic_pm_domain *domain)
 {
 	/* Nothing to be done for RPM powerdomains */
-	pr_debug("%s: %d\n", __func__, __LINE__);
+	pr_err("%s: %d\n", __func__, __LINE__);
 	return 0;
 }
 
@@ -105,7 +105,7 @@ static int rpmpd_performance(struct generic_pm_domain *domain,
 	ret = qcom_rpm_smd_write(pd->rpm, QCOM_RPM_ACTIVE_STATE, pd->res_type,
 				 pd->res_id, &req, sizeof(req));
 
-	pr_info("%s: %d: %d %d\n", __func__, __LINE__, state, ret);
+	pr_err("%s: %d: %d %d\n", __func__, __LINE__, state, ret);
 
 	return ret;
 }
