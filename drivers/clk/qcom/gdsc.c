@@ -286,6 +286,10 @@ static int gdsc_init(struct gdsc *sc)
 	if (on < 0)
 		return on;
 
+	/* hack: mark all gdscs as off */
+	/* this is needed as ufs being on while rpmpd being off is a problem */
+	on = false;
+
 	/*
 	 * Votable GDSCs can be ON due to Vote from other masters.
 	 * If a Votable GDSC is ON, make sure we have a Vote.
