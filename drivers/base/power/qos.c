@@ -172,18 +172,12 @@ static int dev_pm_qos_constraints_allocate(struct device *dev)
 {
 	struct dev_pm_qos *qos;
 	struct pm_qos_constraints *c;
-	struct blocking_notifier_head *n;
 
 	qos = kzalloc(sizeof(*qos), GFP_KERNEL);
 	if (!qos)
 		return -ENOMEM;
 
-	n = kzalloc(sizeof(*n), GFP_KERNEL);
-	if (!n) {
-		kfree(qos);
-		return -ENOMEM;
-	}
-	BLOCKING_INIT_NOTIFIER_HEAD(n);
+	BLOCKING_INIT_NOTIFIER_HEAD(&qos->notifiers);
 
 	c = &qos->resume_latency;
 	plist_head_init(&c->list);
@@ -191,7 +185,7 @@ static int dev_pm_qos_constraints_allocate(struct device *dev)
 	c->default_value = PM_QOS_RESUME_LATENCY_DEFAULT_VALUE;
 	c->no_constraint_value = PM_QOS_RESUME_LATENCY_DEFAULT_VALUE;
 	c->type = PM_QOS_MIN;
-	c->notifiers = n;
+	c->notifiers = &qos->notifiers;
 
 	c = &qos->latency_tolerance;
 	plist_head_init(&c->list);
@@ -268,7 +262,6 @@ void dev_pm_qos_constraints_destroy(struct device *dev)
 	dev->power.qos = ERR_PTR(-ENODEV);
 	spin_unlock_irq(&dev->power.lock);
 
-	kfree(qos->resume_latency.notifiers);
 	kfree(qos);
 
  out:
@@ -487,7 +480,7 @@ int dev_pm_qos_add_notifier(struct device *dev, struct notifier_block *notifier)
 		ret = dev_pm_qos_constraints_allocate(dev);
 
 	if (!ret)
-		ret = blocking_notifier_chain_register(dev->power.qos->resume_latency.notifiers,
+		ret = blocking_notifier_chain_register(&dev->power.qos->notifiers,
 						       notifier);
 
 	mutex_unlock(&dev_pm_qos_mtx);
@@ -514,7 +507,7 @@ int dev_pm_qos_remove_notifier(struct device *dev,
 
 	/* Silently return if the constraints object is not present. */
 	if (!IS_ERR_OR_NULL(dev->power.qos))
-		retval = blocking_notifier_chain_unregister(dev->power.qos->resume_latency.notifiers,
+		retval = blocking_notifier_chain_unregister(&dev->power.qos->notifiers,
 							    notifier);
 
 	mutex_unlock(&dev_pm_qos_mtx);

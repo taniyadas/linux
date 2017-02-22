@@ -416,14 +416,10 @@ static int genpd_power_on(struct generic_pm_domain *genpd, unsigned int depth)
 	return ret;
 }
 
-static int genpd_dev_pm_qos_notifier(struct notifier_block *nb,
-				     unsigned long val, void *ptr)
+static int __resume_latency_notifier(struct generic_pm_domain_data *gpd_data,
+				     unsigned long val)
 {
-	struct generic_pm_domain_data *gpd_data;
-	struct device *dev;
-
-	gpd_data = container_of(nb, struct generic_pm_domain_data, nb);
-	dev = gpd_data->base.dev;
+	struct device *dev = gpd_data->base.dev;
 
 	for (;;) {
 		struct generic_pm_domain *genpd;
@@ -454,6 +450,22 @@ static int genpd_dev_pm_qos_notifier(struct notifier_block *nb,
 	}
 
 	return NOTIFY_DONE;
+}
+
+static int genpd_dev_pm_qos_notifier(struct notifier_block *nb,
+				     unsigned long val, void *ptr)
+{
+	struct generic_pm_domain_data *gpd_data;
+	struct device *dev;
+
+	gpd_data = container_of(nb, struct generic_pm_domain_data, nb);
+	dev = gpd_data->base.dev;
+
+	if (dev_pm_qos_notifier_is_resume_latency(dev, ptr))
+		return __resume_latency_notifier(gpd_data, val);
+
+	dev_err(dev, "%s: Unexpected notifier call\n", __func__);
+	return NOTIFY_BAD;
 }
 
 /**

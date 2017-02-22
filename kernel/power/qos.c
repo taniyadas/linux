@@ -315,7 +315,7 @@ int pm_qos_update_target(struct pm_qos_constraints *c, struct plist_node *node,
 		if (c->notifiers)
 			blocking_notifier_call_chain(c->notifiers,
 						     (unsigned long)curr_value,
-						     NULL);
+						     c);
 	} else {
 		ret = 0;
 	}

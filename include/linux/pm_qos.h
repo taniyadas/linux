@@ -100,6 +100,7 @@ struct dev_pm_qos {
 	struct dev_pm_qos_request *resume_latency_req;
 	struct dev_pm_qos_request *latency_tolerance_req;
 	struct dev_pm_qos_request *flags_req;
+	struct blocking_notifier_head notifiers; /* common for all constraints */
 };
 
 /* Action requested to pm_qos_update_target */
@@ -112,6 +113,12 @@ enum pm_qos_req_action {
 static inline int dev_pm_qos_request_active(struct dev_pm_qos_request *req)
 {
 	return req->dev != NULL;
+}
+
+static inline bool dev_pm_qos_notifier_is_resume_latency(struct device *dev,
+		struct pm_qos_constraints *c)
+{
+	return &dev->power.qos->resume_latency == c;
 }
 
 int pm_qos_update_target(struct pm_qos_constraints *c, struct plist_node *node,
