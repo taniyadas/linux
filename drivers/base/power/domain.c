@@ -1639,6 +1639,10 @@ static void genpd_lock_init(struct generic_pm_domain *genpd)
 	}
 }
 
+static struct bus_type genpd_bus_type = {
+	.name =		"genpd",
+};
+
 /**
  * pm_genpd_init - Initialize a generic I/O PM domain object.
  * @genpd: PM domain object to initialize.
@@ -1696,6 +1700,18 @@ int pm_genpd_init(struct generic_pm_domain *genpd,
 			return ret;
 	}
 
+	genpd->dev.bus = &genpd_bus_type;
+	device_initialize(&genpd->dev);
+	dev_set_name(&genpd->dev, "%s", genpd->name);
+
+	ret = device_add(&genpd->dev);
+	if (ret) {
+		dev_err(&genpd->dev, "failed to add device: %d\n", ret);
+		put_device(&genpd->dev);
+		kfree(genpd->free);
+		return ret;
+	}
+
 	mutex_lock(&gpd_list_lock);
 	list_add(&genpd->gpd_list_node, &gpd_list);
 	mutex_unlock(&gpd_list_lock);
@@ -1733,6 +1749,7 @@ static int genpd_remove(struct generic_pm_domain *genpd)
 
 	list_del(&genpd->gpd_list_node);
 	genpd_unlock(genpd);
+	device_del(&genpd->dev);
 	cancel_work_sync(&genpd->power_off_work);
 	kfree(genpd->free);
 	pr_debug("%s: removed %s\n", __func__, genpd->name);
@@ -1897,6 +1914,7 @@ int of_genpd_add_provider_simple(struct device_node *np,
 		if (!ret) {
 			genpd->provider = &np->fwnode;
 			genpd->has_provider = true;
+			genpd->dev.of_node = np;
 		}
 	}
 
@@ -1933,6 +1951,7 @@ int of_genpd_add_provider_onecell(struct device_node *np,
 
 		data->domains[i]->provider = &np->fwnode;
 		data->domains[i]->has_provider = true;
+		data->domains[i]->dev.of_node = np;
 	}
 
 	ret = genpd_add_provider(np, data->xlate, data);
@@ -2702,3 +2721,21 @@ static void __exit genpd_debug_exit(void)
 }
 __exitcall(genpd_debug_exit);
 #endif /* CONFIG_DEBUG_FS */
+
+static int __init pm_genpd_core_init(void)
+{
+	int ret;
+
+	ret = bus_register(&genpd_bus_type);
+	if (ret)
+		pr_err("bus_register failed (%d)\n", ret);
+
+	return ret;
+}
+pure_initcall(pm_genpd_core_init);
+
+static void __exit pm_genpd_core_exit(void)
+{
+	bus_unregister(&genpd_bus_type);
+}
+__exitcall(pm_genpd_core_exit);
