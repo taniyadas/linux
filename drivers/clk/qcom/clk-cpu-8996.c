@@ -12,14 +12,11 @@
  */
 
 #include <linux/clk.h>
-#include <linux/clk-provider.h>
+#include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
-#include <linux/mfd/syscon.h>
 
 #include "clk-alpha-pll.h"
-#include "clk-pll.h"
-#include "clk-regmap.h"
 #include "clk-regmap-mux.h"
 
 #define VCO(a, b, c) { \
@@ -301,11 +298,50 @@ struct clk_regmap *clks[] = {
 	&pwrcl_clk.clkr,
 };
 
-static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
+struct clk_hw_clks {
+	unsigned int num;
+	struct clk_hw *hws[];
+};
+
+static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
 {
-	int ret, i;
+	int i, ret;
+	void __iomem *base;
+	struct resource *res;
+	struct regmap *regmap_cpu;
+	struct clk_hw_clks *hws;
+	struct clk_hw_onecell_data *data;
+	struct device *dev = &pdev->dev;
 	struct clk *perf_pll, *pwr_pll, *perf_alt_pll, *pwr_alt_pll;
 	struct clk *perf_clk, *pwr_clk;
+
+	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
+		            GFP_KERNEL);
+	if (!data)
+		return -ENOMEM;
+
+	hws = devm_kzalloc(dev, sizeof(*hws) + 2 * sizeof(struct clk_hw *), 
+			   GFP_KERNEL);
+	if (!hws)
+		return -ENOMEM;
+
+	hws->hws[0] = clk_hw_register_fixed_factor(dev, "perfcl_pll_main",
+						   "perfcl_pll",
+						   CLK_SET_RATE_PARENT, 1, 2);
+	hws->hws[1] = clk_hw_register_fixed_factor(dev, "pwrcl_pll_main",
+		       			           "pwrcl_pll",
+						   CLK_SET_RATE_PARENT, 1, 2);
+	hws->num = 2;
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	base = devm_ioremap_resource(dev, res);
+	if (IS_ERR(base))
+		return PTR_ERR(base);
+
+	regmap_cpu = devm_regmap_init_mmio(dev, base,
+					   &cpu_msm8996_regmap_config);
+	if (IS_ERR(regmap_cpu))
+		return PTR_ERR(regmap_cpu);
 
 	for (i = 0; i < ARRAY_SIZE(clks); i++) {
 		ret = devm_clk_register_regmap(dev, clks[i]);
@@ -313,15 +349,10 @@ static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
 			return ret;
 	}
 
-	clk_hw_register_fixed_factor(dev, "perfcl_pll_main", "perfcl_pll",
-				     CLK_SET_RATE_PARENT, 1, 2);
-	clk_hw_register_fixed_factor(dev, "pwrcl_pll_main", "pwrcl_pll",
-				     CLK_SET_RATE_PARENT, 1, 2);
-
-	clk_alpha_pll_configure(&perfcl_pll, regmap, &hfpll_config);
-	clk_alpha_pll_configure(&pwrcl_pll, regmap, &hfpll_config);
-	clk_alpha_pll_configure(&perfcl_alt_pll, regmap, &altpll_config);
-	clk_alpha_pll_configure(&pwrcl_alt_pll, regmap, &altpll_config);
+	clk_alpha_pll_configure(&perfcl_pll, regmap_cpu, &hfpll_config);
+	clk_alpha_pll_configure(&pwrcl_pll, regmap_cpu, &hfpll_config);
+	clk_alpha_pll_configure(&perfcl_alt_pll, regmap_cpu, &altpll_config);
+	clk_alpha_pll_configure(&pwrcl_alt_pll, regmap_cpu, &altpll_config);
 
 	perf_pll = clk_hw_get_clk(&perfcl_pll.clkr.hw, dev_name(dev), NULL);
 	pwr_pll = clk_hw_get_clk(&pwrcl_pll.clkr.hw, dev_name(dev), NULL);
@@ -340,51 +371,40 @@ static int register_cpu_clocks(struct device *dev, struct regmap *regmap)
 	clk_set_rate(pwr_clk, 1228800000);
 	clk_set_rate(perf_clk, 1555200000);
 
-	return 0;
-}
-
-static int qcom_cpu_clk_msm8996_driver_probe(struct platform_device *pdev)
-{
-	int ret;
-	void __iomem *base;
-	struct resource *res;
-	struct clk_hw_onecell_data *data;
-	struct device *dev = &pdev->dev;
-	struct regmap *regmap_cpu;
-
-
-	data = devm_kzalloc(dev, sizeof(*data) + 2 * sizeof(struct clk_hw *),
-		            GFP_KERNEL);
-	if (!data)
-		return -ENOMEM;
-
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	base = devm_ioremap_resource(dev, res);
-	if (IS_ERR(base))
-		return PTR_ERR(base);
-
-	regmap_cpu = devm_regmap_init_mmio(dev, base,
-					   &cpu_msm8996_regmap_config);
-	if (IS_ERR(regmap_cpu))
-		return PTR_ERR(regmap_cpu);
-
-	ret = register_cpu_clocks(dev, regmap_cpu);
-	if (ret)
-		return ret;
-
 	data->hws[0] = &pwrcl_clk.clkr.hw;
 	data->hws[1] = &perfcl_clk.clkr.hw;
 	data->num = 2;
 
+	platform_set_drvdata(pdev, hws);
+
 	return of_clk_add_hw_provider(dev->of_node, of_clk_hw_onecell_get, data);
+}
+
+static int qcom_cpu_clk_msm8996_driver_remove(struct platform_device *pdev)
+{
+	int i;
+	struct device *dev = &pdev->dev;
+	struct clk_hw_clks *hws = platform_get_drvdata(pdev);
+
+	for (i =0; i < hws->num; i++)
+		clk_hw_unregister_fixed_rate(hws->hws[i]);
+
+	of_clk_del_provider(dev->of_node);
+
+	return 0;
 }
 
 static struct platform_driver qcom_cpu_clk_msm8996_driver = {
 	.probe = qcom_cpu_clk_msm8996_driver_probe,
+	.remove = qcom_cpu_clk_msm8996_driver_remove,
 	.driver = {
 		.name = "qcom-cpu-clk-msm8996",
 		.of_match_table = match_table,
 	},
 };
 
-builtin_platform_driver(qcom_cpu_clk_msm8996_driver);
+module_platform_driver(qcom_cpu_clk_msm8996_driver);
+
+MODULE_ALIAS("platform:apcc-msm8996");
+MODULE_DESCRIPTION("QCOM MSM8996 CPU clock Driver");
+MODULE_LICENSE("GPL v2");
