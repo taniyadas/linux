@@ -1213,6 +1213,28 @@ EXPORT_SYMBOL_GPL(pm_genpd_syscore_poweron);
 
 #endif /* CONFIG_PM_SLEEP */
 
+static struct generic_pm_domain_data *genpd_alloc_data(struct device *dev,
+					struct generic_pm_domain *genpd,
+					struct gpd_timing_data *td)
+{
+	struct generic_pm_domain_data *gpd_data;
+
+	gpd_data = kzalloc(sizeof(*gpd_data), GFP_KERNEL);
+	if (!gpd_data)
+		return ERR_PTR(-ENOMEM);
+
+	if (td)
+		gpd_data->td = *td;
+
+	gpd_data->base.dev = dev;
+	gpd_data->td.constraint_changed = true;
+	gpd_data->td.effective_constraint_ns = -1;
+	gpd_data->nb.notifier_call = genpd_dev_pm_qos_notifier;
+	gpd_data->performance_state = 0;
+
+	return gpd_data;
+}
+
 static struct generic_pm_domain_data *genpd_alloc_dev_data(struct device *dev,
 					struct generic_pm_domain *genpd,
 					struct gpd_timing_data *td)
@@ -1224,20 +1246,11 @@ static struct generic_pm_domain_data *genpd_alloc_dev_data(struct device *dev,
 	if (ret)
 		return ERR_PTR(ret);
 
-	gpd_data = kzalloc(sizeof(*gpd_data), GFP_KERNEL);
-	if (!gpd_data) {
-		ret = -ENOMEM;
+	gpd_data = genpd_alloc_data(dev, genpd, td);
+	if (IS_ERR(gpd_data)) {
+		ret = PTR_ERR(gpd_data);
 		goto err_put;
 	}
-
-	if (td)
-		gpd_data->td = *td;
-
-	gpd_data->base.dev = dev;
-	gpd_data->td.constraint_changed = true;
-	gpd_data->td.effective_constraint_ns = -1;
-	gpd_data->nb.notifier_call = genpd_dev_pm_qos_notifier;
-	gpd_data->performance_state = 0;
 
 	spin_lock_irq(&dev->power.lock);
 
@@ -1278,7 +1291,7 @@ static void genpd_free_dev_data(struct device *dev,
 }
 
 static int genpd_add_device(struct generic_pm_domain *genpd, struct device *dev,
-			    struct gpd_timing_data *td)
+			    struct gpd_timing_data *td, int num_pd)
 {
 	struct generic_pm_domain_data *gpd_data;
 	int ret = 0;
@@ -1288,7 +1301,11 @@ static int genpd_add_device(struct generic_pm_domain *genpd, struct device *dev,
 	if (IS_ERR_OR_NULL(genpd) || IS_ERR_OR_NULL(dev))
 		return -EINVAL;
 
-	gpd_data = genpd_alloc_dev_data(dev, genpd, td);
+	if (num_pd > 1)
+		gpd_data = genpd_alloc_data(dev, genpd, td);
+	else
+		gpd_data = genpd_alloc_dev_data(dev, genpd, td);
+
 	if (IS_ERR(gpd_data))
 		return PTR_ERR(gpd_data);
 
@@ -1319,6 +1336,12 @@ static int genpd_add_device(struct generic_pm_domain *genpd, struct device *dev,
 	return ret;
 }
 
+static int genpd_add_one(struct generic_pm_domain *genpd, struct device *dev,
+			 struct gpd_timing_data *td)
+{
+	return genpd_add_device(genpd, dev, td, 1);
+}
+
 /**
  * __pm_genpd_add_device - Add a device to an I/O PM domain.
  * @genpd: PM domain to add the device to.
@@ -1331,7 +1354,7 @@ int __pm_genpd_add_device(struct generic_pm_domain *genpd, struct device *dev,
 	int ret;
 
 	mutex_lock(&gpd_list_lock);
-	ret = genpd_add_device(genpd, dev, td);
+	ret = genpd_add_one(genpd, dev, td);
 	mutex_unlock(&gpd_list_lock);
 
 	return ret;
@@ -2102,7 +2125,7 @@ int of_genpd_add_device(struct of_phandle_args *genpdspec, struct device *dev)
 		goto out;
 	}
 
-	ret = genpd_add_device(genpd, dev, NULL);
+	ret = genpd_add_one(genpd, dev, NULL);
 
 out:
 	mutex_unlock(&gpd_list_lock);
@@ -2234,6 +2257,49 @@ static void genpd_dev_pm_sync(struct device *dev)
 	genpd_queue_power_off_work(pd);
 }
 
+static int genpd_attach_multiple(struct device *dev, int num_pd)
+{
+	int i, ret;
+	struct of_phandle_args pd_args;
+	struct generic_pm_domain *pd[num_pd];
+
+	for (i = 0; i < num_pd; i++) {
+		ret = of_parse_phandle_with_args(dev->of_node, "power-domains",
+						 "#power-domain-cells", i,
+						 &pd_args);
+		if (ret < 0)
+			return ret;
+
+		pd[i] = genpd_get_from_provider(&pd_args);
+		of_node_put(pd_args.np);
+		if (IS_ERR(pd[i])) {
+			mutex_unlock(&gpd_list_lock);
+			dev_dbg(dev, "%s() failed to find Power domain: %ld\n",
+				__func__, PTR_ERR(pd[i]));
+			return -EPROBE_DEFER;
+		}
+	}
+
+	mutex_lock(&gpd_list_lock);
+	for (i = 0; i < num_pd; i++) {
+		ret = genpd_add_device(pd[i], dev, NULL, num_pd);
+		if (ret) {
+			dev_err(dev, "%s() failed to Add Power domain: %ld\n",
+				__func__, PTR_ERR(pd[i]));
+		}
+		genpd_lock(pd[i]);
+		genpd_power_on(pd[i], 0);
+		genpd_unlock(pd[i]);
+	}
+	mutex_unlock(&gpd_list_lock);
+
+	// TODO: Implement detach and sync callbacks
+	//dev->pm_domain->detach = genpd_detach_multiple;
+	//dev->pm_domain->sync = genpd_sync_multiple
+
+	return 0;
+}
+
 /**
  * genpd_dev_pm_attach - Attach a device to its PM domain using DT.
  * @dev: Device to attach.
@@ -2254,7 +2320,7 @@ int genpd_dev_pm_attach(struct device *dev)
 	struct of_phandle_args pd_args;
 	struct generic_pm_domain *pd;
 	unsigned int i;
-	int ret;
+	int ret, num_pd;
 
 	if (!dev->of_node)
 		return -ENODEV;
@@ -2268,9 +2334,11 @@ int genpd_dev_pm_attach(struct device *dev)
 	 * that device, because the genpd core cannot bind a device
 	 * with more than one PM domain.
 	 */
-	if (of_count_phandle_with_args(dev->of_node, "power-domains",
-				       "#power-domain-cells") > 1)
-		return 0;
+	num_pd = of_count_phandle_with_args(dev->of_node, "power-domains",
+				       "#power-domain-cells");
+	if (num_pd > 1)
+		return genpd_attach_multiple(dev, num_pd);
+
 
 	ret = of_parse_phandle_with_args(dev->of_node, "power-domains",
 					"#power-domain-cells", 0, &pd_args);
@@ -2302,7 +2370,7 @@ int genpd_dev_pm_attach(struct device *dev)
 	dev_dbg(dev, "adding to PM domain %s\n", pd->name);
 
 	for (i = 1; i < GENPD_RETRY_MAX_MS; i <<= 1) {
-		ret = genpd_add_device(pd, dev, NULL);
+		ret = genpd_add_one(pd, dev, NULL);
 		if (ret != -EAGAIN)
 			break;
 
