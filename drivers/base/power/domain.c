@@ -37,6 +37,11 @@
 	__ret;							\
 })
 
+struct pm_genpd_handle {
+	struct generic_pm_domain *genpd;
+	struct device *dev;
+};
+
 static LIST_HEAD(gpd_list);
 static DEFINE_MUTEX(gpd_list_lock);
 
@@ -1701,37 +1706,60 @@ int pm_genpd_remove(struct generic_pm_domain *genpd)
 }
 EXPORT_SYMBOL_GPL(pm_genpd_remove);
 
+static bool match_device(struct device *dev, struct generic_pm_domain *gpd)
+{
+	struct pm_domain_data *pdd;
+
+	list_for_each_entry(pdd, &gpd->dev_list, list_node) {
+		if (pdd->dev == dev)
+			return true;
+	}
+	return false;
+}
+
 /**
  * pm_genpd_get - Get a generic I/O PM domain by name
  * @name: Name of the PM domain.
  *
- * Look-ups a PM domain by name. If found, increment the device
+ * Looks-up a PM domain by name. If found, increment the device
  * count for PM domain to ensure that the PM domain cannot be
  * removed, increment the suspended count so that it can still
  * be turned off (when not in-use) and return a pointer to its
  * generic_pm_domain structure. If not found return ERR_PTR().
  */
-struct generic_pm_domain *pm_genpd_get(const char *name)
+struct pm_genpd_handle *pm_genpd_get(struct device *dev, const char *name)
 {
-	struct generic_pm_domain *gpd, *genpd = ERR_PTR(-EEXIST);
+	struct pm_genpd_handle *handle;
+	struct generic_pm_domain *gpd;
 
 	if (!name)
 		return ERR_PTR(-EINVAL);
 
+	handle = devm_kzalloc(dev, sizeof(*handle), GFP_KERNEL);
+	if (!handle)
+		return ERR_PTR(-ENOMEM);
+
 	mutex_lock(&gpd_list_lock);
 	list_for_each_entry(gpd, &gpd_list, gpd_list_node) {
 		if (!strcmp(gpd->name, name)) {
+			if (!match_device(dev, gpd))
+				goto out;
 			genpd_lock(gpd);
 			gpd->device_count++;
 			gpd->suspended_count++;
 			genpd_unlock(gpd);
-			genpd = gpd;
+			handle->genpd = gpd;
+			handle->dev = dev;
 			break;
 		}
 	}
+out:
 	mutex_unlock(&gpd_list_lock);
 
-	return genpd;
+	if (!handle->genpd)
+		handle = ERR_PTR(-EEXIST);
+
+	return handle;
 }
 EXPORT_SYMBOL(pm_genpd_get);
 
@@ -1739,10 +1767,14 @@ EXPORT_SYMBOL(pm_genpd_get);
  * pm_genpd_put - Put a generic I/O PM domain
  * @genpd: Pointer to a PM domain.
  */
-void pm_genpd_put(struct generic_pm_domain *genpd)
+void pm_genpd_put(struct pm_genpd_handle *handle)
 {
-	if (!genpd)
+	struct generic_pm_domain *genpd;
+
+	if (IS_ERR(handle) || !handle || !handle->genpd)
 		return;
+
+	genpd = handle->genpd;
 
 	genpd_lock(genpd);
 
@@ -1764,10 +1796,14 @@ EXPORT_SYMBOL(pm_genpd_put);
  * Powers on a PM domain, if not already on, and decrements the
  * 'suspended_count' to prevent the PM domain from being powered off.
  */
-int pm_genpd_poweron(struct generic_pm_domain *genpd)
+int pm_genpd_poweron(struct pm_genpd_handle *handle)
 {
-	if (!genpd)
+	struct generic_pm_domain *genpd;
+
+	if (IS_ERR(handle) || !handle || !handle->genpd)
 		return -EINVAL;
+
+	genpd = handle->genpd;
 
 	genpd_lock(genpd);
 
@@ -1792,10 +1828,14 @@ EXPORT_SYMBOL_GPL(pm_genpd_poweron);
  * 'suspended_count' equals the 'device_count' then will power
  * off the PM domain.
  */
-int pm_genpd_poweroff(struct generic_pm_domain *genpd)
+int pm_genpd_poweroff(struct pm_genpd_handle *handle)
 {
-	if (!genpd)
+	struct generic_pm_domain *genpd;
+
+	if (IS_ERR(handle) || !handle || !handle->genpd)
 		return -EINVAL;
+
+	genpd = handle->genpd;
 
 	genpd_lock(genpd);
 
@@ -2532,9 +2572,26 @@ static struct generic_pm_domain *genpd_get(struct device_node *np, int index)
  * provided to look up a PM domain from the registered list of PM domain
  * providers.
  */
-struct generic_pm_domain *of_genpd_get(struct device_node *np, int index)
+struct pm_genpd_handle *of_genpd_get(struct device *dev, int index)
 {
-	return genpd_get(np, index);
+	struct generic_pm_domain *genpd;
+	struct pm_genpd_handle *handle;
+
+	if (!dev->of_node)
+		return ERR_PTR(-EINVAL);
+
+	handle = devm_kzalloc(dev, sizeof(*handle), GFP_KERNEL);
+	if (!handle)
+		return ERR_PTR(-ENOMEM);
+
+	genpd = genpd_get(dev->of_node, index);
+	if (IS_ERR(genpd))
+		return ERR_CAST(genpd);
+
+	handle->genpd = genpd;
+	handle->dev = dev;
+
+	return handle;
 }
 EXPORT_SYMBOL(of_genpd_get);
 
@@ -2547,19 +2604,20 @@ EXPORT_SYMBOL(of_genpd_get);
  * properties, and uses them to look up a PM domain from the registered
  * list of PM domain providers.
  */
-struct generic_pm_domain *of_genpd_get_by_name(struct device_node *np,
-					       const char *name)
+struct pm_genpd_handle *of_genpd_get_by_name(struct device *dev,
+					     const char *name)
 {
 	int index;
 
-	if (!np || !name)
+	if (!dev || !dev->of_node || !name)
 		return ERR_PTR(-EINVAL);
 
-	index = of_property_match_string(np, "power-domain-names", name);
+	index = of_property_match_string(dev->of_node, "power-domain-names",
+					 name);
 	if (index < 0)
 		return ERR_PTR(index);
 
-	return genpd_get(np, index);
+	return of_genpd_get(dev, index);
 }
 EXPORT_SYMBOL(of_genpd_get_by_name);
 #endif /* CONFIG_PM_GENERIC_DOMAINS_OF */

@@ -21,6 +21,8 @@
 #define GENPD_FLAG_PM_CLK	(1U << 0) /* PM domain uses PM clk */
 #define GENPD_FLAG_IRQ_SAFE	(1U << 1) /* PM domain operates in atomic */
 
+struct pm_genpd_handle;
+
 enum gpd_status {
 	GPD_STATE_ACTIVE = 0,	/* PM domain is active */
 	GPD_STATE_POWER_OFF,	/* PM domain is off */
@@ -149,10 +151,10 @@ extern int pm_genpd_remove_subdomain(struct generic_pm_domain *genpd,
 extern int pm_genpd_init(struct generic_pm_domain *genpd,
 			 struct dev_power_governor *gov, bool is_off);
 extern int pm_genpd_remove(struct generic_pm_domain *genpd);
-extern struct generic_pm_domain *pm_genpd_get(const char *name);
-extern void pm_genpd_put(struct generic_pm_domain *genpd);
-extern int pm_genpd_poweron(struct generic_pm_domain *genpd);
-extern int pm_genpd_poweroff(struct generic_pm_domain *genpd);
+extern struct pm_genpd_handle *pm_genpd_get(struct device *dev, const char *name);
+extern void pm_genpd_put(struct pm_genpd_handle *handle);
+extern int pm_genpd_poweron(struct pm_genpd_handle *handle);
+extern int pm_genpd_poweroff(struct pm_genpd_handle *handle);
 
 extern struct dev_power_governor simple_qos_governor;
 extern struct dev_power_governor pm_domain_always_on_gov;
@@ -192,17 +194,18 @@ static inline int pm_genpd_remove(struct generic_pm_domain *genpd)
 {
 	return -ENOTSUPP;
 }
-static inline struct generic_pm_domain *pm_genpd_get(const char *name)
+static inline struct pm_genpd_handle *pm_genpd_get(struct device *dev,
+						   const char *name)
 {
 	return ERR_PTR(-ENOTSUPP);
 }
 
-static inline void pm_genpd_put(struct generic_pm_domain *genpd) {}
-static inline int pm_genpd_poweron(struct generic_pm_domain *genpd)
+static inline void pm_genpd_put(struct pm_genpd_handle *handle) {}
+static inline int pm_genpd_poweron(struct pm_genpd_handle *handle)
 {
 	return -ENOTSUPP;
 }
-static inline int pm_genpd_poweroff(struct generic_pm_domain *genpd)
+static inline int pm_genpd_poweroff(struct pm_genpd_handle *handle)
 {
 	return -ENOTSUPP;
 }
@@ -246,9 +249,9 @@ extern int of_genpd_add_subdomain(struct of_phandle_args *parent,
 extern struct generic_pm_domain *of_genpd_remove_last(struct device_node *np);
 extern int of_genpd_parse_idle_states(struct device_node *dn,
 			struct genpd_power_state **states, int *n);
-extern struct generic_pm_domain *of_genpd_get(struct device_node *np,
+extern struct pm_genpd_handle *of_genpd_get(struct device *dev,
 					      int index);
-extern struct generic_pm_domain *of_genpd_get_by_name(struct device_node *np,
+extern struct pm_genpd_handle *of_genpd_get_by_name(struct device *dev,
 						      const char *name);
 
 int genpd_dev_pm_attach(struct device *dev);
@@ -297,13 +300,13 @@ struct generic_pm_domain *of_genpd_remove_last(struct device_node *np)
 }
 
 static inline
-struct generic_pm_domain *of_genpd_get(struct device_node *np, int index)
+struct pm_genpd_handle *of_genpd_get(struct device *dev, int index)
 {
 	return ERR_PTR(-ENOTSUPP);
 }
 
 static inline
-struct generic_pm_domain *of_genpd_get_by_name(struct device_node *np,
+struct pm_genpd_handle *of_genpd_get_by_name(struct device *dev,
 					       const char *name)
 {
 	return ERR_PTR(-ENOTSUPP);
