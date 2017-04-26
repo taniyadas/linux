@@ -1852,6 +1852,29 @@ out:
 }
 EXPORT_SYMBOL_GPL(pm_genpd_poweroff);
 
+int pm_genpd_set_performance_state(struct pm_genpd_handle *handle,
+				   unsigned long val)
+{
+	struct generic_pm_domain *gpd;
+	struct pm_domain_data *pdd;
+
+	if (!handle)
+		return -EINVAL;
+
+	gpd = handle->genpd;
+
+	genpd_lock(gpd);
+	list_for_each_entry(pdd, &gpd->dev_list, list_node) {
+		if (pdd->dev == handle->dev) {
+			to_gpd_data(pdd)->performance_state = val;
+			__update_domain_performance_state(gpd, 0);
+		}
+	}
+	genpd_unlock(gpd);
+	return 0;
+};
+EXPORT_SYMBOL(pm_genpd_set_performance_state);
+
 #ifdef CONFIG_PM_GENERIC_DOMAINS_OF
 
 typedef struct generic_pm_domain *(*genpd_xlate_t)(struct of_phandle_args *args,

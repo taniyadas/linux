@@ -155,6 +155,8 @@ extern struct pm_genpd_handle *pm_genpd_get(struct device *dev, const char *name
 extern void pm_genpd_put(struct pm_genpd_handle *handle);
 extern int pm_genpd_poweron(struct pm_genpd_handle *handle);
 extern int pm_genpd_poweroff(struct pm_genpd_handle *handle);
+extern int pm_genpd_set_performance_state(struct pm_genpd_handle *handle,
+					  unsigned long val);
 
 extern struct dev_power_governor simple_qos_governor;
 extern struct dev_power_governor pm_domain_always_on_gov;
@@ -206,6 +208,13 @@ static inline int pm_genpd_poweron(struct pm_genpd_handle *handle)
 	return -ENOTSUPP;
 }
 static inline int pm_genpd_poweroff(struct pm_genpd_handle *handle)
+{
+	return -ENOTSUPP;
+}
+
+static inline int
+pm_genpd_set_performance_state(struct pm_genpd_handle *handle,
+			       unsigned lone val)
 {
 	return -ENOTSUPP;
 }
