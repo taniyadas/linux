@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/iopoll.h>
 #include <linux/pm_opp.h>
+#include <linux/pm_domain.h>
 
 #include "sdhci-pltfm.h"
 
@@ -141,6 +142,7 @@ struct sdhci_msm_host {
 	bool use_cdclp533;
 };
 
+#if 0
 static unsigned int msm_get_clock_rate_for_bus_mode(struct sdhci_host *host,
 						    unsigned int clock)
 {
@@ -158,6 +160,7 @@ static unsigned int msm_get_clock_rate_for_bus_mode(struct sdhci_host *host,
 		clock *= 2;
 	return clock;
 }
+#endif
 
 static void msm_set_clock_rate_for_bus_mode(struct sdhci_host *host,
 					    unsigned int clock)
@@ -1153,7 +1156,7 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 	u16 host_version, core_minor;
 	u32 core_version, config;
 	u8 core_major;
-	struct device *dev = &msm_host->pdev->dev;
+	struct pm_genpd_handle *cx, *ufs;
 
 	host = sdhci_pltfm_init(pdev, &sdhci_msm_pdata, sizeof(*msm_host));
 	if (IS_ERR(host))
@@ -1226,6 +1229,16 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 	ret = clk_prepare_enable(msm_host->clk);
 	if (ret)
 		goto pclk_disable;
+
+	cx = of_genpd_get_by_name(&pdev->dev, "vddcx");
+	if (!IS_ERR(cx)) {
+		pm_genpd_poweron(cx);
+		pm_genpd_set_performance_state(cx, 6);
+	}
+
+	ufs = of_genpd_get_by_name(&pdev->dev, "ufs");
+	if (!IS_ERR(ufs))
+		pm_genpd_poweron(ufs);
 
 	core_memres = platform_get_resource(pdev, IORESOURCE_MEM, 1);
 	msm_host->core_mem = devm_ioremap_resource(&pdev->dev, core_memres);

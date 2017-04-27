@@ -39,6 +39,7 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/wait.h>
+#include <linux/pm_domain.h>
 
 #define UART_MR1			0x0000
 
@@ -1743,6 +1744,7 @@ static int msm_serial_probe(struct platform_device *pdev)
 	struct uart_port *port;
 	const struct of_device_id *id;
 	int irq, line;
+	struct pm_genpd_handle *cx, *ufs;
 
 	if (pdev->dev.of_node)
 		line = of_alias_get_id(pdev->dev.of_node, "serial");
@@ -1779,6 +1781,16 @@ static int msm_serial_probe(struct platform_device *pdev)
 
 	port->uartclk = clk_get_rate(msm_port->clk);
 	dev_info(&pdev->dev, "uartclk = %d\n", port->uartclk);
+
+	cx = of_genpd_get_by_name(&pdev->dev, "vddcx");
+	if (!IS_ERR(cx)) {
+		pm_genpd_poweron(cx);
+		pm_genpd_set_performance_state(cx, 3);
+	}
+
+	ufs = of_genpd_get_by_name(&pdev->dev, "ufs");
+	if (!IS_ERR(ufs))
+		pm_genpd_poweron(ufs);
 
 	resource = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (unlikely(!resource))

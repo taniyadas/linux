@@ -301,10 +301,10 @@
 					domain-performance-state = <1>;
 				};
 				opp@2 {
-					domain-performance-state = <2>;
+					domain-performance-state = <3>;
 				};
 				opp@3 {
-					domain-performance-state = <3>;
+					domain-performance-state = <6>;
 				};
 			};
 
@@ -443,6 +443,40 @@
 			#thermal-sensor-cells = <1>;
 		};
 
+		test_opp_table: opp_table2 {
+			compatible = "operating-points-v2";
+
+			opp0 {
+				opp-hz = /bits/ 64 <400000>;
+				domain-performance-state = <1>;
+			};
+
+			opp1 {
+				opp-hz = /bits/ 64 <20000000>;
+				domain-performance-state = <1>;
+			};
+
+			opp2 {
+				opp-hz = /bits/ 64 <25000000>;
+				domain-performance-state = <3>;
+			};
+
+			opp3 {
+				opp-hz = /bits/ 64 <50000000>;
+				domain-performance-state = <3>;
+			};
+
+			opp4 {
+				opp-hz = /bits/ 64 <100000000>;
+				domain-performance-state = <6>;
+			};
+
+			opp5 {
+				opp-hz = /bits/ 64 <200000000>;
+				domain-performance-state = <6>;
+			};
+		};
+
 		blsp2_uart1: serial@75b0000 {
 			compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
 			reg = <0x75b0000 0x1000>;
@@ -450,6 +484,9 @@
 			clocks = <&gcc GCC_BLSP2_UART2_APPS_CLK>,
 				 <&gcc GCC_BLSP2_AHB_CLK>;
 			clock-names = "core", "iface";
+			power-domains = <&rpmpd 0>, <&gcc UFS_GDSC>;
+			power-domain-names = "vddcx", "ufs";
+			operating-points-v2 = <&test_opp_table>;
 			status = "disabled";
 		};
 
@@ -508,40 +545,6 @@
 			status = "disabled";
 		};
 
-		sdhc2_opp_table: opp_table2 {
-			compatible = "operating-points-v2";
-
-			opp0 {
-				opp-hz = /bits/ 64 <400000>;
-				domain-performance-state = <1>;
-			};
-
-			opp1 {
-				opp-hz = /bits/ 64 <20000000>;
-				domain-performance-state = <1>;
-			};
-
-			opp2 {
-				opp-hz = /bits/ 64 <25000000>;
-				domain-performance-state = <2>;
-			};
-
-			opp3 {
-				opp-hz = /bits/ 64 <50000000>;
-				domain-performance-state = <2>;
-			};
-
-			opp4 {
-				opp-hz = /bits/ 64 <100000000>;
-				domain-performance-state = <3>;
-			};
-
-			opp5 {
-				opp-hz = /bits/ 64 <200000000>;
-				domain-performance-state = <3>;
-			};
-		};
-
 		sdhc2: sdhci@74a4900 {
 			 status = "disabled";
 			 compatible = "qcom,sdhci-msm-v4";
@@ -556,8 +559,9 @@
 			 <&gcc GCC_SDCC2_AHB_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
-			power-domains = <&rpmpd 0>;
-			operating-points-v2 = <&sdhc2_opp_table>;
+			power-domains = <&rpmpd 0>, <&gcc UFS_GDSC>;
+			power-domain-names = "vddcx", "ufs";
+			operating-points-v2 = <&test_opp_table>;
 		 };
 
 		msmgpio: pinctrl@1010000 {
