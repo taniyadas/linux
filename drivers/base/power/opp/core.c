@@ -19,6 +19,7 @@
 #include <linux/slab.h>
 #include <linux/device.h>
 #include <linux/export.h>
+#include <linux/pm_domain.h>
 #include <linux/regulator/consumer.h>
 
 #include "opp.h"
@@ -535,6 +536,42 @@ _generic_set_opp_clk_only(struct device *dev, struct clk *clk,
 	return ret;
 }
 
+static inline int
+_generic_set_opp_domain(struct device *dev, struct clk *clk,
+			unsigned long old_freq, unsigned long freq)
+{
+	int ret;
+
+	/* Scaling up? Scale domain performance state before frequency */
+	if (freq > old_freq) {
+		ret = pm_genpd_update_performance_state(dev, freq);
+		if (ret)
+			return ret;
+	}
+
+	ret = _generic_set_opp_clk_only(dev, clk, old_freq, freq);
+	if (ret)
+		goto restore_domain_state;
+
+	/* Scaling down? Scale domain performance state after frequency */
+	if (freq < old_freq) {
+		ret = pm_genpd_update_performance_state(dev, freq);
+		if (ret)
+			goto restore_freq;
+	}
+
+	return 0;
+
+restore_freq:
+	if (_generic_set_opp_clk_only(dev, clk, freq, old_freq))
+		dev_err(dev, "%s: failed to restore old-freq (%lu Hz)\n",
+			__func__, old_freq);
+restore_domain_state:
+	pm_genpd_update_performance_state(dev, old_freq);
+
+	return ret;
+}
+
 static int _generic_set_opp_regulator(const struct opp_table *opp_table,
 				      struct device *dev,
 				      unsigned long old_freq,
@@ -653,7 +690,14 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
 
 	/* Only frequency scaling */
 	if (!opp_table->regulators) {
-		ret = _generic_set_opp_clk_only(dev, clk, old_freq, freq);
+		/*
+		 * We don't support devices with both regulator and
+		 * domain performance-state for now.
+		 */
+		if (opp_table->genpd_performance_state)
+			ret = _generic_set_opp_domain(dev, clk, old_freq, freq);
+		else
+			ret = _generic_set_opp_clk_only(dev, clk, old_freq, freq);
 	} else if (!opp_table->set_opp) {
 		ret = _generic_set_opp_regulator(opp_table, dev, old_freq, freq,
 						 IS_ERR(old_opp) ? NULL : old_opp->supplies,
@@ -754,6 +798,8 @@ static struct opp_table *_allocate_opp_table(struct device *dev)
 			dev_dbg(dev, "%s: Couldn't find clock: %d\n", __func__,
 				ret);
 	}
+
+	opp_table->genpd_performance_state = pm_genpd_has_performance_state(dev);
 
 	BLOCKING_INIT_NOTIFIER_HEAD(&opp_table->head);
 	INIT_LIST_HEAD(&opp_table->opp_list);
