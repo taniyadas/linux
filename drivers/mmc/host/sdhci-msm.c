@@ -19,6 +19,7 @@
 #include <linux/delay.h>
 #include <linux/mmc/mmc.h>
 #include <linux/pm_runtime.h>
+#include <linux/pm_domain.h>
 #include <linux/slab.h>
 #include <linux/iopoll.h>
 
@@ -1267,6 +1268,7 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 		goto clk_disable;
 	}
 
+	pm_resource_qos_request(&pdev->dev, "pcie2", RES_QOS_ALWAYS_ON);
 	pm_runtime_get_noresume(&pdev->dev);
 	pm_runtime_set_active(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);

@@ -426,6 +426,9 @@
 			 <&gcc GCC_SDCC2_APPS_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
+			 power-domains = <&gcc PCIE0_GDSC>, <&gcc PCIE1_GDSC>,
+<&gcc PCIE2_GDSC>;
+			 power-domain-names = "pcie0", "pcie1", "pcie2";
 		 };
 
 		msmgpio: pinctrl@1010000 {

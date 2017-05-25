@@ -298,7 +298,7 @@ static int gdsc_init(struct gdsc *sc)
 
 	sc->pd.power_off = gdsc_disable;
 	sc->pd.power_on = gdsc_enable;
-	pm_genpd_init(&sc->pd, NULL, !on);
+	pm_genpd_init(&sc->pd, &pm_resource_qos_gov, !on);
 
 	return 0;
 }
