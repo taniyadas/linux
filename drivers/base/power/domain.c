@@ -1431,6 +1431,76 @@ out:
 }
 EXPORT_SYMBOL_GPL(pm_genpd_remove_subdomain);
 
+int genpd_add_qos(struct generic_pm_domain *genpd, struct device *dev,
+		  enum pm_resource_qos_type qos)
+{
+	struct pm_resource_qos_data *pm_qos;
+
+	list_for_each_entry(pm_qos, &genpd->pm_qos_list, qos_req)
+		if (pm_qos->dev == dev)
+			goto found;
+
+	pm_qos = kzalloc(sizeof(*pm_qos), GFP_KERNEL);
+	if (!pm_qos)
+		return -ENOMEM;
+	pm_qos->dev = dev;
+	list_add(&pm_qos->qos_req, &genpd->pm_qos_list);
+
+found:
+	pm_qos->qos = qos;
+	return 0;
+}
+
+void genpd_free_qos(struct generic_pm_domain *genpd, struct device *dev)
+{
+	struct pm_resource_qos_data *pm_qos;
+
+	list_for_each_entry(pm_qos, &genpd->pm_qos_list, qos_req) {
+		if (pm_qos->dev == dev) {
+			list_del(&pm_qos->qos_req);
+			kfree(pm_qos);
+		}
+	}
+}
+
+int pm_resource_qos_request(struct device *dev, const char *res_name,
+			    enum pm_resource_qos_type qos)
+{
+	int ret;
+	struct generic_pm_domain *genpd;
+
+	if (!dev || !dev->of_node)
+		return -ENOTSUPP;
+
+	genpd = of_genpd_get_by_name(dev->of_node, res_name);
+	if (IS_ERR(genpd))
+		return PTR_ERR(genpd);
+
+	genpd_lock(genpd);
+	ret = genpd_add_qos(genpd, dev, qos);
+	genpd_unlock(genpd);
+
+	return ret;
+};
+EXPORT_SYMBOL_GPL(pm_resource_qos_request);
+
+void pm_resource_qos_release(struct device *dev, const char *res_name)
+{
+	struct generic_pm_domain *genpd;
+
+	if (!dev || !dev->of_node)
+		return;
+
+	genpd = of_genpd_get_by_name(dev->of_node, res_name);
+	if (IS_ERR(genpd))
+		return;
+
+	genpd_lock(genpd);
+	genpd_free_qos(genpd, dev);
+	genpd_unlock(genpd);
+}
+EXPORT_SYMBOL_GPL(pm_resource_qos_release);
+
 static int genpd_set_default_power_state(struct generic_pm_domain *genpd)
 {
 	struct genpd_power_state *state;
@@ -1476,6 +1546,7 @@ int pm_genpd_init(struct generic_pm_domain *genpd,
 	INIT_LIST_HEAD(&genpd->master_links);
 	INIT_LIST_HEAD(&genpd->slave_links);
 	INIT_LIST_HEAD(&genpd->dev_list);
+	INIT_LIST_HEAD(&genpd->pm_qos_list);
 	genpd_lock_init(genpd);
 	genpd->gov = gov;
 	INIT_WORK(&genpd->power_off_work, genpd_power_off_work_fn);

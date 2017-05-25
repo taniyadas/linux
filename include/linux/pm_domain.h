@@ -22,6 +22,11 @@
 #define GENPD_FLAG_IRQ_SAFE	(1U << 1) /* PM domain operates in atomic */
 #define GENPD_FLAG_ALWAYS_ON	(1U << 2) /* PM domain is always powered on */
 
+enum pm_resource_qos_type {
+	RES_QOS_ALWAYS_ON = 1,
+	RES_QOS_IGNORE_ON,
+};
+
 enum gpd_status {
 	GPD_STATE_ACTIVE = 0,	/* PM domain is active */
 	GPD_STATE_POWER_OFF,	/* PM domain is off */
@@ -30,6 +35,7 @@ enum gpd_status {
 struct dev_power_governor {
 	bool (*power_down_ok)(struct dev_pm_domain *domain);
 	bool (*suspend_ok)(struct device *dev);
+	bool (*power_on_ignore)(struct device *dev, struct dev_pm_domain *domain);
 };
 
 struct gpd_dev_ops {
@@ -53,6 +59,7 @@ struct generic_pm_domain {
 	struct list_head master_links;	/* Links with PM domain as a master */
 	struct list_head slave_links;	/* Links with PM domain as a slave */
 	struct list_head dev_list;	/* List of devices */
+	struct list_head pm_qos_list;
 	struct dev_power_governor *gov;
 	struct work_struct power_off_work;
 	struct fwnode_handle *provider;	/* Identity of the domain provider */
@@ -109,6 +116,12 @@ struct gpd_timing_data {
 	bool cached_suspend_ok;
 };
 
+struct pm_resource_qos_data {
+	struct list_head qos_req;
+	struct device *dev;
+	enum pm_resource_qos_type qos;
+};
+
 struct pm_domain_data {
 	struct list_head list_node;
 	struct device *dev;
@@ -146,8 +159,12 @@ extern int pm_genpd_init(struct generic_pm_domain *genpd,
 			 struct dev_power_governor *gov, bool is_off);
 extern int pm_genpd_remove(struct generic_pm_domain *genpd);
 
+extern int pm_resource_qos_request(struct device *, const char *, enum pm_resource_qos_type);
+extern void pm_resource_qos_release(struct device *, const char *);
+
 extern struct dev_power_governor simple_qos_governor;
 extern struct dev_power_governor pm_domain_always_on_gov;
+extern struct dev_power_governor pm_resource_qos_gov;
 #else
 
 static inline struct generic_pm_domain_data *dev_gpd_data(struct device *dev)

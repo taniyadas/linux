@@ -238,3 +238,32 @@ struct dev_power_governor pm_domain_always_on_gov = {
 	.power_down_ok = always_on_power_down_ok,
 	.suspend_ok = default_suspend_ok,
 };
+
+static bool pm_resource_power_down_ok(struct dev_pm_domain *pd)
+{
+	struct generic_pm_domain *genpd = pd_to_genpd(pd);
+	struct pm_resource_qos_data *pm_qos;
+
+	list_for_each_entry(pm_qos, &genpd->pm_qos_list, qos_req)
+		if (pm_qos->qos & RES_QOS_ALWAYS_ON)
+			return false;
+
+	return true;
+}
+
+static bool pm_resource_power_on_ignore(struct device *dev, struct dev_pm_domain *pd)
+{
+	struct generic_pm_domain *genpd = pd_to_genpd(pd);
+	struct pm_resource_qos_data *pm_qos;
+
+	list_for_each_entry(pm_qos, &genpd->pm_qos_list, qos_req)
+		if (pm_qos->dev == dev && (pm_qos->qos & RES_QOS_IGNORE_ON))
+			return true;
+
+	return false;
+}
+
+struct dev_power_governor pm_resource_qos_gov = {
+	.power_down_ok = pm_resource_power_down_ok,
+	.power_on_ignore = pm_resource_power_on_ignore,
+};
