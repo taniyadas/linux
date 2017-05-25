@@ -378,7 +378,8 @@ static int genpd_power_off(struct generic_pm_domain *genpd, bool one_dev_on,
  * Restore power to @genpd and all of its masters so that it is possible to
  * resume a device belonging to it.
  */
-static int genpd_power_on(struct generic_pm_domain *genpd, unsigned int depth)
+static int genpd_power_on(struct device *dev, struct generic_pm_domain *genpd,
+			  unsigned int depth)
 {
 	struct gpd_link *link;
 	int ret = 0;
@@ -397,7 +398,7 @@ static int genpd_power_on(struct generic_pm_domain *genpd, unsigned int depth)
 		genpd_sd_counter_inc(master);
 
 		genpd_lock_nested(master, depth + 1);
-		ret = genpd_power_on(master, depth + 1);
+		ret = genpd_power_on(dev, master, depth + 1);
 		genpd_unlock(master);
 
 		if (ret) {
@@ -405,6 +406,10 @@ static int genpd_power_on(struct generic_pm_domain *genpd, unsigned int depth)
 			goto err;
 		}
 	}
+
+	if (genpd->gov && genpd->gov->power_on_ignore)
+		if (genpd->gov->power_on_ignore(dev, &genpd->domain))
+			return 0;
 
 	ret = _genpd_power_on(genpd, true);
 	if (ret)
@@ -635,8 +640,9 @@ static int genpd_runtime_resume(struct device *dev)
 		goto out;
 	}
 
+
 	genpd_lock(genpd);
-	ret = genpd_power_on(genpd, 0);
+	ret = genpd_power_on(dev, genpd, 0);
 	genpd_unlock(genpd);
 
 	if (ret)
@@ -2141,7 +2147,7 @@ static int genpd_dev_pm_attach_device(struct device *dev,
 	dev->pm_domain->sync = genpd_dev_pm_sync;
 
 	genpd_lock(pd);
-	ret = genpd_power_on(pd, 0);
+	ret = genpd_power_on(dev, pd, 0);
 	genpd_unlock(pd);
 out:
 	return ret ? -EPROBE_DEFER : 0;
