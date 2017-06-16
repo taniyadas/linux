@@ -101,6 +101,20 @@ struct rpmpd_desc {
 	size_t num_pds;
 };
 
+enum rpmpd_levels {
+	NONE,
+	LOWER,          /* SVS2 */
+	LOW,            /* SVS */
+	NOMINAL,        /* NOMINAL */
+	HIGH,           /* Turbo */
+	MAX_LEVEL,
+};
+
+struct rpmpd_freq_map {
+	struct rpmpd *pd;
+	unsigned long freq[MAX_LEVEL];
+};
+
 static DEFINE_MUTEX(rpmpd_lock);
 
 /* msm8996 RPM powerdomains */
@@ -124,6 +138,47 @@ static struct rpmpd *msm8996_rpmpds[] = {
 static const struct rpmpd_desc msm8996_desc = {
 	.rpmpds = msm8996_rpmpds,
 	.num_pds = ARRAY_SIZE(msm8996_rpmpds),
+};
+
+enum msm8996_devices {
+	SDHCI,
+	UFS,
+	PCIE,
+	USB3,
+};
+
+static struct rpmpd_freq_map msm8996_rpmpd_freq_map[] = {
+	[SDHCI] = {
+		.pd = &msm8996_vddcx,
+		.freq[LOWER] = 19200000,
+		.freq[LOW] = 200000000,
+		.freq[NOMINAL] = 400000000,
+	},
+	[UFS] = {
+		.pd = &msm8996_vddcx,
+		.freq[LOWER] = 19200000,
+		.freq[LOW] = 100000000,
+		.freq[NOMINAL] = 200000000,
+		.freq[HIGH] = 240000000,
+	},
+	[PCIE] = {
+		.pd = &msm8996_vddcx,
+		.freq[LOWER] = 1011000,
+	},
+	[USB3] = {
+		.pd = &msm8996_vddcx,
+		.freq[LOWER] = 60000000,
+		.freq[LOW] = 120000000,
+		.freq[NOMINAL] = 150000000,
+	},
+};
+
+static const struct of_device_id rpmpd_performance_table[] = {
+	{ .compatible = "qcom,sdhci-msm-v4", .data = (void *)SDHCI },
+	{ .compatible = "qcom,ufshc", .data = (void *)UFS },
+	{ .compatible = "qcom,pcie-msm8996", .data = (void *)PCIE },
+	{ .compatible = "qcom,dwc3", .data = (void *)USB3 },
+	{ }
 };
 
 static const struct of_device_id rpmpd_match_table[] = {
@@ -234,7 +289,7 @@ static int rpmpd_power_off(struct generic_pm_domain *domain)
 	return ret;
 }
 
-static int rpmpd_performance(struct generic_pm_domain *domain,
+static int rpmpd_set_performance(struct generic_pm_domain *domain,
 			     unsigned int state)
 {
 	int ret = 0;
@@ -255,6 +310,25 @@ out:
 	pr_info("%s: %d: %d %d\n", __func__, __LINE__, state, ret);
 
 	return ret;
+}
+
+
+static int rpmpd_get_performance(struct device *dev, unsigned long rate)
+{
+	int i;
+	unsigned long index;
+	const struct of_device_id *id;
+
+	id = of_match_device(rpmpd_performance_table, dev);
+	if (!id)
+		return -EINVAL;
+
+	index = (unsigned long)id->data;
+	for (i = 0; i < MAX_LEVEL; i++)
+		if (msm8996_rpmpd_freq_map[index].freq[i] == rate)
+			return i;
+
+	return -EINVAL;
 }
 
 static int rpmpd_probe(struct platform_device *pdev)
@@ -294,7 +368,8 @@ static int rpmpd_probe(struct platform_device *pdev)
 		rpmpds[i]->rpm = rpm;
 		rpmpds[i]->pd.power_off = rpmpd_power_off;
 		rpmpds[i]->pd.power_on = rpmpd_power_on;
-		rpmpds[i]->pd.set_performance_state = rpmpd_performance;
+		rpmpds[i]->pd.set_performance_state = rpmpd_set_performance;
+		rpmpds[i]->pd.get_performance_state = rpmpd_get_performance;
 		pm_genpd_init(&rpmpds[i]->pd, NULL, true);
 
 		data->domains[i] = &rpmpds[i]->pd;
