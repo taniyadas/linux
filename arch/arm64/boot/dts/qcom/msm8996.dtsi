@@ -546,7 +546,25 @@
 			 <&gcc GCC_SDCC2_AHB_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
+			power-domains = <&rpmpd 0>;
+			operating-points-v2 = <&sdhc_opp_table>;
 		 };
+
+		sdhc_opp_table: opp_table {
+			compatible = "operating-points-v2";
+
+			opp@19200000 {
+				opp-hz = /bits/ 64 <19200000>;
+			};
+
+			opp@200000000 {
+				opp-hz = /bits/ 64 <200000000>;
+			};
+
+			opp@400000000 {
+				opp-hz = /bits/ 64 <400000000>;
+			};
+		};
 
 		msmgpio: pinctrl@1010000 {
 			compatible = "qcom,msm8996-pinctrl";
