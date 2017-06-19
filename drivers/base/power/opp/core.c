@@ -1409,6 +1409,95 @@ void dev_pm_opp_put_regulators(struct opp_table *opp_table)
 EXPORT_SYMBOL_GPL(dev_pm_opp_put_regulators);
 
 /**
+ * dev_pm_opp_set_clkname() - Set clk name for the device
+ * @dev: Device for which clk name is being set.
+ * @name: Clk name.
+ *
+ * In order to support OPP switching, OPP layer needs to get pointer to the
+ * clock for the device. Simple cases work fine without using this routine (i.e.
+ * by passing connection-id as NULL), but for a device with multiple clocks
+ * available, the OPP core needs to know the exact name of the clk to use.
+ *
+ * This must be called before any OPPs are initialized for the device.
+ */
+struct opp_table *dev_pm_opp_set_clkname(struct device *dev, const char *name)
+{
+	struct opp_table *opp_table;
+	int ret;
+
+	opp_table = dev_pm_opp_get_opp_table(dev);
+	if (!opp_table)
+		return ERR_PTR(-ENOMEM);
+
+	/* This should be called before OPPs are initialized */
+	if (WARN_ON(!list_empty(&opp_table->opp_list))) {
+		ret = -EBUSY;
+		goto err;
+	}
+
+	/* Already have clkname set */
+	if (opp_table->clk_name) {
+		ret = -EBUSY;
+		goto err;
+	}
+
+	opp_table->clk_name = kstrdup(name, GFP_KERNEL);
+	if (!opp_table->clk_name) {
+		ret = -ENOMEM;
+		goto err;
+	}
+
+	/* Already have default clk set, free it */
+	if (!IS_ERR(opp_table->clk))
+		clk_put(opp_table->clk);
+
+	/* Find clk for the device */
+	opp_table->clk = clk_get(dev, name);
+	if (IS_ERR(opp_table->clk)) {
+		ret = PTR_ERR(opp_table->clk);
+		if (ret != -EPROBE_DEFER) {
+			dev_err(dev, "%s: Couldn't find clock: %d\n", __func__,
+				ret);
+		}
+		goto free_clk_name;
+	}
+
+	return opp_table;
+
+free_clk_name:
+	kfree(opp_table->clk_name);
+	opp_table->clk_name = NULL;
+
+err:
+	dev_pm_opp_put_opp_table(opp_table);
+
+	return ERR_PTR(ret);
+}
+EXPORT_SYMBOL_GPL(dev_pm_opp_set_clkname);
+
+/**
+ * dev_pm_opp_put_clkname() - Releases resources blocked for clk.
+ * @opp_table: OPP table returned from dev_pm_opp_set_clkname().
+ */
+void dev_pm_opp_put_clkname(struct opp_table *opp_table)
+{
+	if (!opp_table->clk_name) {
+		pr_err("%s: Doesn't have clk set\n", __func__);
+		return;
+	}
+
+	/* Make sure there are no concurrent readers while updating opp_table */
+	WARN_ON(!list_empty(&opp_table->opp_list));
+
+	clk_put(opp_table->clk);
+	kfree(opp_table->clk_name);
+	opp_table->clk_name = NULL;
+
+	dev_pm_opp_put_opp_table(opp_table);
+}
+EXPORT_SYMBOL_GPL(dev_pm_opp_put_clkname);
+
+/**
  * dev_pm_opp_register_set_opp_helper() - Register custom set OPP helper
  * @dev: Device for which the helper is getting registered.
  * @set_opp: Custom set OPP helper.
