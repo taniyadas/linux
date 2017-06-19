@@ -690,14 +690,18 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
 
 	/* Only frequency scaling */
 	if (!opp_table->regulators) {
+		printk("NO REGULATORS\n");
 		/*
 		 * We don't support devices with both regulator and
 		 * domain performance-state for now.
 		 */
-		if (opp_table->genpd_performance_state)
+		if (opp_table->genpd_performance_state) {
+			printk("CALLING SET OPP DOMAIN\n");
 			ret = _generic_set_opp_domain(dev, clk, old_freq, freq);
-		else
+		} else {
+			printk("CALLING SET OPP CLK\\n");
 			ret = _generic_set_opp_clk_only(dev, clk, old_freq, freq);
+		}
 	} else if (!opp_table->set_opp) {
 		ret = _generic_set_opp_regulator(opp_table, dev, old_freq, freq,
 						 IS_ERR(old_opp) ? NULL : old_opp->supplies,

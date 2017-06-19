@@ -1161,10 +1161,13 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 
 	sdhci_get_of_property(pdev);
 
+	printk("Adding OPP Table for SDHC\n");
 	ret = dev_pm_opp_of_add_table(&pdev->dev);
+
 	if (ret)
 		dev_warn(&pdev->dev, "%s: No OPP table specified\n", __func__);
 
+	printk("Adding OPP Table for SDHC DONE\n");
 	msm_host->saved_tuning_phase = INVALID_TUNING_PHASE;
 
 	/* Setup SDCC bus voter clock. */

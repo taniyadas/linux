@@ -320,10 +320,15 @@ static int rpmpd_get_performance(struct device *dev, unsigned long rate)
 	const struct of_device_id *id;
 
 	id = of_match_device(rpmpd_performance_table, dev);
-	if (!id)
+	if (!id) {
+		printk("invalid device %s\n", dev_name(dev));
 		return -EINVAL;
+	}
 
 	index = (unsigned long)id->data;
+	
+	pr_info("%s: %d: %d %d\n", __func__, __LINE__, rate, index);
+	
 	for (i = 0; i < MAX_LEVEL; i++)
 		if (msm8996_rpmpd_freq_map[index].freq[i] == rate)
 			return i;

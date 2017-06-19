@@ -622,7 +622,9 @@ static int __dev_update_performance_state(struct device *dev, int state)
 
 	spin_lock_irq(&dev->power.lock);
 
+	printk("__dev_update_performance_state called\n");
 	if (!dev->power.subsys_data || !dev->power.subsys_data->domain_data) {
+		printk("returning ENODEV\n");
 		ret = -ENODEV;
 		goto unlock;
 	}
