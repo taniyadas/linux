@@ -18,6 +18,7 @@
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/dma-mapping.h>
+#include <linux/pm_domain.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
 #include <linux/mfd/syscon.h>
@@ -603,10 +604,9 @@ static int q6v5_start(struct rproc *rproc)
 	struct q6v5 *qproc = (struct q6v5 *)rproc->priv;
 	int ret;
 
-	ret = q6v5_regulator_enable(qproc, qproc->proxy_regs,
-				    qproc->proxy_reg_count);
+	ret = pm_genpd_update_performance_state(qproc->dev, INT_MAX);
 	if (ret) {
-		dev_err(qproc->dev, "failed to enable proxy supplies\n");
+		dev_err(qproc->dev, "Failed to set performance state.\n");
 		return ret;
 	}
 
@@ -671,8 +671,7 @@ static int q6v5_start(struct rproc *rproc)
 
 	q6v5_clk_disable(qproc->dev, qproc->proxy_clks,
 			 qproc->proxy_clk_count);
-	q6v5_regulator_disable(qproc, qproc->proxy_regs,
-			       qproc->proxy_reg_count);
+	pm_genpd_update_performance_state(qproc->dev, 0);
 
 	return 0;
 

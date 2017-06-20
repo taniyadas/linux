@@ -145,6 +145,7 @@ enum msm8996_devices {
 	UFS,
 	PCIE,
 	USB3,
+	Q6V5_PIL,
 };
 
 static struct rpmpd_freq_map msm8996_rpmpd_freq_map[] = {
@@ -170,6 +171,10 @@ static struct rpmpd_freq_map msm8996_rpmpd_freq_map[] = {
 		.freq[LOWER] = 60000000,
 		.freq[LOW] = 120000000,
 		.freq[NOMINAL] = 150000000,
+	},
+	[Q6V5_PIL] = {
+		.pd = &msm8996_vddcx,
+		.freq[HIGH] = INT_MAX,
 	},
 };
 
