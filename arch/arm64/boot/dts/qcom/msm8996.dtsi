@@ -568,7 +568,48 @@
 			 <&gcc GCC_SDCC2_APPS_CLK>,
 			 <&xo_board>;
 			 bus-width = <4>;
+			power-domains = <&rpmpd 0>;
+			operating-points-v2 = <&sdhc_opp_table>;
 		 };
+
+		sdhc_opp_table: opp_table {
+			compatible = "operating-points-v2";
+
+			opp@144000 {
+				opp-hz = /bits/ 64 <144000>;
+				required-opp = <&rpmpd_opp1>;
+			};
+
+			opp@4000000 {
+				opp-hz = /bits/ 64 <400000>;
+				required-opp = <&rpmpd_opp1>;
+			};
+
+			opp@20000000 {
+				opp-hz = /bits/ 64 <20000000>;
+				required-opp = <&rpmpd_opp2>;
+			};
+
+			opp@25000000 {
+				opp-hz = /bits/ 64 <25000000>;
+				required-opp = <&rpmpd_opp2>;
+			};
+
+			opp@50000000 {
+				opp-hz = /bits/ 64 <50000000>;
+				required-opp = <&rpmpd_opp2>;
+			};
+
+			opp@100000000 {
+				opp-hz = /bits/ 64 <100000000>;
+				required-opp = <&rpmpd_opp3>;
+			};
+
+			opp@200000000 {
+				opp-hz = /bits/ 64 <200000000>;
+				required-opp = <&rpmpd_opp3>;
+			};
+		};
 
 		msmgpio: pinctrl@1010000 {
 			compatible = "qcom,msm8996-pinctrl";

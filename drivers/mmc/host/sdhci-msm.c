@@ -21,6 +21,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/slab.h>
 #include <linux/iopoll.h>
+#include <linux/pm_opp.h>
 
 #include "sdhci-pltfm.h"
 
@@ -137,6 +138,7 @@ struct sdhci_msm_host {
 	struct clk *bus_clk;	/* SDHC bus voter clock */
 	struct clk *xo_clk;	/* TCXO clk needed for FLL feature of cm_dll*/
 	struct clk_bulk_data bulk_clks[4]; /* core, iface, cal, sleep clocks */
+	struct opp_table *opp_table;
 	unsigned long clk_rate;
 	struct mmc_host *mmc;
 	bool use_14lpp_dll_reset;
@@ -150,7 +152,7 @@ struct sdhci_msm_host {
 	bool pwr_irq_flag;
 };
 
-static unsigned int msm_get_clock_rate_for_bus_mode(struct sdhci_host *host,
+static long unsigned int msm_get_clock_rate_for_bus_mode(struct sdhci_host *host,
 						    unsigned int clock)
 {
 	struct mmc_ios ios = host->mmc->ios;
@@ -176,18 +178,37 @@ static void msm_set_clock_rate_for_bus_mode(struct sdhci_host *host,
 	struct mmc_ios curr_ios = host->mmc->ios;
 	struct clk *core_clk = msm_host->bulk_clks[0].clk;
 	int rc;
+	struct device *dev = &msm_host->pdev->dev;
+	struct dev_pm_opp *opp;
+	long unsigned int freq;
 
-	clock = msm_get_clock_rate_for_bus_mode(host, clock);
-	rc = clk_set_rate(core_clk, clock);
-	if (rc) {
-		pr_err("%s: Failed to set clock at rate %u at timing %d\n",
-		       mmc_hostname(host->mmc), clock,
-		       curr_ios.timing);
-		return;
+	if (msm_host->opp_table) {
+		freq = msm_get_clock_rate_for_bus_mode(host, clock);
+		opp = dev_pm_opp_find_freq_floor(dev, &freq);
+		if (IS_ERR(opp)) {
+			pr_err("%s: failed to find OPP for %u at timing %d\n",
+				mmc_hostname(host->mmc), clock, curr_ios.timing);
+			return;
+		}
+		rc = dev_pm_opp_set_rate(dev, freq);
+		if (rc)
+			pr_err("%s: error in setting opp\n", __func__);
+
+		msm_host->clk_rate = freq;
+	} else {
+		clock = msm_get_clock_rate_for_bus_mode(host, clock);
+		rc = clk_set_rate(core_clk, clock);
+		if (rc) {
+			pr_err("%s: Failed to set clock at rate %u at timing %d\n",
+			       mmc_hostname(host->mmc), clock,
+			       curr_ios.timing);
+			return;
+		}
+		msm_host->clk_rate = clock;
 	}
-	msm_host->clk_rate = clock;
+
 	pr_debug("%s: Setting clock at rate %lu at timing %d\n",
-		 mmc_hostname(host->mmc), clk_get_rate(core_clk),
+		 mmc_hostname(host->mmc), msm_host->clk_rate,
 		 curr_ios.timing);
 }
 
@@ -1519,6 +1540,16 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 		goto clk_disable;
 	}
 
+	/* Set up the OPP table if it exists */
+	msm_host->opp_table = dev_pm_opp_set_clkname(&pdev->dev, "core");
+
+	ret = dev_pm_opp_of_add_table(&pdev->dev);
+	if (ret) {
+		dev_warn(&pdev->dev, "%s: No OPP table specified\n", __func__);
+		dev_pm_opp_put_clkname(msm_host->opp_table);
+		msm_host->opp_table = NULL;
+	}
+
 	pm_runtime_get_noresume(&pdev->dev);
 	pm_runtime_set_active(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);
@@ -1540,6 +1571,9 @@ pm_runtime_disable:
 	pm_runtime_disable(&pdev->dev);
 	pm_runtime_set_suspended(&pdev->dev);
 	pm_runtime_put_noidle(&pdev->dev);
+	dev_pm_opp_of_remove_table(&pdev->dev);
+	if (msm_host->opp_table)
+		dev_pm_opp_put_clkname(msm_host->opp_table);
 clk_disable:
 	clk_bulk_disable_unprepare(ARRAY_SIZE(msm_host->bulk_clks),
 				   msm_host->bulk_clks);
@@ -1564,6 +1598,9 @@ static int sdhci_msm_remove(struct platform_device *pdev)
 	pm_runtime_get_sync(&pdev->dev);
 	pm_runtime_disable(&pdev->dev);
 	pm_runtime_put_noidle(&pdev->dev);
+	dev_pm_opp_of_remove_table(&pdev->dev);
+	if (msm_host->opp_table)
+		dev_pm_opp_put_clkname(msm_host->opp_table);
 
 	clk_bulk_disable_unprepare(ARRAY_SIZE(msm_host->bulk_clks),
 				   msm_host->bulk_clks);
