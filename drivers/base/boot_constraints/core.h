@@ -1,0 +1,33 @@
+/*
+ * Copyright (C) 2017 Linaro.
+ * Viresh Kumar <viresh.kumar@linaro.org>
+ *
+ * This file is released under the GPLv2.
+ */
+#ifndef _CORE_H
+#define _CORE_H
+
+#include <linux/boot_constraint.h>
+#include <linux/device.h>
+#include <linux/list.h>
+
+struct constraint_dev {
+	struct device *dev;
+	struct list_head node;
+	struct list_head constraints;
+};
+
+struct constraint {
+	struct constraint_dev *cdev;
+	struct list_head node;
+	enum dev_boot_constraint_type type;
+	void (*free_resources)(void *data);
+	void *free_resources_data;
+
+	int (*add)(struct constraint *constraint, void *data);
+	void (*remove)(struct constraint *constraint);
+	void *private;
+};
+
+/* Forward declarations of constraint specific callbacks */
+#endif /* _CORE_H */
