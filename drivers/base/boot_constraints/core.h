@@ -30,4 +30,7 @@ struct constraint {
 };
 
 /* Forward declarations of constraint specific callbacks */
+int constraint_supply_add(struct constraint *constraint, void *data);
+void constraint_supply_remove(struct constraint *constraint);
+
 #endif /* _CORE_H */

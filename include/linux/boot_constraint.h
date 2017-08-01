@@ -15,7 +15,13 @@
 struct device;
 
 enum dev_boot_constraint_type {
-	DEV_BOOT_CONSTRAINT_NONE,
+	DEV_BOOT_CONSTRAINT_SUPPLY,
+};
+
+struct dev_boot_constraint_supply_info {
+	const char *name;
+	unsigned int u_volt_min;
+	unsigned int u_volt_max;
 };
 
 struct dev_boot_constraint {
