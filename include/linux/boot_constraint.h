@@ -15,7 +15,12 @@
 struct device;
 
 enum dev_boot_constraint_type {
+	DEV_BOOT_CONSTRAINT_CLK,
 	DEV_BOOT_CONSTRAINT_SUPPLY,
+};
+
+struct dev_boot_constraint_clk_info {
+	const char *name;
 };
 
 struct dev_boot_constraint_supply_info {
