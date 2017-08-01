@@ -24,7 +24,7 @@
 static LIST_HEAD(constraint_devices);
 static DEFINE_MUTEX(constraint_devices_mutex);
 
-static bool boot_constraints_disabled;
+bool boot_constraints_disabled;
 
 static int __init constraints_disable(char *str)
 {

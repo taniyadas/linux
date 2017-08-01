@@ -32,6 +32,8 @@ struct constraint {
 	void *private;
 };
 
+extern bool boot_constraints_disabled;
+
 void constraint_add_debugfs(struct constraint *constraint, const char *suffix);
 void constraint_remove_debugfs(struct constraint *constraint);
 

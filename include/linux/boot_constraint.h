@@ -46,11 +46,21 @@ struct dev_boot_constraint_info {
 #ifdef CONFIG_DEV_BOOT_CONSTRAINTS
 int dev_boot_constraint_add(struct device *dev, struct dev_boot_constraint_info *info);
 void dev_boot_constraints_remove(struct device *dev);
+int dev_boot_constraint_add_deferrable(struct device *dev,
+			    struct dev_boot_constraint *constraints, int count);
+int dev_boot_constraint_add_of_deferrable(const char *compatible,
+			       struct dev_boot_constraint *constraints, int count);
 #else
 static inline int dev_boot_constraint_add(struct device *dev,
 				      struct dev_boot_constraint_info *info)
 { return -EINVAL; }
 static inline void dev_boot_constraints_remove(struct device *dev) {}
+static inline int dev_boot_constraint_add_deferrable(struct device *dev,
+			  struct dev_boot_constraint *constraints, int count)
+{ return -EINVAL; }
+static inline int dev_boot_constraint_add_of_deferrable(const char *compatible,
+			     struct dev_boot_constraint *constraints, int count)
+{ return -EINVAL; }
 #endif /* CONFIG_DEV_BOOT_CONSTRAINTS */
 
 #endif /* _LINUX_BOOT_CONSTRAINT_H */
