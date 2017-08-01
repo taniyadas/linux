@@ -409,6 +409,27 @@ static void mdp5_crtc_mode_set_nofb(struct drm_crtc *crtc)
 	spin_unlock_irqrestore(&mdp5_crtc->lm_lock, flags);
 }
 
+void mdp5_crtc_readback(struct drm_crtc *crtc, struct drm_display_mode *mode,
+		enum mdp5_pipe pipe)
+{
+	struct drm_crtc_state *state = crtc->state;
+	struct drm_plane *plane = crtc->primary;
+	int ret;
+
+	// TODO probably just drop mdp5_state->enabled?
+	to_mdp5_crtc(crtc)->enabled = true;
+
+	state->active = true;
+	ret = drm_atomic_set_mode_for_crtc(state, mode);
+	WARN_ON(ret);
+	drm_mode_copy(&state->adjusted_mode, mode);
+
+	state->plane_mask = 1 << drm_plane_index(plane);
+	plane->state->crtc = crtc;
+
+	mdp5_plane_readback(plane, pipe);
+}
+
 static void mdp5_crtc_atomic_disable(struct drm_crtc *crtc,
 				     struct drm_crtc_state *old_state)
 {
@@ -533,7 +554,7 @@ static bool is_fullscreen(struct drm_crtc_state *cstate,
 		((pstate->crtc_y + pstate->crtc_h) >= cstate->mode.vdisplay);
 }
 
-enum mdp_mixer_stage_id get_start_stage(struct drm_crtc *crtc,
+static enum mdp_mixer_stage_id get_start_stage(struct drm_crtc *crtc,
 					struct drm_crtc_state *new_crtc_state,
 					struct drm_plane_state *bpstate)
 {
@@ -755,6 +776,7 @@ static int mdp5_crtc_cursor_set(struct drm_crtc *crtc,
 	if (!handle) {
 		DBG("Cursor off");
 		cursor_enable = false;
+		mdp5_enable(mdp5_kms);
 		goto set_cursor;
 	}
 
@@ -777,6 +799,8 @@ static int mdp5_crtc_cursor_set(struct drm_crtc *crtc,
 	mdp5_crtc->cursor.height = height;
 
 	get_roi(crtc, &roi_w, &roi_h);
+
+	mdp5_enable(mdp5_kms);
 
 	mdp5_write(mdp5_kms, REG_MDP5_LM_CURSOR_STRIDE(lm), stride);
 	mdp5_write(mdp5_kms, REG_MDP5_LM_CURSOR_FORMAT(lm),
@@ -806,6 +830,7 @@ set_cursor:
 	crtc_flush(crtc, flush_mask);
 
 end:
+	mdp5_disable(mdp5_kms);
 	if (old_bo) {
 		drm_flip_work_queue(&mdp5_crtc->unref_cursor_work, old_bo);
 		/* enable vblank to complete cursor work: */
@@ -838,6 +863,8 @@ static int mdp5_crtc_cursor_move(struct drm_crtc *crtc, int x, int y)
 
 	get_roi(crtc, &roi_w, &roi_h);
 
+	mdp5_enable(mdp5_kms);
+
 	spin_lock_irqsave(&mdp5_crtc->cursor.lock, flags);
 	mdp5_write(mdp5_kms, REG_MDP5_LM_CURSOR_SIZE(lm),
 			MDP5_LM_CURSOR_SIZE_ROI_H(roi_h) |
@@ -848,6 +875,8 @@ static int mdp5_crtc_cursor_move(struct drm_crtc *crtc, int x, int y)
 	spin_unlock_irqrestore(&mdp5_crtc->cursor.lock, flags);
 
 	crtc_flush(crtc, flush_mask);
+
+	mdp5_disable(mdp5_kms);
 
 	return 0;
 }

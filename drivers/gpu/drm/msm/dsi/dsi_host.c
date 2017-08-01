@@ -28,11 +28,14 @@
 #include <linux/regmap.h>
 #include <video/mipi_display.h>
 
+#include "msm_drv.h"
+#include "msm_kms.h"
 #include "dsi.h"
 #include "dsi.xml.h"
 #include "sfpb.xml.h"
 #include "dsi_cfg.h"
 #include "msm_kms.h"
+#include "phy/dsi_phy.h"
 
 static int dsi_get_version(const void __iomem *base, u32 *major, u32 *minor)
 {
@@ -705,7 +708,7 @@ static void dsi_intr_ctrl(struct msm_dsi_host *msm_host, u32 mask, int enable)
 	else
 		intr &= ~mask;
 
-	DBG("intr=%x enable=%d", intr, enable);
+	//DBG("intr=%x enable=%d", intr, enable);
 
 	dsi_write(msm_host, REG_DSI_INTR_CTRL, intr);
 	spin_unlock_irqrestore(&msm_host->intr_lock, flags);
@@ -1308,7 +1311,7 @@ static void dsi_err_worker(struct work_struct *work)
 		container_of(work, struct msm_dsi_host, err_work);
 	u32 status = msm_host->err_work_state;
 
-	pr_err_ratelimited("%s: status=%x\n", __func__, status);
+	//pr_err_ratelimited("%s: status=%x\n", __func__, status);
 	if (status & DSI_ERR_STATE_MDP_FIFO_UNDERFLOW)
 		dsi_sw_reset_restore(msm_host);
 
@@ -1431,7 +1434,7 @@ static irqreturn_t dsi_host_irq(int irq, void *ptr)
 	dsi_write(msm_host, REG_DSI_INTR_CTRL, isr);
 	spin_unlock_irqrestore(&msm_host->intr_lock, flags);
 
-	DBG("isr=0x%x, id=%d", isr, msm_host->id);
+	//DBG("isr=0x%x, id=%d", isr, msm_host->id);
 
 	if (isr & DSI_IRQ_ERROR)
 		dsi_error(msm_host);
@@ -1866,6 +1869,35 @@ void msm_dsi_host_unregister(struct mipi_dsi_host *host)
 	}
 }
 
+// XXX msm_dsi_host_hw_readback()... preserve the layer-cake?
+void msm_dsi_hw_readback(struct msm_dsi *msm_dsi)
+{
+	struct msm_dsi_host *msm_host = to_msm_dsi_host(msm_dsi->host);
+	struct msm_drm_private *priv = msm_dsi->dev->dev_private;
+	struct msm_kms *kms = priv->kms;
+
+	if (!__clk_is_enabled(msm_host->pixel_clk))
+		return;
+
+	kms->funcs->hw_readback_encoder(kms, msm_dsi->encoder);
+	msm_dsi->connector->state->crtc = msm_dsi->encoder->crtc;
+	msm_dsi->connector->state->best_encoder = msm_dsi->encoder;
+	msm_dsi->encoder->crtc->state->connector_mask =
+		(1 << drm_connector_index(msm_dsi->connector));
+	msm_host->power_on = true;
+
+	/* also fixup refcnt on regulators: */
+	dsi_host_regulator_enable(msm_host);
+
+	/* clocks will already be on, but with just a single refcnt,
+	 * whereas normally (at least in some cases) both dsi and
+	 * mdp5 take a reference to the same clks.  So take an extra
+	 * reference here to balance things out in the disable path.
+	 */
+	dsi_bus_clk_enable(msm_host);
+	dsi_phy_enable_resource(msm_dsi->phy);
+}
+
 int msm_dsi_host_xfer_prepare(struct mipi_dsi_host *host,
 				const struct mipi_dsi_msg *msg)
 {
@@ -2137,6 +2169,13 @@ void msm_dsi_host_get_phy_clk_req(struct mipi_dsi_host *host,
 	struct msm_dsi_phy_clk_request *clk_req)
 {
 	struct msm_dsi_host *msm_host = to_msm_dsi_host(host);
+	int ret;
+
+	ret = dsi_calc_clk_rate(msm_host);
+	if (ret) {
+		pr_err("%s: unable to calc clk rate, %d\n", __func__, ret);
+		return;
+	}
 
 	clk_req->bitclk_rate = msm_host->byte_clk_rate * 8;
 	clk_req->escclk_rate = msm_host->esc_clk_rate;
@@ -2280,7 +2319,6 @@ int msm_dsi_host_set_display_mode(struct mipi_dsi_host *host,
 					struct drm_display_mode *mode)
 {
 	struct msm_dsi_host *msm_host = to_msm_dsi_host(host);
-	int ret;
 
 	if (msm_host->mode) {
 		drm_mode_destroy(msm_host->dev, msm_host->mode);
@@ -2291,12 +2329,6 @@ int msm_dsi_host_set_display_mode(struct mipi_dsi_host *host,
 	if (!msm_host->mode) {
 		pr_err("%s: cannot duplicate mode\n", __func__);
 		return -ENOMEM;
-	}
-
-	ret = dsi_calc_clk_rate(msm_host);
-	if (ret) {
-		pr_err("%s: unable to calc clk rate, %d\n", __func__, ret);
-		return ret;
 	}
 
 	return 0;

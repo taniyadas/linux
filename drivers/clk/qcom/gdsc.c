@@ -11,6 +11,7 @@
  * GNU General Public License for more details.
  */
 
+#define DEBUG 1
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/err.h>
@@ -171,6 +172,8 @@ static int gdsc_enable(struct generic_pm_domain *domain)
 	struct gdsc *sc = domain_to_gdsc(domain);
 	int ret;
 
+pr_warn("GDSC: enabling: %s\n", sc->pd.name);
+
 	if (sc->pwrsts == PWRSTS_ON)
 		return gdsc_deassert_reset(sc);
 
@@ -216,6 +219,8 @@ static int gdsc_disable(struct generic_pm_domain *domain)
 {
 	struct gdsc *sc = domain_to_gdsc(domain);
 	int ret;
+
+pr_warn("GDSC: disabling: %s\n", sc->pd.name);
 
 	if (sc->pwrsts == PWRSTS_ON)
 		return gdsc_assert_reset(sc);
@@ -290,6 +295,12 @@ static int gdsc_init(struct gdsc *sc)
 	 */
 	if ((sc->flags & VOTABLE) && on)
 		gdsc_enable(&sc->pd);
+
+	if ((sc->flags & INHERIT_BL) && on) {
+		pr_debug("gdsc: %s is enabled from bootloader!\n", sc->pd.name);
+		gdsc_enable(&sc->pd);
+		sc->pd.flags |= GENPD_FLAG_ALWAYS_ON;
+	}
 
 	if (on || (sc->pwrsts & PWRSTS_RET))
 		gdsc_force_mem_on(sc);

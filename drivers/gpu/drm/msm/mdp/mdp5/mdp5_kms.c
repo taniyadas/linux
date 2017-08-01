@@ -22,6 +22,7 @@
 #include "msm_gem.h"
 #include "msm_mmu.h"
 #include "mdp5_kms.h"
+#include "dsi/dsi.h"
 
 static const char *iommu_ports[] = {
 		"mdp_0",
@@ -32,6 +33,9 @@ static int mdp5_hw_init(struct msm_kms *kms)
 	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(kms));
 	struct platform_device *pdev = mdp5_kms->pdev;
 	unsigned long flags;
+
+	if (mdp5_kms->poweron_enabled)
+		return 0;
 
 	pm_runtime_get_sync(&pdev->dev);
 	mdp5_enable(mdp5_kms);
@@ -70,6 +74,56 @@ static int mdp5_hw_init(struct msm_kms *kms)
 	pm_runtime_put_sync(&pdev->dev);
 
 	return 0;
+}
+
+static void mdp5_hw_readback(struct msm_kms *kms)
+{
+	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(kms));
+	struct msm_drm_private *priv = mdp5_kms->dev->dev_private;
+	unsigned i;
+
+	if (!mdp5_kms->poweron_enabled)
+		return;
+
+	/* We need to work backwards up the pipeline starting with the
+	 * connectors.
+	 *
+	 * TODO eDP
+	 * TODO HDMI
+	 */
+	for (i = 0; i < ARRAY_SIZE(priv->dsi); i++)
+		if (priv->dsi[i])
+			msm_dsi_hw_readback(priv->dsi[i]);
+
+	if (mdp5_kms->smp) {
+		struct drm_plane *plane;
+
+		/* readback SMP state for active planes: */
+		drm_for_each_plane(plane, mdp5_kms->dev) {
+			struct mdp5_plane_state *pstate =
+				to_mdp5_plane_state(plane->state);
+			if (!plane->state->crtc ||
+			    !plane->state->crtc->state->enable ||
+			    !pstate->hwpipe)
+				continue;
+			mdp5_smp_readback(mdp5_kms->smp,
+				&mdp5_kms->state->smp,
+				pstate->hwpipe->pipe);
+		}
+	}
+
+	if (drm_debug & DRM_UT_DRIVER) {
+		struct drm_printer p = drm_info_printer(mdp5_kms->dev->dev);
+		drm_state_dump(mdp5_kms->dev, &p);
+		if (mdp5_kms->smp)
+			mdp5_smp_dump(mdp5_kms->smp, &p);
+	}
+}
+
+static void mdp5_hw_readback_encoder(struct msm_kms *kms,
+		struct drm_encoder *encoder)
+{
+	mdp5_encoder_readback(encoder);
 }
 
 struct mdp5_state *mdp5_get_state(struct drm_atomic_state *s)
@@ -113,6 +167,9 @@ static void mdp5_prepare_commit(struct msm_kms *kms, struct drm_atomic_state *st
 	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(kms));
 
 	mdp5_enable(mdp5_kms);
+
+DBG("enable_count=%d", mdp5_kms->enable_count);
+WARN_ON(!__clk_is_enabled(mdp5_kms->ahb_clk));
 
 	if (mdp5_kms->smp)
 		mdp5_smp_prepare_commit(mdp5_kms->smp, &mdp5_kms->state->smp);
@@ -223,6 +280,8 @@ static int mdp5_kms_debugfs_init(struct msm_kms *kms, struct drm_minor *minor)
 static const struct mdp_kms_funcs kms_funcs = {
 	.base = {
 		.hw_init         = mdp5_hw_init,
+		.hw_readback     = mdp5_hw_readback,
+		.hw_readback_encoder = mdp5_hw_readback_encoder,
 		.irq_preinstall  = mdp5_irq_preinstall,
 		.irq_postinstall = mdp5_irq_postinstall,
 		.irq_uninstall   = mdp5_irq_uninstall,
@@ -249,11 +308,23 @@ int mdp5_disable(struct mdp5_kms *mdp5_kms)
 {
 	DBG("");
 
+	mdp5_kms->enable_count--;
+	WARN_ON(mdp5_kms->enable_count < 0);
+
 	clk_disable_unprepare(mdp5_kms->ahb_clk);
 	clk_disable_unprepare(mdp5_kms->axi_clk);
 	clk_disable_unprepare(mdp5_kms->core_clk);
 	if (mdp5_kms->lut_clk)
 		clk_disable_unprepare(mdp5_kms->lut_clk);
+
+	DBG("clk state: enable_count=%d, ahb=%d (%d), axi=%d (%d), core=%d (%d)",
+		mdp5_kms->enable_count,
+		__clk_is_enabled(mdp5_kms->ahb_clk),
+		__clk_get_enable_count(mdp5_kms->ahb_clk),
+		__clk_is_enabled(mdp5_kms->axi_clk),
+		__clk_get_enable_count(mdp5_kms->axi_clk),
+		__clk_is_enabled(mdp5_kms->core_clk),
+		__clk_get_enable_count(mdp5_kms->core_clk));
 
 	return 0;
 }
@@ -262,11 +333,22 @@ int mdp5_enable(struct mdp5_kms *mdp5_kms)
 {
 	DBG("");
 
+	mdp5_kms->enable_count++;
+
 	clk_prepare_enable(mdp5_kms->ahb_clk);
 	clk_prepare_enable(mdp5_kms->axi_clk);
 	clk_prepare_enable(mdp5_kms->core_clk);
 	if (mdp5_kms->lut_clk)
 		clk_prepare_enable(mdp5_kms->lut_clk);
+
+	DBG("clk state: enable_count=%d, ahb=%d (%d), axi=%d (%d), core=%d (%d)",
+		mdp5_kms->enable_count,
+		__clk_is_enabled(mdp5_kms->ahb_clk),
+		__clk_get_enable_count(mdp5_kms->ahb_clk),
+		__clk_is_enabled(mdp5_kms->axi_clk),
+		__clk_get_enable_count(mdp5_kms->axi_clk),
+		__clk_is_enabled(mdp5_kms->core_clk),
+		__clk_get_enable_count(mdp5_kms->core_clk));
 
 	return 0;
 }
@@ -648,7 +730,9 @@ struct msm_kms *mdp5_kms_init(struct drm_device *dev)
 		if (mdp5_cfg_intf_is_virtual(config->hw->intf.connect[i]) ||
 		    !config->hw->intf.base[i])
 			continue;
-		mdp5_write(mdp5_kms, REG_MDP5_INTF_TIMING_ENGINE_EN(i), 0);
+
+		if (!mdp5_kms->poweron_enabled)
+			mdp5_write(mdp5_kms, REG_MDP5_INTF_TIMING_ENGINE_EN(i), 0);
 
 		mdp5_write(mdp5_kms, REG_MDP5_INTF_FRAME_LINE_COUNT_EN(i), 0x3);
 	}
@@ -903,11 +987,26 @@ static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 	/* optional clocks: */
 	get_clk(pdev, &mdp5_kms->lut_clk, "lut_clk", false);
 
-	/* we need to set a default rate before enabling.  Set a safe
-	 * rate first, then figure out hw revision, and then set a
-	 * more optimal rate:
+	/* If clock is enabled when driver is loaded, then bootloader
+	 * has already set up the display:
 	 */
-	clk_set_rate(mdp5_kms->core_clk, 200000000);
+	if (__clk_is_enabled(mdp5_kms->core_clk)) {
+		mdp5_kms->poweron_enabled = true;
+		mdp5_kms->enable_count++;
+
+		/* let pm-runtime know that we are already enabled: */
+		pm_runtime_get_noresume(&pdev->dev);
+
+DBG("core_clk: %s (%d)", __clk_is_enabled(mdp5_kms->core_clk) ? "on" : "off", __clk_get_enable_count(mdp5_kms->core_clk));
+DBG("ahb_clk:  %s (%d)", __clk_is_enabled(mdp5_kms->ahb_clk)  ? "on" : "off", __clk_get_enable_count(mdp5_kms->ahb_clk));
+DBG("axi_clk:  %s (%d)", __clk_is_enabled(mdp5_kms->axi_clk)  ? "on" : "off", __clk_get_enable_count(mdp5_kms->axi_clk));
+	} else {
+		/* we need to set a default rate before enabling.  Set a safe
+		 * rate first, then figure out hw revision, and then set a
+		 * more optimal rate:
+		 */
+		clk_set_rate(mdp5_kms->core_clk, 200000000);
+	}
 
 	pm_runtime_enable(&pdev->dev);
 	mdp5_kms->rpm_enabled = true;
