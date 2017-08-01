@@ -16,6 +16,7 @@ struct device;
 
 enum dev_boot_constraint_type {
 	DEV_BOOT_CONSTRAINT_CLK,
+	DEV_BOOT_CONSTRAINT_PM,
 	DEV_BOOT_CONSTRAINT_SUPPLY,
 };
 
