@@ -1146,7 +1146,6 @@ static const struct of_device_id geni_se_dt_match[] = {
 
 static int geni_se_probe(struct platform_device *pdev)
 {
-	int ret;
 	struct device *dev = &pdev->dev;
 	struct resource *res;
 	struct geni_se_device *geni_se_dev;
@@ -1181,7 +1180,7 @@ static int geni_se_probe(struct platform_device *pdev)
 	spin_lock_init(&geni_se_dev->ab_ib_lock);
 	dev_set_drvdata(dev, geni_se_dev);
 
-	return ret;
+	return 0;
 }
 
 static int geni_se_remove(struct platform_device *pdev)
