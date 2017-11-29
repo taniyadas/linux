@@ -187,6 +187,7 @@ struct opp_table {
 };
 
 /* Routines internal to opp core */
+void dev_pm_opp_get(struct dev_pm_opp *opp);
 void _get_opp_table_kref(struct opp_table *opp_table);
 struct opp_table *_find_opp_table(struct device *dev);
 struct opp_device *_add_opp_dev(const struct device *dev, struct opp_table *opp_table);
