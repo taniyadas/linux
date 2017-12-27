@@ -1,0 +1,31 @@
+Qualcomm Technologies Inc. GENI based Serial UART Controller driver
+
+This serial UART driver supports console use-cases. This driver is meant
+only for Generic Interface (GENI) based Qualcomm Universal Peripheral (QUP)
+cores and isn't backwards compatible.
+
+Required properties:
+- compatible: should contain "qcom,geni-uart, qcom,geni-console"
+- reg: Should contain UART register location and length.
+- interrupts: Should contain UART core interrupts.
+- clocks: clocks needed for UART, includes the core and AHB clock.
+- pinctrl-names/pinctrl-0/1: The GPIOs assigned to this core. The names
+  Should be "active" and "sleep" for the pin confuguration when core is active
+  or when entering sleep state.
+- qcom,wrapper-core: Wrapper QUP core containing this UART controller.
+
+Example:
+qup_uart11: qcom,qup_uart@0xa88000 {
+	compatible = "qcom,geni-uart";
+	reg = <0xa88000 0x7000>;
+	reg-names = "se_phys";
+	clock-names = "se-clk", "m-ahb", "s-ahb";
+	clocks = <&clock_gcc GCC_QUPV3_WRAP0_S0_CLK>,
+		<&clock_gcc GCC_QUPV3_WRAP_0_M_AHB_CLK>,
+		<&clock_gcc GCC_QUPV3_WRAP_0_S_AHB_CLK>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&qup_1_uart_3_active>;
+	pinctrl-1 = <&qup_1_uart_3_sleep>;
+	interrupts = <0 355 0>;
+	qcom,wrapper-core = <&qup_0>;
+};
