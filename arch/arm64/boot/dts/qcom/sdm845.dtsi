@@ -278,3 +278,4 @@
 	};
 };
 #include "sdm845-pins.dtsi"
+#include "sdm845-qupv3.dtsi"

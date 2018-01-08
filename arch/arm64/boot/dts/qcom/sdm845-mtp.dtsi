@@ -7,5 +7,8 @@
 
 / {
 	soc {
+		serial@0xa84000 {
+			status = "okay";
+		};
 	};
 };
