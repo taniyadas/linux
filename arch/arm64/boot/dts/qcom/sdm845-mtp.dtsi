@@ -10,5 +10,9 @@
 		pinctrl@03400000 {
 			ngpios-ranges = <4 77>, <85 65>;
 		};
+
+		serial@0xa84000 {
+			status = "okay";
+		};
 	};
 };

@@ -285,6 +285,8 @@
 	soc: soc { };
 };
 
+#include "sdm845-qupv3.dtsi"
+
 &soc {
 	#address-cells = <1>;
 	#size-cells = <1>;
