@@ -10,4 +10,46 @@
 / {
 	model = "Qualcomm Technologies, Inc. SDM845 MTP";
 	compatible = "qcom,sdm845-mtp";
+
+	aliases {
+		serial0 = &qup_uart2;
+	};
+
+	chosen {
+		stdout-path = "serial0";
+	};
+
+	soc {
+		serial@a84000 {
+			status = "okay";
+		};
+
+		pinctrl@3400000 {
+			qup_uart2_default: qup_uart2_default {
+				pinmux {
+					function = "qup9";
+					pins = "gpio4", "gpio5";
+				};
+
+				pinconf {
+					pins = "gpio4", "gpio5";
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+
+			qup_uart2_sleep: qup_uart2_sleep {
+				pinmux {
+					function = "gpio";
+					pins = "gpio4", "gpio5";
+				};
+
+				pinconf {
+					pins = "gpio4", "gpio5";
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+		};
+	};
 };
