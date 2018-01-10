@@ -40,6 +40,12 @@ MSM8996 platform.
 	Definition: must be 2. Specifying the pin number and flags, as defined
 		    in <dt-bindings/gpio/gpio.h>
 
+- ngpios-ranges:
+	Usage: optional
+	Value type: <prop-encoded-array>
+	Definition: Tuples of GPIO ranges (base, size) indicating
+		    GPIOs available for use.
+
 Please refer to ../gpio/gpio.txt and ../interrupt-controller/interrupts.txt for
 a general description of GPIO and interrupt bindings.
 
