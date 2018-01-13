@@ -1,0 +1,34 @@
+Qualcomm Technologies, Inc. GENI Serial Engine QUP Wrapper Controller
+
+Generic Interface (GENI) based Qualcomm Universal Peripheral (QUP) wrapper
+is a programmable module for supporting a wide range of serial interfaces
+like UART, SPI, I2C, I3C, etc. A single QUP module can provide upto 8 Serial
+Interfaces, using its internal Serial Engines. The GENI Serial Engine QUP
+Wrapper controller is modeled as a node with zero or more child nodes each
+representing a serial engine.
+
+Required properties:
+- compatible:		Must be "qcom,geni-se-qup".
+- reg:			Must contain QUP register address and length.
+- clock-names:		Must contain "m-ahb" and "s-ahb".
+- clocks:		AHB clocks needed by the device.
+
+Required properties if child node exists:
+- #address-cells: Must be 1
+- #size-cells: Must be 1
+- ranges: Must be present
+
+Properties for children:
+
+A GENI based QUP wrapper controller node can contain 0 or more child nodes
+representing serial devices.  These serial devices can be a QCOM UART, I2C
+controller, spi controller, or some combination of aforementioned devices.
+
+Example:
+	qup0: qcom,geniqup0@8c0000 {
+		compatible = "qcom,geni-se-qup";
+		reg = <0x8c0000 0x6000>;
+		clock-names = "m-ahb", "s-ahb";
+		clocks = <&clock_gcc GCC_QUPV3_WRAP_0_M_AHB_CLK>,
+			<&clock_gcc GCC_QUPV3_WRAP_0_S_AHB_CLK>;
+	}
