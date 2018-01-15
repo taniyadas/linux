@@ -1,0 +1,15 @@
+Qualcomm Technologies, Inc. GENI Serial Engine Driver
+
+GENI Serial Engine Driver manages the GENI firmware based Qualcomm Universal
+Peripheral (QUP) Wrapper. GENI SE Driver also manages the common aspects of
+individual Serial Engines that composes the QUP Wrapper.
+
+Required properties:
+- compatible:		Must be "qcom,geni-se-qup".
+- reg:			Must contain QUP register address and length.
+
+Example:
+	qup_0: qcom,geni_se_qup_0@8c0000 {
+		compatible = "qcom,geni-se-qup";
+		reg = <0x8c0000 0x6000>;
+	}
