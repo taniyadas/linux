@@ -11,13 +11,13 @@
 	model = "Qualcomm Technologies, Inc. SDM845 MTP";
 	compatible = "qcom,sdm845-mtp";
 
-	aliases {
-		serial0 = &qup_uart2;
-	};
+	//aliases {
+	//	serial0 = &qup_uart2;
+	//};
 
-	chosen {
-		stdout-path = "serial0";
-	};
+	//chosen {
+	//	stdout-path = "serial0";
+	//};
 
 	soc {
 		serial@a84000 {
