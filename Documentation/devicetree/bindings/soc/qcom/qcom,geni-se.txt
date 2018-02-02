@@ -1,0 +1,66 @@
+Qualcomm Technologies, Inc. GENI Serial Engine QUP Wrapper Controller
+
+Generic Interface (GENI) based Qualcomm Universal Peripheral (QUP) wrapper
+is a programmable module for supporting a wide range of serial interfaces
+like UART, SPI, I2C, I3C, etc. A single QUP module can provide upto 8 Serial
+Interfaces, using its internal Serial Engines. The GENI Serial Engine QUP
+Wrapper controller is modeled as a node with zero or more child nodes each
+representing a serial engine.
+
+Required properties:
+- compatible:		Must be "qcom,geni-se-qup".
+- reg:			Must contain QUP register address and length.
+- clock-names:		Must contain "m-ahb" and "s-ahb".
+- clocks:		AHB clocks needed by the device.
+
+Required properties if child node exists:
+- #address-cells: Must be 1
+- #size-cells: Must be 1
+- ranges: Must be present
+
+Properties for children:
+
+A GENI based QUP wrapper controller node can contain 0 or more child nodes
+representing serial devices.  These serial devices can be a QCOM UART, I2C
+controller, spi controller, or some combination of aforementioned devices.
+
+See the following documentation for child node definitions:
+Documentation/devicetree/bindings/i2c/i2c-qcom-geni.txt
+Documentation/devicetree/bindings/serial/qcom,geni-uart.txt
+
+Example:
+	qup0: qcom,geniqup0@8c0000 {
+		compatible = "qcom,geni-se-qup";
+		reg = <0x8c0000 0x6000>;
+		clock-names = "m-ahb", "s-ahb";
+		clocks = <&clock_gcc GCC_QUPV3_WRAP_0_M_AHB_CLK>,
+			<&clock_gcc GCC_QUPV3_WRAP_0_S_AHB_CLK>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		i2c0: i2c@a94000 {
+			compatible = "qcom,i2c-geni";
+			reg = <0xa94000 0x4000>;
+			interrupts = <GIC_SPI 358 0>;
+			clock-names = "se-clk";
+			clocks = <&clock_gcc GCC_QUPV3_WRAP0_S5_CLK>;
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&qup_1_i2c_5_active>;
+			pinctrl-1 = <&qup_1_i2c_5_sleep>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		uart0: qcom,serial@a88000 {
+			compatible = "qcom,geni-debug-uart";
+			reg = <0xa88000 0x7000>;
+			reg-names = "se-phys";
+			interrupts = <0 355 0>;
+			clock-names = "se-clk";
+			clocks = <&clock_gcc GCC_QUPV3_WRAP0_S0_CLK>;
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&qup_1_uart_3_active>;
+			pinctrl-1 = <&qup_1_uart_3_sleep>;
+		};
+	}
