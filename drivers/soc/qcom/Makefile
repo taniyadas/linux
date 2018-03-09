@@ -19,3 +19,4 @@ obj-$(CONFIG_QCOM_RPMPD) += rpmpd.o
 obj-$(CONFIG_QCOM_RPMH)	+= qcom_rpmh.o
 qcom_rpmh-y		+= rpmh-rsc.o
 qcom_rpmh-y		+= rpmh.o
+obj-y += rpmhpd.o

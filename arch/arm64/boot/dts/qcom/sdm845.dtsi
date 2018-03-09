@@ -7,6 +7,7 @@
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/qcom,gcc-sdm845.h>
+#include <dt-bindings/soc/qcom,rpmh-rsc.h>
 
 / {
 	interrupt-parent = <&intc>;
@@ -20,6 +21,18 @@
 		device_type = "memory";
 		/* We expect the bootloader to fill in the size */
 		reg = <0 0x80000000 0 0>;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		qcom,cmd-db@c3f000c {
+			reg = <0x0 0xc3f000c 0x0 0x8>,
+			      <0x0 0x85fe0000 0x0 0x20000>;
+			compatible = "qcom,cmd-db";
+		};
 	};
 
 	cpus {
@@ -310,6 +323,80 @@
 				pinctrl-1 = <&qup_uart2_sleep>;
 				interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>;
 				status = "disabled";
+			};
+		};
+
+		apss_rsc: rsc@179e000 {
+			label = "apps_rsc";
+			compatible = "qcom,rpmh-rsc";
+			reg = <0x179e0000 0x100>, <0x179e0d00 0x3000>;
+			reg-names = "drv", "tcs";
+			interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
+			qcom,drv-id = <2>;
+			qcom,tcs-config = <SLEEP_TCS   3>,
+					  <WAKE_TCS    3>,
+					  <ACTIVE_TCS  2>,
+					  <CONTROL_TCS 1>;
+			rpmhpd {
+				compatible = "qcom,rpmhpd-sdm845";
+				#power-domain-cells = <1>;
+				operating-points-v2 = <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>,
+						      <&rpmhpd_opp_table>;
+			};
+
+			rpmhpd_opp_table: opp-table {
+				compatible = "operating-points-v2";
+
+				rpmhpd_opp1: opp@1 {
+					/*
+					 * opp-hz is mandatory for now in the
+					 * OPP code, will change that later.
+					*/
+					opp-hz = /bits/ 64 <1>;
+					qcom-corner = <16>;
+				};
+
+				rpmhpd_opp2: opp@2 {
+					opp-hz = /bits/ 64 <2>;
+					qcom-corner = <48>;
+				};
+
+				rpmhpd_opp3: opp@3 {
+					opp-hz = /bits/ 64 <3>;
+					qcom-corner = <64>;
+				};
+
+				rpmhpd_opp4: opp@4 {
+					opp-hz = /bits/ 64 <4>;
+					qcom-corner = <128>;
+				};
+
+				rpmhpd_opp5: opp@5 {
+					opp-hz = /bits/ 64 <5>;
+					qcom-corner = <192>;
+				};
+
+				rpmhpd_opp6: opp@6 {
+					opp-hz = /bits/ 64 <6>;
+					qcom-corner = <256>;
+				};
+
+				rpmhpd_opp7: opp@7 {
+					opp-hz = /bits/ 64 <7>;
+					qcom-corner = <320>;
+				};
+
+				rpmhpd_opp8: opp@8 {
+					opp-hz = /bits/ 64 <8>;
+					qcom-corner = <416>;
+				};
 			};
 		};
 	};
