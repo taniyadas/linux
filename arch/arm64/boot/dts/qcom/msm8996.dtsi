@@ -1009,6 +1009,8 @@
 						"bus_master",
 						"bus_slave";
 
+				interconnects = <&a0noc MASTER_PCIE &bimc SLAVE_EBI_CH0>;
+				interconnect-names = "ddr";
 			};
 
 			pcie1: pcie@608000 {
@@ -1062,6 +1064,9 @@
 						"cfg",
 						"bus_master",
 						"bus_slave";
+
+				interconnects = <&a0noc MASTER_PCIE_1 &bimc SLAVE_EBI_CH0>;
+				interconnect-names = "ddr";
 			};
 
 			pcie2: pcie@610000 {
@@ -1114,6 +1119,9 @@
 						"cfg",
 						"bus_master",
 						"bus_slave";
+
+				interconnects = <&a0noc MASTER_PCIE_2 &bimc SLAVE_EBI_CH0>;
+				interconnect-names = "ddr";
 			};
 		};
 
