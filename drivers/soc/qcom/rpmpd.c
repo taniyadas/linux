@@ -122,7 +122,7 @@ static const struct rpmpd_desc msm8996_desc = {
 };
 
 static const struct of_device_id rpmpd_match_table[] = {
-	{ .compatible = "qcom,rpmpd-msm8996", .data = &msm8996_desc },
+	{ .compatible = "qcom,msm8996-rpmpd", .data = &msm8996_desc },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, rpmpd_match_table);

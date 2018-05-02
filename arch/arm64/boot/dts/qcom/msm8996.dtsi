@@ -308,7 +308,7 @@
 				#clock-cells = <1>;
 			};
 
-			rpmpd: qcom,rpmpd {
+			rpmpd: power-controller {
 				compatible = "qcom,msm8996-rpmpd";
 				#power-domain-cells = <1>;
 				operating-points-v2 = <&rpmpd_opp_table>, /* cx */
