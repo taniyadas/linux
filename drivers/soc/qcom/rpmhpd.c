@@ -165,6 +165,7 @@ static int rpmhpd_aggregate_corner(struct rpmhpd *pd, unsigned int corner)
 
 	active_corner = max(this_active_corner, peer_active_corner);
 
+	printk("Sending active %d\n", active_corner);
 	ret = rpmhpd_send_corner(pd, RPMH_ACTIVE_ONLY_STATE, active_corner,
 				 active_corner > pd->active_corner);
 	if (ret)
@@ -175,6 +176,7 @@ static int rpmhpd_aggregate_corner(struct rpmhpd *pd, unsigned int corner)
 	if (peer) {
 		peer->active_corner = active_corner;
 
+		printk("Sending wake %d\n", active_corner);
 		ret = rpmhpd_send_corner(pd, RPMH_WAKE_ONLY_STATE,
 					 active_corner, false);
 		if (ret)
@@ -182,6 +184,7 @@ static int rpmhpd_aggregate_corner(struct rpmhpd *pd, unsigned int corner)
 
 		sleep_corner = max(this_sleep_corner, peer_sleep_corner);
 
+		printk("Sending sleep %d\n", sleep_corner);
 		return rpmhpd_send_corner(pd, RPMH_SLEEP_STATE, sleep_corner,
 					  false);
 	}
@@ -204,6 +207,8 @@ static int rpmhpd_power_on(struct generic_pm_domain *domain)
 
 	mutex_unlock(&rpmhpd_lock);
 
+	pr_err("%s: %s: %d %d %d\n", __func__, domain->name, pd->corner, __LINE__, ret);
+
 	return ret;
 }
 
@@ -220,6 +225,8 @@ static int rpmhpd_power_off(struct generic_pm_domain *domain)
 		pd->enabled = false;
 
 	mutex_unlock(&rpmhpd_lock);
+
+	pr_err("%s: %s: %d %d %d\n", __func__, domain->name, pd->corner, __LINE__, ret);
 
 	return ret;
 }
@@ -252,6 +259,8 @@ static int rpmhpd_set_performance_state(struct generic_pm_domain *domain,
 	pd->corner = i;
 out:
 	mutex_unlock(&rpmhpd_lock);
+
+	pr_err("%s: %s: %d %d %d\n", __func__, domain->name, level, pd->corner, ret);
 
 	return ret;
 }
@@ -304,7 +313,7 @@ static int rpmhpd_update_level_mapping(struct rpmhpd *rpmhpd)
 			rpmhpd->level_count = i;
 			break;
 		}
-		pr_debug("%s: ARC hlvl=%2d --> vlvl=%4u\n", rpmhpd->res_name, i,
+		pr_err("%s: ARC hlvl=%2d --> vlvl=%4u\n", rpmhpd->res_name, i,
 			 rpmhpd->level[i]);
 	}
 
@@ -377,6 +386,26 @@ static int rpmhpd_probe(struct platform_device *pdev)
 
 		data->domains[i] = &rpmhpds[i]->pd;
 	}
+
+	/* test code */
+	rpmhpd_set_performance_state(&rpmhpds[2]->pd, rpmhpds[2]->level[2]);
+	rpmhpd_power_on(&rpmhpds[2]->pd);
+	rpmhpd_set_performance_state(&rpmhpds[1]->pd, rpmhpds[1]->level[4]);
+	rpmhpd_power_on(&rpmhpds[1]->pd);
+
+	rpmhpd_set_performance_state(&rpmhpds[2]->pd, rpmhpds[2]->level[3]);
+
+	rpmhpd_set_performance_state(&rpmhpds[0]->pd, rpmhpds[0]->level[4]);
+	rpmhpd_power_on(&rpmhpds[0]->pd);
+
+	rpmhpd_power_off(&rpmhpds[2]->pd);
+	rpmhpd_power_off(&rpmhpds[1]->pd);
+	rpmhpd_power_off(&rpmhpds[0]->pd);
+
+	rpmhpd_set_performance_state(&rpmhpds[0]->pd, rpmhpds[0]->level[5]);
+	rpmhpd_power_on(&rpmhpds[2]->pd);
+	rpmhpd_power_on(&rpmhpds[1]->pd);
+	rpmhpd_power_on(&rpmhpds[0]->pd);
 
 	return of_genpd_add_provider_onecell(pdev->dev.of_node, data);
 }
