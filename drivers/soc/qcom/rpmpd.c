@@ -206,6 +206,8 @@ static int rpmpd_power_on(struct generic_pm_domain *domain)
 out:
 	mutex_unlock(&rpmpd_lock);
 
+	pr_err("%s: %d %d\n", __func__, __LINE__, ret);
+
 	return ret;
 }
 
@@ -221,6 +223,8 @@ static int rpmpd_power_off(struct generic_pm_domain *domain)
 		pd->enabled = false;
 
 	mutex_unlock(&rpmpd_lock);
+
+	pr_err("%s: %d\n", __func__, __LINE__);
 
 	return ret;
 }
@@ -245,6 +249,8 @@ static int rpmpd_set_performance(struct generic_pm_domain *domain,
 
 out:
 	mutex_unlock(&rpmpd_lock);
+
+	pr_err("%s: %s: %d: %d %d\n", __func__, domain->name, __LINE__, state, ret);
 
 	return ret;
 }
