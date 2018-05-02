@@ -159,6 +159,8 @@ static int rpmhpd_power_on(struct generic_pm_domain *domain)
 
 	mutex_unlock(&rpmhpd_lock);
 
+	pr_err("%s: %d %d\n", __func__, __LINE__, ret);
+
 	return ret;
 }
 
@@ -183,6 +185,8 @@ static int rpmhpd_power_off(struct generic_pm_domain *domain)
 
 	mutex_unlock(&rpmhpd_lock);
 
+	pr_err("%s: %d %d\n", __func__, __LINE__, ret);
+
 	return 0;
 }
 
@@ -203,7 +207,7 @@ static int rpmhpd_set_performance(struct generic_pm_domain *domain,
 out:
 	mutex_unlock(&rpmhpd_lock);
 
-	pr_dbg("%s: %s: %d %d\n", __func__, domain->name, __LINE__, state, ret);
+	pr_err("%s: %s: %d %d\n", __func__, domain->name, state, ret);
 
 	return ret;
 }
@@ -257,7 +261,7 @@ static int rpmhpd_update_level_mapping(struct rpmhpd *rpmhpd)
 			rpmhpd->level_count = i;
 			break;
 		}
-		pr_dbg("%s: ARC hlvl=%2d --> vlvl=%4u\n", rpmhpd->res_name, i,
+		pr_err("%s: ARC hlvl=%2d --> vlvl=%4u\n", rpmhpd->res_name, i,
 		       rpmhpd->level[i]);
 	}
 
