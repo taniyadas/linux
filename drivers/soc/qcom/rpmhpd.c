@@ -174,14 +174,18 @@ static int rpmhpd_aggregate_corner(struct rpmhpd *pd, unsigned int corner)
 		 * Wait for an ack only when we are increasing the
 		 * perf state of the power domain
 		 */
-		if (active_corner > pd->active_corner)
+		if (active_corner > pd->active_corner) {
+			printk("Sending active sync %d\n", active_corner);
 			ret = rpmhpd_send_corner_sync(pd,
 						      RPMH_ACTIVE_ONLY_STATE,
 						      active_corner);
-		else
+		} else {
+			printk("Sending active async %d\n", active_corner);
 			ret = rpmhpd_send_corner_async(pd,
 						       RPMH_ACTIVE_ONLY_STATE,
 						       active_corner);
+		}
+
 		if (ret)
 			return ret;
 		pd->active_corner = active_corner;
@@ -190,6 +194,7 @@ static int rpmhpd_aggregate_corner(struct rpmhpd *pd, unsigned int corner)
 	}
 
 	if (pd->valid_state_mask & BIT(RPMH_WAKE_ONLY_STATE)) {
+		printk("Sending wake %d\n", active_corner);
 		ret = rpmhpd_send_corner_async(pd, RPMH_WAKE_ONLY_STATE,
 					       active_corner);
 		if (ret)
@@ -198,9 +203,11 @@ static int rpmhpd_aggregate_corner(struct rpmhpd *pd, unsigned int corner)
 
 	sleep_corner = max(this_sleep_corner, peer_sleep_corner);
 
-	if (pd->valid_state_mask & BIT(RPMH_SLEEP_STATE))
+	if (pd->valid_state_mask & BIT(RPMH_SLEEP_STATE)) {
+		printk("Sending sleep %d\n", sleep_corner);
 		ret = rpmhpd_send_corner_async(pd, RPMH_SLEEP_STATE,
 					       sleep_corner);
+	}
 
 	return ret;
 }
@@ -219,6 +226,8 @@ static int rpmhpd_power_on(struct generic_pm_domain *domain)
 
 	mutex_unlock(&rpmhpd_lock);
 
+	pr_err("%s: %s: %d %d %d\n", __func__, domain->name, pd->corner, __LINE__, ret);
+
 	return ret;
 }
 
@@ -236,6 +245,8 @@ static int rpmhpd_power_off(struct generic_pm_domain *domain)
 		pd->enabled = false;
 
 	mutex_unlock(&rpmhpd_lock);
+
+	pr_err("%s: %s: %d %d %d\n", __func__, domain->name, pd->corner, __LINE__, ret);
 
 	return ret;
 }
@@ -267,6 +278,8 @@ static int rpmhpd_set_performance(struct generic_pm_domain *domain,
 	ret = rpmhpd_aggregate_corner(pd, i);
 out:
 	mutex_unlock(&rpmhpd_lock);
+
+	pr_err("%s: %s: %d %d %d\n", __func__, domain->name, state, pd->corner, ret);
 
 	return ret;
 }
@@ -320,7 +333,7 @@ static int rpmhpd_update_level_mapping(struct rpmhpd *rpmhpd)
 			rpmhpd->level_count = i;
 			break;
 		}
-		pr_dbg("%s: ARC hlvl=%2d --> vlvl=%4u\n", rpmhpd->res_name, i,
+		pr_err("%s: ARC hlvl=%2d --> vlvl=%4u\n", rpmhpd->res_name, i,
 		       rpmhpd->level[i]);
 	}
 
@@ -397,10 +410,30 @@ static int rpmhpd_probe(struct platform_device *pdev)
 		 * This should ideally be *removed* once we have
 		 * all (most) consumers being able to vote
 		 */
-		max_level = rpmhpds[i]->level_count - 1;
-		rpmhpd_set_performance(&rpmhpds[i]->pd, rpmhpds[i]->level[max_level]);
-		rpmhpd_power_on(&rpmhpds[i]->pd);
+		//max_level = rpmhpds[i]->level_count - 1;
+		//rpmhpd_set_performance(&rpmhpds[i]->pd, rpmhpds[i]->level[max_level]);
+		//rpmhpd_power_on(&rpmhpds[i]->pd);
 	}
+
+	/* test code */
+	rpmhpd_set_performance(&rpmhpds[2]->pd, rpmhpds[2]->level[2]);
+	rpmhpd_power_on(&rpmhpds[2]->pd);
+	rpmhpd_set_performance(&rpmhpds[1]->pd, rpmhpds[1]->level[4]);
+	rpmhpd_power_on(&rpmhpds[1]->pd);
+
+	rpmhpd_set_performance(&rpmhpds[2]->pd, rpmhpds[2]->level[3]);
+
+	rpmhpd_set_performance(&rpmhpds[0]->pd, rpmhpds[0]->level[4]);
+	rpmhpd_power_on(&rpmhpds[0]->pd);
+
+	rpmhpd_power_off(&rpmhpds[2]->pd);
+	rpmhpd_power_off(&rpmhpds[1]->pd);
+	rpmhpd_power_off(&rpmhpds[0]->pd);
+
+	rpmhpd_set_performance(&rpmhpds[0]->pd, rpmhpds[0]->level[5]);
+	rpmhpd_power_on(&rpmhpds[2]->pd);
+	rpmhpd_power_on(&rpmhpds[1]->pd);
+	rpmhpd_power_on(&rpmhpds[0]->pd);
 
 	return of_genpd_add_provider_onecell(pdev->dev.of_node, data);
 }
