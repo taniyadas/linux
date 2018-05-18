@@ -117,13 +117,44 @@ int dev_pm_domain_attach(struct device *dev, bool power_on)
 EXPORT_SYMBOL_GPL(dev_pm_domain_attach);
 
 /**
+ * dev_pm_domain_attach_by_id - Attach a device to one of its PM domains.
+ * @index: The index of the PM domain.
+ * @dev: Device to attach.
+ *
+ * As @dev may only be attached to a single PM domain, the backend PM domain
+ * provider should create a virtual device to attach instead. As attachment
+ * succeeds, the ->detach() callback in the struct dev_pm_domain should be
+ * assigned by the corresponding backend attach function.
+ *
+ * This function should typically be invoked from drivers during probe phase.
+ * Especially for those that manages devices which requires power management
+ * through more than one PM domain.
+ *
+ * Callers must ensure proper synchronization of this function with power
+ * management callbacks.
+ *
+ * Returns the virtual attached device in case successfully attached PM domain,
+ * NULL in case @dev don't need a PM domain, else a PTR_ERR().
+ */
+struct device *dev_pm_domain_attach_by_id(struct device *dev,
+					  unsigned int index)
+{
+	if (dev->pm_domain)
+		return NULL;
+
+	return genpd_dev_pm_attach_by_id(dev, index);
+}
+EXPORT_SYMBOL_GPL(dev_pm_domain_attach_by_id);
+
+/**
  * dev_pm_domain_detach - Detach a device from its PM domain.
  * @dev: Device to detach.
  * @power_off: Used to indicate whether we should power off the device.
  *
  * This functions will reverse the actions from dev_pm_domain_attach() and thus
  * try to detach the @dev from its PM domain. Typically it should be invoked
- * from subsystem level code during the remove phase.
+ * during the remove phase, either from subsystem level code or from drivers in
+ * case attaching was done through dev_pm_domain_attach_by_id.
  *
  * Callers must ensure proper synchronization of this function with power
  * management callbacks.
