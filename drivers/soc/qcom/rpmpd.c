@@ -207,7 +207,6 @@ out:
 	mutex_unlock(&rpmpd_lock);
 
 	pr_err("%s: %d %d\n", __func__, __LINE__, ret);
-
 	return ret;
 }
 

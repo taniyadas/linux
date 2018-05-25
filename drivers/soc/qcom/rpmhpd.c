@@ -160,7 +160,6 @@ static int rpmhpd_power_on(struct generic_pm_domain *domain)
 	mutex_unlock(&rpmhpd_lock);
 
 	pr_err("%s: %d %d\n", __func__, __LINE__, ret);
-
 	return ret;
 }
 
@@ -307,7 +306,8 @@ static int rpmhpd_probe(struct platform_device *pdev)
 		rpmhpds[i]->dev = &pdev->dev;
 		rpmhpds[i]->addr = cmd_db_read_addr(rpmhpds[i]->res_name);
 		if (!rpmhpds[i]->addr) {
-			dev_err(&pdev->dev, "Could not find RPMh address for resource %s\n", rpmhpds[i]->res_name);
+			dev_err(&pdev->dev, "Could not find RPMh address for resource %s\n",
+				rpmhpds[i]->res_name);
 			return -ENODEV;
 		}
 
