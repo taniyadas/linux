@@ -111,8 +111,9 @@ Example 3:
 ==PM domain consumers==
 
 Required properties:
- - power-domains : A phandle and PM domain specifier as defined by bindings of
-                   the power controller specified by phandle.
+ - power-domains : A phandle and PM domain specifier, or a list of phandles, as
+		   defined by bindings of the power controller specified by
+		   phandle.
 
 Example:
 
@@ -122,9 +123,16 @@ Example:
 		power-domains = <&power 0>;
 	};
 
-The node above defines a typical PM domain consumer device, which is located
-inside a PM domain with index 0 of a power controller represented by a node
-with the label "power".
+	leaky-device@12350000 {
+		compatible = "foo,i-leak-current";
+		reg = <0x12350000 0x1000>;
+		power-domains = <&power0 0>, <&power1 0> ;
+	};
+
+The first example above defines a typical PM domain consumer device, which is
+located inside a PM domain with index 0 of a power controller represented by a
+node with the label "power". In the second example the consumer device are
+partitioned across two PM domains.
 
 Optional properties:
 - required-opps: This contains phandle to an OPP node in another device's OPP
