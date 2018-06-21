@@ -24,6 +24,11 @@
 #include "clk-alpha-pll.h"
 #include "gdsc.h"
 #include "reset.h"
+#include "clk-genpd.h"
+#include "vdd-level.h"
+
+#include <linux/delay.h>
+#include <linux/clk.h>
 
 #define F(f, s, h, m, n) { (f), (s), (2 * (h) - 1), (m), (n) }
 
@@ -162,12 +167,22 @@ static const char * const gcc_parent_names_10[] = {
 	"core_bi_pll_test_se",
 };
 
+static CLK_GENPD_INIT(vdd_cx, VDD_NUM, 1, vdd_corner);
+static CLK_GENPD_INIT(vdd_cx_ao, VDD_NUM, 1, vdd_corner);
+
 static struct clk_alpha_pll gpll0 = {
 	.offset = 0x0,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_FABIA],
 	.clkr = {
 		.enable_reg = 0x52000,
 		.enable_mask = BIT(0),
+		.genpd = &vdd_cx,
+		.rate_max = (unsigned long[VDD_NUM]) {
+			[VDD_MIN] = 615000000,
+			[VDD_LOW] = 1066000000,
+			[VDD_LOW_L1] = 1600000000,
+			[VDD_NOMINAL] = 2000000000,
+		},
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll0",
 			.parent_names = (const char *[]){ "bi_tcxo" },
@@ -183,6 +198,13 @@ static struct clk_alpha_pll gpll4 = {
 	.clkr = {
 		.enable_reg = 0x52000,
 		.enable_mask = BIT(4),
+		.genpd = &vdd_cx,
+		.rate_max = (unsigned long[VDD_NUM]) {
+			[VDD_MIN] = 615000000,
+			[VDD_LOW] = 1066000000,
+			[VDD_LOW_L1] = 1600000000,
+			[VDD_NOMINAL] = 2000000000,
+		},
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll4",
 			.parent_names = (const char *[]){ "bi_tcxo" },
@@ -226,11 +248,19 @@ static struct clk_rcg2 gcc_cpuss_ahb_clk_src = {
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_0,
 	.freq_tbl = ftbl_gcc_cpuss_ahb_clk_src,
-	.clkr.hw.init = &(struct clk_init_data){
-		.name = "gcc_cpuss_ahb_clk_src",
-		.parent_names = gcc_parent_names_7,
-		.num_parents = 4,
-		.ops = &clk_rcg2_ops,
+	.clkr = {
+		.genpd = &vdd_cx_ao,
+		.rate_max = (unsigned long[VDD_NUM]) {
+			[VDD_MIN] = 19200000,
+			[VDD_LOW] = 50000000,
+			[VDD_NOMINAL] = 100000000,
+		},
+		.hw.init = &(struct clk_init_data){
+			.name = "gcc_cpuss_ahb_clk_src",
+			.parent_names = gcc_parent_names_7,
+			.num_parents = 4,
+			.ops = &clk_rcg2_ops,
+		},
 	},
 };
 
@@ -268,11 +298,20 @@ static struct clk_rcg2 gcc_gp1_clk_src = {
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_1,
 	.freq_tbl = ftbl_gcc_gp1_clk_src,
-	.clkr.hw.init = &(struct clk_init_data){
-		.name = "gcc_gp1_clk_src",
-		.parent_names = gcc_parent_names_1,
-		.num_parents = 5,
-		.ops = &clk_rcg2_ops,
+	.clkr = {
+		.genpd = &vdd_cx,
+		.rate_max = (unsigned long[VDD_NUM]) {
+			[VDD_MIN] = 19200000,
+			[VDD_LOWER] = 50000000,
+			[VDD_LOW] = 100000000,
+			[VDD_NOMINAL] = 200000000,
+		},
+		.hw.init = &(struct clk_init_data){
+			.name = "gcc_gp1_clk_src",
+			.parent_names = gcc_parent_names_1,
+			.num_parents = 5,
+			.ops = &clk_rcg2_ops,
+		},
 	},
 };
 
@@ -282,11 +321,20 @@ static struct clk_rcg2 gcc_gp2_clk_src = {
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_1,
 	.freq_tbl = ftbl_gcc_gp1_clk_src,
-	.clkr.hw.init = &(struct clk_init_data){
-		.name = "gcc_gp2_clk_src",
-		.parent_names = gcc_parent_names_1,
-		.num_parents = 5,
-		.ops = &clk_rcg2_ops,
+	.clkr = {
+		.genpd = &vdd_cx,
+		.rate_max = (unsigned long[VDD_NUM]) {
+			[VDD_MIN] = 19200000,
+			[VDD_LOWER] = 50000000,
+			[VDD_LOW] = 100000000,
+			[VDD_NOMINAL] = 200000000,
+		},
+		.hw.init = &(struct clk_init_data){
+			.name = "gcc_gp2_clk_src",
+			.parent_names = gcc_parent_names_1,
+			.num_parents = 5,
+			.ops = &clk_rcg2_ops,
+		},
 	},
 };
 
@@ -3437,6 +3485,10 @@ static int gcc_sdm845_probe(struct platform_device *pdev)
 	regmap_update_bits(regmap, 0x48190, BIT(0), 0x1);
 	regmap_update_bits(regmap, 0x52004, BIT(22), 0x1);
 
+	/* Indexes of the power domain */
+	vdd_cx.genpd_index[0] = 0;
+	vdd_cx_ao.genpd_index[0] = 1;
+
 	return qcom_cc_really_probe(pdev, &gcc_sdm845_desc, regmap);
 }
 
@@ -3459,6 +3511,34 @@ static void __exit gcc_sdm845_exit(void)
 	platform_driver_unregister(&gcc_sdm845_driver);
 }
 module_exit(gcc_sdm845_exit);
+
+static int gcc_late_init_genpd(void)
+{
+	pr_alert("This will test the genpd voting for PLLs\n");
+
+	pr_err("GPLL4 prepare\n");
+	clk_prepare(gpll4.clkr.hw.clk);
+	mdelay(10);
+	pr_err("GPLL4 enable\n");
+	clk_enable(gpll4.clkr.hw.clk);
+	mdelay(20);
+	pr_err("GPLL4 disable and unprepare\n");
+	clk_disable_unprepare(gpll4.clkr.hw.clk);
+
+	pr_err("GP1 clksrc set rate 25000000\n");
+	clk_set_rate(gcc_gp1_clk_src.clkr.hw.clk, 25000000);
+	pr_err("GP1 prepare_enable 25000000\n");
+	clk_prepare_enable(gcc_gp1_clk.clkr.hw.clk);
+	mdelay(50);
+	pr_err("GP1 clksrc set rate 200000000\n");
+	clk_set_rate(gcc_gp1_clk.clkr.hw.clk, 200000000);
+	pr_err("GP2 clksrc set rate 200000000\n");
+	clk_set_rate(gcc_gp2_clk_src.clkr.hw.clk, 200000000);
+
+	return 0;
+}
+
+late_initcall(gcc_late_init_genpd)
 
 MODULE_DESCRIPTION("QTI GCC SDM845 Driver");
 MODULE_LICENSE("GPL v2");

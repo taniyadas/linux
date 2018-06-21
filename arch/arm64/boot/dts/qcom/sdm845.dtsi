@@ -8,6 +8,7 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/qcom,gcc-sdm845.h>
 #include <dt-bindings/soc/qcom,rpmh-rsc.h>
+#include <dt-bindings/power/qcom-rpmhpd.h>
 
 / {
 	interrupt-parent = <&intc>;
@@ -166,8 +167,8 @@
 		xo_board: xo-board {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
-			clock-frequency = <38400000>;
-			clock-output-names = "xo_board";
+			clock-frequency = <19200000>;
+			clock-output-names = "bi_tcxo";
 		};
 
 		sleep_clk: sleep-clk {
@@ -203,6 +204,8 @@
 		gcc: clock-controller@100000 {
 			compatible = "qcom,gcc-sdm845";
 			reg = <0x100000 0x1f0000>;
+			power-domains = <&rpmhpd SDM845_CX>,
+					<&rpmhpd SDM845_CX_AO>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
 			#power-domain-cells = <1>;
