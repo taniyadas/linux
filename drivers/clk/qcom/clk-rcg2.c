@@ -15,6 +15,7 @@
 
 #include <asm/div64.h>
 
+#include "clk-pd.h"
 #include "clk-rcg.h"
 #include "common.h"
 
@@ -247,26 +248,46 @@ static int __clk_rcg2_configure(struct clk_rcg2 *rcg, const struct freq_tbl *f)
 	u32 cfg, mask;
 	struct clk_hw *hw = &rcg->clkr.hw;
 	int ret, index = qcom_find_src_index(hw, rcg->parent_map, f->src);
+	unsigned long old_rate = clk_hw_get_rate(hw);
 
 	if (index < 0)
 		return index;
+
+	/* Enforce power domain requirement for new frequency */
+	if (clk_hw_is_prepared(hw)) {
+		ret = clk_power_domain_vote_rate(&rcg->clkr, f->freq);
+		if (ret) {
+			pr_err("Failed to vote & set new rate %lu\n", f->freq);
+			return ret;
+		}
+	}
 
 	if (rcg->mnd_width && f->n) {
 		mask = BIT(rcg->mnd_width) - 1;
 		ret = regmap_update_bits(rcg->clkr.regmap,
 				rcg->cmd_rcgr + M_REG, mask, f->m);
-		if (ret)
-			return ret;
+		if (ret) {
+			/*
+			 * Release the power domain requirement for
+			 * new frequency
+			 */
+			old_rate = f->freq;
+			goto out;
+		}
 
 		ret = regmap_update_bits(rcg->clkr.regmap,
 				rcg->cmd_rcgr + N_REG, mask, ~(f->n - f->m));
-		if (ret)
-			return ret;
+		if (ret) {
+			old_rate = f->freq;
+			goto out;
+		}
 
 		ret = regmap_update_bits(rcg->clkr.regmap,
 				rcg->cmd_rcgr + D_REG, mask, ~f->n);
-		if (ret)
-			return ret;
+		if (ret) {
+			old_rate = f->freq;
+			goto out;
+		}
 	}
 
 	mask = BIT(rcg->hid_width) - 1;
@@ -276,8 +297,14 @@ static int __clk_rcg2_configure(struct clk_rcg2 *rcg, const struct freq_tbl *f)
 	if (rcg->mnd_width && f->n && (f->m != f->n))
 		cfg |= CFG_MODE_DUAL_EDGE;
 
-	return regmap_update_bits(rcg->clkr.regmap, rcg->cmd_rcgr + CFG_REG,
+	ret = regmap_update_bits(rcg->clkr.regmap, rcg->cmd_rcgr + CFG_REG,
 					mask, cfg);
+out:
+	if (clk_hw_is_prepared(hw))
+		/* Release the power domain requirement for old/new frequency */
+		clk_power_domain_unvote_rate(&rcg->clkr, old_rate);
+
+	return ret;
 }
 
 static int clk_rcg2_configure(struct clk_rcg2 *rcg, const struct freq_tbl *f)
@@ -338,7 +365,25 @@ static int clk_rcg2_set_floor_rate_and_parent(struct clk_hw *hw,
 	return __clk_rcg2_set_rate(hw, rate, FLOOR);
 }
 
+static int clk_rcg2_prepare(struct clk_hw *hw)
+{
+	struct clk_rcg2 *rcg = to_clk_rcg2(hw);
+	unsigned long rate = clk_hw_get_rate(hw);
+
+	return clk_power_domain_vote_rate(&rcg->clkr, rate);
+}
+
+static void clk_rcg2_unprepare(struct clk_hw *hw)
+{
+	struct clk_rcg2 *rcg = to_clk_rcg2(hw);
+	unsigned long rate = clk_hw_get_rate(hw);
+
+	clk_power_domain_unvote_rate(&rcg->clkr, rate);
+}
+
 const struct clk_ops clk_rcg2_ops = {
+	.prepare = clk_rcg2_prepare,
+	.unprepare = clk_rcg2_unprepare,
 	.is_enabled = clk_rcg2_is_enabled,
 	.get_parent = clk_rcg2_get_parent,
 	.set_parent = clk_rcg2_set_parent,
@@ -919,6 +964,8 @@ static void clk_rcg2_shared_disable(struct clk_hw *hw)
 }
 
 const struct clk_ops clk_rcg2_shared_ops = {
+	.prepare = clk_rcg2_prepare,
+	.unprepare = clk_rcg2_unprepare,
 	.enable = clk_rcg2_shared_enable,
 	.disable = clk_rcg2_shared_disable,
 	.get_parent = clk_rcg2_get_parent,
