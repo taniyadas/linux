@@ -1,14 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2015, 2018, The Linux Foundation. All rights reserved.
- *
- * This software is licensed under the terms of the GNU General Public
- * License version 2, as published by the Free Software Foundation, and
- * may be copied, distributed, and modified under those terms.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
  */
 
 #include <linux/kernel.h>
@@ -18,6 +10,7 @@
 #include <linux/delay.h>
 
 #include "clk-alpha-pll.h"
+#include "clk-genpd.h"
 #include "common.h"
 
 #define PLL_MODE(p)		((p)->offset + 0x0)
@@ -522,13 +515,24 @@ static int __clk_alpha_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 	struct clk_alpha_pll *pll = to_clk_alpha_pll(hw);
 	const struct pll_vco *vco;
 	u32 l, alpha_width = pll_alpha_width(pll);
+	unsigned long old_rate = clk_hw_get_rate(hw);
 	u64 a;
+	int ret;
 
 	rate = alpha_pll_round_rate(rate, prate, &l, &a, alpha_width);
 	vco = alpha_pll_find_vco(pll, rate);
 	if (pll->vco_table && !vco) {
 		pr_err("alpha pll not in a valid vco range\n");
 		return -EINVAL;
+	}
+
+	if (clk_hw_is_prepared(hw)) {
+		/* Enforce power domain requirement for new frequency */
+		ret = genpd_clk_prepare_vote_rate(&pll->clkr, rate);
+		if (ret) {
+			pr_err("Failed to vote/set new rate %lu\n", rate);
+			return ret;
+		}
 	}
 
 	regmap_write(pll->clkr.regmap, PLL_L_VAL(pll), l);
@@ -550,7 +554,15 @@ static int __clk_alpha_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 	regmap_update_bits(pll->clkr.regmap, PLL_USER_CTL(pll),
 			   PLL_ALPHA_EN, PLL_ALPHA_EN);
 
-	return clk_alpha_pll_update_latch(pll, is_enabled);
+	ret = clk_alpha_pll_update_latch(pll, is_enabled);
+	if (ret)
+		old_rate = rate;
+
+	if (clk_hw_is_prepared(hw))
+		/* Release the power domain requirement for old frequency */
+		genpd_clk_unprepare_vote_rate(&pll->clkr, old_rate);
+
+	return ret;
 }
 
 static int clk_alpha_pll_set_rate(struct clk_hw *hw, unsigned long rate,
@@ -1017,7 +1029,25 @@ static int alpha_pll_fabia_set_rate(struct clk_hw *hw, unsigned long rate,
 	return __clk_alpha_pll_update_latch(pll);
 }
 
+static int clk_alpha_pll_prepare(struct clk_hw *hw)
+{
+	struct clk_alpha_pll *pll = to_clk_alpha_pll(hw);
+	unsigned long rate = clk_hw_get_rate(hw);
+
+	return genpd_clk_prepare_vote_rate(&pll->clkr, rate);
+}
+
+static void clk_alpha_pll_unprepare(struct clk_hw *hw)
+{
+	struct clk_alpha_pll *pll = to_clk_alpha_pll(hw);
+	unsigned long rate = clk_hw_get_rate(hw);
+
+	genpd_clk_unprepare_vote_rate(&pll->clkr, rate);
+}
+
 const struct clk_ops clk_alpha_pll_fabia_ops = {
+	.prepare = clk_alpha_pll_prepare,
+	.unprepare = clk_alpha_pll_unprepare,
 	.enable = alpha_pll_fabia_enable,
 	.disable = alpha_pll_fabia_disable,
 	.is_enabled = clk_alpha_pll_is_enabled,
@@ -1028,6 +1058,8 @@ const struct clk_ops clk_alpha_pll_fabia_ops = {
 EXPORT_SYMBOL_GPL(clk_alpha_pll_fabia_ops);
 
 const struct clk_ops clk_alpha_pll_fixed_fabia_ops = {
+	.prepare = clk_alpha_pll_prepare,
+	.unprepare = clk_alpha_pll_unprepare,
 	.enable = alpha_pll_fabia_enable,
 	.disable = alpha_pll_fabia_disable,
 	.is_enabled = clk_alpha_pll_is_enabled,
