@@ -17,22 +17,27 @@
 #include <linux/clk-provider.h>
 
 struct regmap;
+struct clk_genpd_class;
 
 /**
  * struct clk_regmap - regmap supporting clock
  * @hw:		handle between common and hardware-specific interfaces
  * @regmap:	regmap to use for regmap helpers and/or by providers
+ * @genpd:	power domain scaling requirement class
  * @enable_reg: register when using regmap enable/disable ops
  * @enable_mask: mask when using regmap enable/disable ops
  * @enable_is_inverted: flag to indicate set enable_mask bits to disable
  *                      when using clock_enable_regmap and friends APIs.
+ * @rate_max:	maximum clock rate in Hz supported at each power domain.
  */
 struct clk_regmap {
 	struct clk_hw hw;
 	struct regmap *regmap;
+	struct clk_genpd_class *genpd;
 	unsigned int enable_reg;
 	unsigned int enable_mask;
 	bool enable_is_inverted;
+	unsigned long *rate_max;
 };
 #define to_clk_regmap(_hw) container_of(_hw, struct clk_regmap, hw)
 
