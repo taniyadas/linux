@@ -1508,6 +1508,9 @@
 			/* cx-supply = <&pm8998_s9>; */
 			/* mx-supply = <&pm8998_s6>; */
 			/* mss-supply = <&pm8005_s2_level>; */
+			power-domains = <&rpmhpd SDM845_CX>,
+					<&rpmhpd SDM845_MX>,
+					<&rpmhpd SDM845_MSS>;
 
 			qcom,halt-regs = <&tcsr_mutex_regs 0x23000 0x25000 0x24000>;
 
